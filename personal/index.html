@@ -223,7 +223,7 @@
 					</div>
 
 					<!-- Event Info overlay (left side, above Lots) -->
-					<div id="wheelEventInfoOverlay" onclick="var a=document.getElementById('auspiciousNavLink');if(this.classList.contains('has-data')&&a&&a.href){window.location.href=a.href;}else{navigateToAuspicious();}return false;" style="cursor:pointer;">
+					<div id="wheelEventInfoOverlay" onclick="var a=document.getElementById('auspiciousNavLink');if(this.classList.contains('has-data')&&a&&a.href&&a.getAttribute('href')&&a.getAttribute('href')!=='#'){window.location.href=a.href;}else if(window.navigateToAuspicious){window.navigateToAuspicious();}else{window.location.href='/auspicious/';}return false;" style="cursor:pointer;">
 						<a id="auspiciousNavLink" href="#" style="text-decoration:none;color:inherit;display:block;">
 							<div class="lots-header">
 								<span class="grid-label">Auspicious Event</span>
@@ -615,7 +615,7 @@
 		<script src="js/events-renderer.js?v=157"></script>
 		<script src="js/personal-life.js?v=2"></script>
 
-		<script src="js/ui-controller.js?v=154"></script>
+		<script src="js/ui-controller.js?v=155"></script>
 		<script src="js/monarchs-data.js"></script>
 
 		<!-- President Thumbnails - Fixed to bottom of viewport with overlapping -->

@@ -2272,52 +2272,57 @@
 	      </div>` : ""}
 	    `;
 	  }
+		function buildAuspiciousUrl() {
+  const params = new URLSearchParams();
+  params.set('variant', 'personal');
+
+  // Current timeline date (from AstroEngine/timeState)
+  const now = (typeof timeState !== 'undefined' && timeState.dateUTC) ? timeState.dateUTC : new Date();
+  if (now instanceof Date && !isNaN(now.getTime())) {
+    params.set('dt', now.toISOString());
+  }
+
+  // Birth data from PersonalLife profiles
+  if (typeof PersonalLife !== 'undefined') {
+    try {
+      const p = PersonalLife.getActiveProfile();
+      if (p && p.birthData) {
+        params.set('bd', p.birthData.date || '');
+        params.set('bt', p.birthData.time || '12:00');
+        params.set('bc', p.birthData.city || '');
+        params.set('name', p.name || '');
+      }
+    } catch(e) {}
+    // Natal location data
+    if (window.natalLocationData) {
+      params.set('blat', window.natalLocationData.lat || '');
+      params.set('blon', window.natalLocationData.lon || '');
+    }
+  }
+
+  // Event location for ASC computation
+  if (window.locationData) {
+    if (window.locationData.lat) params.set('elat', window.locationData.lat);
+    if (window.locationData.lon) params.set('elon', window.locationData.lon);
+    if (window.locationData.tz) params.set('etz', window.locationData.tz);
+  }
+
+  // Location label
+  const locInput = document.getElementById('locationBoxInput');
+  if (locInput && locInput.value) params.set('loc', locInput.value);
+
+  // Preserve event topic when returning from an Auspicious jump
+  const currentParams = new URLSearchParams(window.location.search);
+  const topic = currentParams.get('topic');
+  if (topic) params.set('topic', topic);
+
+  return getAuspiciousBase() + '?' + params.toString();
+}
+window.buildAuspiciousUrl = buildAuspiciousUrl;
+
 		function navigateToAuspicious() {
   try {
-    const params = new URLSearchParams();
-    params.set('variant', 'personal');
-    
-    // Current timeline date (from AstroEngine/timeState)
-    const now = (typeof timeState !== 'undefined' && timeState.dateUTC) ? timeState.dateUTC : new Date();
-    if (now instanceof Date && !isNaN(now.getTime())) {
-      params.set('dt', now.toISOString());
-    }
-    
-    // Birth data from PersonalLife profiles
-    if (typeof PersonalLife !== 'undefined') {
-      try {
-        const p = PersonalLife.getActiveProfile();
-        if (p && p.birthData) {
-          params.set('bd', p.birthData.date || '');
-          params.set('bt', p.birthData.time || '12:00');
-          params.set('bc', p.birthData.city || '');
-          params.set('name', p.name || '');
-        }
-      } catch(e) {}
-      // Natal location data
-      if (window.natalLocationData) {
-        params.set('blat', window.natalLocationData.lat || '');
-        params.set('blon', window.natalLocationData.lon || '');
-      }
-    }
-    
-    // Event location for ASC computation
-    if (window.locationData) {
-      if (window.locationData.lat) params.set('elat', window.locationData.lat);
-      if (window.locationData.lon) params.set('elon', window.locationData.lon);
-      if (window.locationData.tz) params.set('etz', window.locationData.tz);
-    }
-    
-    // Location label
-    const locInput = document.getElementById('locationBoxInput');
-    if (locInput && locInput.value) params.set('loc', locInput.value);
-
-    // Preserve event topic when returning from an Auspicious jump
-    const currentParams = new URLSearchParams(window.location.search);
-    const topic = currentParams.get('topic');
-    if (topic) params.set('topic', topic);
-
-    location.href = getAuspiciousBase() + '?' + params.toString();
+    location.href = buildAuspiciousUrl();
   } catch(e) {
     location.href = getAuspiciousBase();
   }
@@ -2328,6 +2333,51 @@ function getAuspiciousBase() {
   return "/auspicious/";
 }
 window.getAuspiciousBase = getAuspiciousBase;
+
+function refreshAuspiciousNavLink() {
+  const navLink = document.getElementById('auspiciousNavLink');
+  if (!navLink) return '';
+  // If this overlay was populated from an Auspicious return trip, preserve that richer href.
+  const existing = navLink.getAttribute('href') || '';
+  const overlay = document.getElementById('wheelEventInfoOverlay');
+  if (overlay && overlay.classList.contains('has-data') && existing && existing !== '#') return navLink.href;
+  const url = (typeof window.buildAuspiciousUrl === 'function') ? window.buildAuspiciousUrl() : getAuspiciousBase();
+  navLink.setAttribute('href', url);
+  return navLink.href;
+}
+window.refreshAuspiciousNavLink = refreshAuspiciousNavLink;
+
+function handleAuspiciousEventOverlayClick(ev) {
+  const overlay = document.getElementById('wheelEventInfoOverlay');
+  if (!overlay) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  const navLink = document.getElementById('auspiciousNavLink');
+  const hrefAttr = navLink ? navLink.getAttribute('href') : '';
+  if (overlay.classList.contains('has-data') && navLink && hrefAttr && hrefAttr !== '#') {
+    window.location.href = navLink.href;
+    return;
+  }
+  window.location.href = refreshAuspiciousNavLink() || getAuspiciousBase();
+}
+
+function wireAuspiciousEventOverlayLink() {
+  const overlay = document.getElementById('wheelEventInfoOverlay');
+  if (!overlay || overlay.__auspiciousClickWired) return;
+  overlay.__auspiciousClickWired = true;
+  refreshAuspiciousNavLink();
+  overlay.addEventListener('pointerdown', handleAuspiciousEventOverlayClick, true);
+  overlay.addEventListener('mousedown', handleAuspiciousEventOverlayClick, true);
+  overlay.addEventListener('click', handleAuspiciousEventOverlayClick, true);
+  const navLink = document.getElementById('auspiciousNavLink');
+  if (navLink) {
+    navLink.addEventListener('pointerdown', handleAuspiciousEventOverlayClick, true);
+    navLink.addEventListener('mousedown', handleAuspiciousEventOverlayClick, true);
+    navLink.addEventListener('click', handleAuspiciousEventOverlayClick, true);
+  }
+}
+wireAuspiciousEventOverlayLink();
+window.wireAuspiciousEventOverlayLink = wireAuspiciousEventOverlayLink;
 
 function escHtml(s) { var d=document.createElement('div'); d.appendChild(document.createTextNode(s||'')); return d.innerHTML; }
 	
