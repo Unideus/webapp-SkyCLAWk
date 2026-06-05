@@ -1366,8 +1366,10 @@ for (const k of show) {
       if (target === 0) {
         // A conjunction must happen near 0°. The signed separation also flips at the 180° wrap,
         // which was causing false conjunction pins at opposition (e.g. Mars/Uranus).
+        // Only use sign-crossing detection — NEVER enteredOrb, which fires prematurely at 2°
+        // orb entry instead of the actual 0° crossing, causing double pins for slow planets.
         const nearZeroCross = crossed && (Math.abs(dist) <= 45 || (Number.isFinite(prevDist) && Math.abs(prevDist) <= 45));
-        validHit = nearZeroCross || enteredOrb;
+        validHit = nearZeroCross;
       } else if (target === 180) {
         // Opposition has no useful sign crossing because +/-180 is a wrap boundary.
         validHit = enteredOrb;
@@ -1384,6 +1386,10 @@ for (const k of show) {
     if (aspectActive && lons && Number.isFinite(Number(lons[ca.a])) && Number.isFinite(Number(lons[ca.b]))) {
       if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'aspect' || window.cycleTrackState.aspectKey !== `${ca.a}|${ca.b}|${ca.deg}`) {
         const initialDist = aspectDist(lons[ca.a], lons[ca.b], ca.deg);
+        // Pick a primary planet (non-Sun) for motion tracking, so we can gate
+        // conjunctions to prograde-only and avoid firing on retrograde crossings.
+        const motionPlanet = [ca.a, ca.b].find(p => p !== 'sun') || ca.a;
+        const initialMotionLon = lons && Number.isFinite(Number(lons[motionPlanet])) ? Number(lons[motionPlanet]) : null;
         window.cycleTrackState = {
           pins: [],
           active: true,
@@ -1391,6 +1397,9 @@ for (const k of show) {
           aspectKey: `${ca.a}|${ca.b}|${ca.deg}`,
           prevAspectDist: initialDist,
           prevAspectDistSign: initialDist > 0.001 ? 1 : (initialDist < -0.001 ? -1 : 0),
+          motionPlanet,
+          prevMotionLon: initialMotionLon,
+          prevMotionSign: null,
           startTime: t.getTime()
         };
       }
@@ -1408,7 +1417,14 @@ for (const k of show) {
           while (eventLon < 0) eventLon += 360;
           while (eventLon >= 360) eventLon -= 360;
         }
-        ts.pins.push({
+        // When tracking conj (0°) and one body is the Sun, only fire for prograde
+        // motion to skip the inferior (retrograde) conjunction — show only the
+        // superior conjunction where the planet is moving direct.
+        const involvesSun = (ca.a === 'sun' || ca.b === 'sun');
+        const isSunConj = involvesSun && Number(ca.deg) === 0;
+        const motionOk = !isSunConj || (ts.prevMotionSign !== null && ts.prevMotionSign > 0);
+        if (motionOk) {
+          ts.pins.push({
           lon: eventLon,
           type: 'major_aspect',
           aspect: Number(ca.deg),
@@ -1420,7 +1436,16 @@ for (const k of show) {
           b: ca.b
         });
         aspectPinAdded = true;
+        }
       }
+      // Track motion of the non-Sun planet to gate conjunctions to prograde-only
+      const motionLon = ts.motionPlanet && lons && Number.isFinite(Number(lons[ts.motionPlanet])) ? Number(lons[ts.motionPlanet]) : null;
+      if (motionLon !== null && ts.prevMotionLon !== null) {
+        const motionDLon = signedDelta(motionLon, ts.prevMotionLon);
+        const motionSign = motionDLon > 0.001 ? 1 : (motionDLon < -0.001 ? -1 : 0);
+        if (motionSign !== 0) ts.prevMotionSign = motionSign;
+      }
+      ts.prevMotionLon = motionLon;
       ts.prevAspectDist = dist;
       if (distSign !== 0) ts.prevAspectDistSign = distSign;
       window.cycleTrackState = ts;
@@ -1482,7 +1507,9 @@ for (const k of show) {
           const distSign = dist > 0.001 ? 1 : (dist < -0.001 ? -1 : 0);
           if (ts.prevSunDiffSign !== null && distSign !== 0 && ts.prevSunDiffSign !== distSign) {
             // Only fire for inner planets when in prograde (direct) motion
-            const isPrograde = ts.prevSign === null || ts.prevSign > 0;
+            // Require motion direction established (prevSign !== null) to avoid false
+            // first-frame hits before we know which way the planet is moving.
+            const isPrograde = ts.prevSign !== null && ts.prevSign > 0;
             if (!isInner || isPrograde) {
               const type = isInner ? 'conjunction' : 'opposition';
               ts.pins.push({ lon: curLon, type, time: t.getTime() });

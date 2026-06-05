@@ -26,6 +26,6 @@ export default defineConfig({
     exclude: ['@fusionstrings/swiss-eph'],
   },
   server: {
-    port: 3000,
+    port: 5173,
   },
 })
