@@ -147,9 +147,7 @@
       : pairHtml;
     const textSpan = cycleFab.querySelector('.cycleFabText');
     if (textSpan) {
-      textSpan.innerHTML = pairWithLengthHtml;
-    } else {
-      cycleFab.innerHTML = pairWithLengthHtml;
+      textSpan.textContent = "Choose Planetary Conjunction Cycle";
     }
 
     // Keep the conj nav buttons consistent with the chosen pair
