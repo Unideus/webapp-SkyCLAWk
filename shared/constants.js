@@ -24,9 +24,12 @@
 	// └─ YEAR_LABELS
 	//
 
-	// Detect timeline scale from URL before CANON is defined
+	// Detect timeline scale from URL or split-app route before CANON is defined
 const _urlVariant = new URLSearchParams(window.location.search).get("variant");
-const _scale = /^(generational|personal)$/.test(_urlVariant) ? _urlVariant : "generational";
+const _routeScale = location.pathname.includes("/personal/") ? "personal" : null;
+const _scale = /^(generational|personal)$/.test(_urlVariant)
+	? _urlVariant
+	: (_routeScale || "generational");
 
 	const CANON = {
 

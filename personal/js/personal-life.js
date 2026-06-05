@@ -243,12 +243,10 @@ const PersonalLife = {
     const diag = document.getElementById("personalDiagonal");
     const peg = document.getElementById("personalEventsGroup");
     const lhe = document.getElementById("localHistoryEvents");
-    const lifeBtn = document.getElementById("lifeEventsBtn");
     if (ll) ll.style.display = hasBirth ? "block" : "none";
     if (diag) diag.style.display = hasBirth ? "block" : "none";
     if (peg) peg.style.display = (hasBirth || hasLifeEv) ? "block" : "none";
     if (lhe) lhe.style.display = (hasBirth || hasLocalHist) ? "block" : "none";
-    if (lifeBtn) lifeBtn.style.display = "";
   },
 
   // ───────────── Local History Events ─────────────
@@ -944,6 +942,7 @@ window.PersonalLife = PersonalLife;
       if (e.target === natalModal) PersonalLife.closeNatalModal();
     });
   }
+
 
   // Life Events modal
   const addBtn = document.getElementById("lifeEventAddBtn");

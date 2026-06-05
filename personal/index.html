@@ -19,13 +19,13 @@
 		 • All future systems attach to known anchors
 		 ========================================================= -->
 
-	<link href="../css/timeline.css?v=153" rel="stylesheet"/>
+	<link href="../css/timeline.css?v=158" rel="stylesheet"/>
 	<link href="../css/astro-hud.css?v=43" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	</head>
 
-		<body>
+		<body class="personal-page">
 
 			<div id="topMenu">
 
@@ -428,8 +428,6 @@
 				</g>
 			  </svg>
 
-			
-
 			</div> <!-- ✅ END timelineWrap -->
 
 			<!-- =========================================================
@@ -581,28 +579,44 @@
 			</svg>
 		</div>
 
-		<script src="../shared/constants.js"></script>
+		<script src="../shared/constants.js?v=2"></script>
 
-		<!-- Elemental baseline (keep if elemental band still uses it) -->
-		
-		<!-- Outer-cycle datasets (overlay band options) -->
-																				
+		<!-- Elemental/conjunction datasets required by personal screw bands -->
+		<script src="js/_conjunction_data_saturn_jupiter.js"></script>
+		<script src="js/_conjunction_data_saturn_uranus.js"></script>
+		<script src="js/_conjunction_data_saturn_neptune.js"></script>
+		<script src="js/_conjunction_data_saturn_pluto.js"></script>
+		<script src="js/_conjunction_data_uranus_neptune.js"></script>
+		<script src="js/_conjunction_data_uranus_pluto.js"></script>
+		<script src="js/_conjunction_data_neptune_pluto.js"></script>
+		<script src="js/_conjunction_data_jupiter_uranus.js"></script>
+		<script src="js/_conjunction_data_jupiter_neptune.js"></script>
+		<script src="js/_conjunction_data_jupiter_pluto.js"></script>
+		<script src="js/_conjunction_data_mars_venus.js"></script>
+
 		<script src="js/time-engine.js"></script>
 		<script src="../shared/astronomy-adapter.js?v=150"></script>
 		<script src="js/planetary-cycles.js?v=145"></script>
 
 		<!-- Era markers must load BEFORE screw-renderer builds the SVG -->
+		<script src="js/_era_markers.js"></script>
 		<script src="../shared/heaven-data.js"></script>
 
-		<script src="js/screw-renderer.js?v=153"></script>
+		<script src="js/screw-renderer.js?v=155"></script>
 		<script src="../shared/astro-wheel.js?v=153"></script>
+		<script src="js/conjunction-selector.js"></script>
 
-		<!-- 3D (Phase 1) — Three.js global build + simple renderer wrapper -->
-		
+		<!-- 3D river/screw perspective layer from original personal scale -->
+		<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+		<script src="js/render-river-3d.js"></script>
+
 		<!-- Historical events data and renderer -->
-		<script src="js/personal-life.js"></script>
+		<script src="js/_historical_events.js"></script>
+		<script src="js/events-renderer.js?v=157"></script>
+		<script src="js/personal-life.js?v=2"></script>
 
 		<script src="js/ui-controller.js?v=154"></script>
+		<script src="js/monarchs-data.js"></script>
 
 		<!-- President Thumbnails - Fixed to bottom of viewport with overlapping -->
 		<div id="presidentThumbContainer" style="position: fixed; bottom: 10px; left: 0; width: 100%; height: 70px; z-index: 500010; pointer-events: none; border: none !important; box-shadow: none !important; border-top: none !important; border-bottom: none !important;">

@@ -695,7 +695,7 @@ function selectEventCity(name, lat, lon, tz, inputId, listId, latId, lonId, tzId
 }
 
 // Load data
-fetch('./cities.json').then(r => r.json()).then(d => { CITY_DATA = d; });
+fetch('/data/cities.json').then(r => r.json()).then(d => { CITY_DATA = d; });
 
 // Format an ISO datetime string in a given IANA timezone
 function fmtInTz(isoStr, tz) {

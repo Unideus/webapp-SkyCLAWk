@@ -11,9 +11,9 @@ const CUSTOM_GENERATION_LABELS = [];
 
 		function buildScrew() {
 
-	const _urlVariant2 = new URLSearchParams(window.location.search).get("variant");
-	const _isPersonal = _urlVariant2 === "personal";
-	const BAND_OFFSET = _isPersonal ? PX_PER_MAJOR * 0.64 : 0;
+	// This is the Personal split renderer: always use personal screw geometry.
+	const _isPersonal = true;
+	const BAND_OFFSET = PX_PER_MAJOR * 0.64;
 			
 			const svg = document.getElementById("screwSVG");
 
