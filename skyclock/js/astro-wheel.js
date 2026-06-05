@@ -50,6 +50,7 @@
     pallas: false,
     juno: false,
     vesta: false,
+    eros: false,
     northNode: true,
     southNode: true
   };
@@ -695,6 +696,7 @@ for (const k of show) {
     if (enabled.pallas && Number.isFinite(Number(lons.pallas))) keys.push("pallas");
     if (enabled.juno && Number.isFinite(Number(lons.juno))) keys.push("juno");
     if (enabled.vesta && Number.isFinite(Number(lons.vesta))) keys.push("vesta");
+    if (enabled.eros && Number.isFinite(Number(lons.eros))) keys.push("eros");
 
     const natalLons = (window.NatalChart && window.NatalChart.enabled && window.NatalChart.longitudes) ? window.NatalChart.longitudes : null;
     const url = renderWheelSVG(lons, { baseLon: 0, showKeys: keys, natalLons, dateUTC: t })
@@ -1111,7 +1113,8 @@ for (const k of show) {
       { id: "ceres", glyph: "⚳", name: "Ceres" },
       { id: "pallas", glyph: "⚴", name: "Pallas" },
       { id: "juno", glyph: "⚵", name: "Juno" },
-      { id: "vesta", glyph: "⚶", name: "Vesta" }
+      { id: "vesta", glyph: "⚶", name: "Vesta" },
+      { id: "eros", glyph: "♡", name: "Eros" }
     ];
 
     const enabled = window.enabledPlanets || {};

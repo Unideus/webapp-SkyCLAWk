@@ -65,6 +65,42 @@
     return p ? p.glyph : "?";
   }
 
+  function parseEventOrdinal(t) {
+    const m = String(t || "").match(/^([+-]?\d+)-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?Z$/);
+    if (!m) return NaN;
+    const y = parseInt(m[1], 10);
+    const mon = parseInt(m[2], 10);
+    const day = parseInt(m[3], 10);
+    const hh = parseInt(m[4], 10);
+    const mm = parseInt(m[5], 10);
+    const ss = parseInt(m[6] || "0", 10);
+    return (y * 365.2425) + ((mon - 1) * 30.436875) + day + (hh / 24) + (mm / 1440) + (ss / 86400);
+  }
+
+  function getCycleLengthLabel(p1, p2) {
+    const map = window.CONJUNCTION_DATASETS || {};
+    const ds = map[`${p1}|${p2}`] || map[`${p2}|${p1}`];
+    const events = (ds && Array.isArray(ds.events)) ? ds.events : [];
+    const gaps = [];
+    for (let i = 0; i < events.length - 1; i++) {
+      const a = parseEventOrdinal(events[i]?.t);
+      const b = parseEventOrdinal(events[i + 1]?.t);
+      const gapDays = b - a;
+      if (Number.isFinite(gapDays) && gapDays > 0) gaps.push(gapDays);
+    }
+    if (!gaps.length) return "";
+    gaps.sort((a, b) => a - b);
+    const mid = Math.floor(gaps.length / 2);
+    const days = gaps.length % 2 ? gaps[mid] : (gaps[mid - 1] + gaps[mid]) / 2;
+    if (days < 730) {
+      const months = Math.max(1, Math.round(days / 30.436875));
+      return `≈${months} mo`;
+    }
+    const years = days / 365.2425;
+    const rounded = years < 30 ? (Math.round(years * 10) / 10) : Math.round(years);
+    return `≈${String(rounded).replace(/\.0$/, "")} yr`;
+  }
+
   function setCycleSelection(p1, p2, persist = true) {
     // Defaults now that Jupiter is removed from the modal:
     if (!planetById.has(p1)) p1 = "Saturn";
@@ -105,18 +141,22 @@
     const g2 = getGlyph(p2);
     const pair = `${g1} ☌ ${g2}`;
     const pairHtml = `<span style="font-size:1.28em">${g1}</span> ☌ <span style="font-size:1.28em">${g2}</span>`;
+    const lengthLabel = getCycleLengthLabel(p1, p2);
+    const pairWithLengthHtml = lengthLabel
+      ? `${pairHtml} <span style="font-size:0.78em;opacity:0.82;margin-left:4px;white-space:nowrap;">${lengthLabel}</span>`
+      : pairHtml;
     const textSpan = cycleFab.querySelector('.cycleFabText');
     if (textSpan) {
-      // Keep the static text, glyphs are already in HTML
+      textSpan.innerHTML = pairWithLengthHtml;
     } else {
-      cycleFab.innerHTML = pairHtml;
+      cycleFab.innerHTML = pairWithLengthHtml;
     }
 
     // Keep the conj nav buttons consistent with the chosen pair
     const prevConjBtn = document.getElementById("prevConjBtn");
     const nextConjBtn = document.getElementById("nextConjBtn");
-    if (prevConjBtn) prevConjBtn.innerHTML = `← ${pairHtml}`;
-    if (nextConjBtn) nextConjBtn.innerHTML = `${pairHtml} →`;
+    if (prevConjBtn) prevConjBtn.innerHTML = `← ${pairWithLengthHtml}`;
+    if (nextConjBtn) nextConjBtn.innerHTML = `${pairWithLengthHtml} →`;
   }
 
   function openCycle() {

@@ -53,7 +53,7 @@
   window.enabledPlanets = window.enabledPlanets || {
     sun: true, moon: true, mercury: true, venus: true, mars: true,
     jupiter: true, saturn: true, uranus: true, neptune: true, pluto: true,
-    chiron: false, ceres: false, pallas: false, juno: false, vesta: false,
+    chiron: false, ceres: false, pallas: false, juno: false, vesta: false, eros: false,
     regulus: false, aldebaran: false, antares: false, fomalhaut: false,
     sirius: false, spica: false, rigel: false, algol: false, deneb: false,
     northNode: true, southNode: true
@@ -300,7 +300,7 @@ let cardStartLeft = 0, cardStartTop = 0;
     sun: "☉", moon: "☽", mercury: "☿", venus: "♀", mars: "♂",
     jupiter: "♃", saturn: "♄", uranus: "♅", neptune: "♆", pluto: "♇",
     northNode: "☊", southNode: "☋",
-    chiron: "⚷", ceres: "⚳", pallas: "⚴", juno: "⚵", vesta: "⚶",
+    chiron: "⚷", ceres: "⚳", pallas: "⚴", juno: "⚵", vesta: "⚶", eros: "♡",
     regulus: "★", aldebaran: "★", antares: "★", fomalhaut: "★",
     sirius: "★", spica: "★", rigel: "★", algol: "★", deneb: "★",
   };
@@ -575,7 +575,7 @@ let cardStartLeft = 0, cardStartTop = 0;
       const natalKeys = Object.keys(opts.natalLons).filter(k => {
         const lon = Number(opts.natalLons[k]);
         // Only include asteroids if explicitly enabled in Bodies modal
-        const isAsteroid = ['chiron','ceres','pallas','juno','vesta'].includes(k);
+        const isAsteroid = ['chiron','ceres','pallas','juno','vesta','eros'].includes(k);
         const enabledCheck = !isAsteroid || (enabled[k] === true);
         return k && k !== '0' && Number.isFinite(lon) && planetGlyph.hasOwnProperty(k) && enabledCheck;
       });
@@ -1189,6 +1189,7 @@ for (const k of show) {
     if (enabled.pallas && Number.isFinite(Number(lons.pallas))) keys.push("pallas");
     if (enabled.juno && Number.isFinite(Number(lons.juno))) keys.push("juno");
     if (enabled.vesta && Number.isFinite(Number(lons.vesta))) keys.push("vesta");
+    if (enabled.eros && Number.isFinite(Number(lons.eros))) keys.push("eros");
 
     // Fixed stars (only if explicitly enabled)
     if (enabled.regulus && Number.isFinite(Number(lons.regulus))) keys.push("regulus");
@@ -1446,6 +1447,7 @@ for (const k of show) {
       { id: "pallas", glyph: "⚴", asteroid: true },
       { id: "juno", glyph: "⚵", asteroid: true },
       { id: "vesta", glyph: "⚶", asteroid: true },
+      { id: "eros", glyph: "♡", asteroid: true },
     ];
 
     const planets = allPlanets.filter(p => {
@@ -1564,6 +1566,7 @@ for (const k of show) {
       { id: "pallas", glyph: "⚴", asteroid: true },
       { id: "juno", glyph: "⚵", asteroid: true },
       { id: "vesta", glyph: "⚶", asteroid: true },
+      { id: "eros", glyph: "♡", asteroid: true },
     ];
 
     const planets = allPlanets.filter(p => {
@@ -2655,7 +2658,8 @@ for (const k of show) {
       { id: "ceres", glyph: "⚳", name: "Ceres" },
       { id: "pallas", glyph: "⚴", name: "Pallas" },
       { id: "juno", glyph: "⚵", name: "Juno" },
-      { id: "vesta", glyph: "⚶", name: "Vesta" }
+      { id: "vesta", glyph: "⚶", name: "Vesta" },
+      { id: "eros", glyph: "♡", name: "Eros" }
     ];
 
     const enabled = window.enabledPlanets || {};

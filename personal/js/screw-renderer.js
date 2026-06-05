@@ -1034,6 +1034,10 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						"Neptune|Jupiter": "~13",
 						"Jupiter|Pluto": "~12",
 						"Pluto|Jupiter": "~12",
+						"Venus|Jupiter": "~14 mo",
+						"Jupiter|Venus": "~14 mo",
+						"Venus|Saturn": "~14 mo",
+						"Saturn|Venus": "~14 mo",
 						"default": ""
 					};
 
@@ -1048,16 +1052,22 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					if (!el) {
 						el = document.createElement("div");
 						el.id = labelId;
-						el.style.position = "fixed";
-						el.style.whiteSpace = "nowrap";
-						el.style.pointerEvents = "none";
-						el.style.fontFamily = "Segoe UI Symbol, Noto Sans Symbols2, Symbola, system-ui, sans-serif";
-						el.style.fontSize = "16px";
-						el.style.fontWeight = "900";
-						el.style.color = "#fff";
-						el.style.textShadow = "0 0 3px rgba(0,0,0,0.85), 0 0 3px rgba(0,0,0,0.85)";
 						hud.appendChild(el);
 					}
+
+					// Re-apply every render so already-open pages do not keep stale label styles.
+					el.style.position = "fixed";
+					el.style.whiteSpace = "nowrap";
+					el.style.pointerEvents = "none";
+					el.style.fontFamily = "Segoe UI Symbol, Noto Sans Symbols2, Symbola, system-ui, sans-serif";
+					el.style.fontSize = "18px";
+					el.style.fontWeight = "900";
+					el.style.color = "#fff";
+					el.style.display = "inline-flex";
+					el.style.alignItems = "center";
+					el.style.gap = "3px";
+					el.style.lineHeight = "1";
+					el.style.textShadow = "0 0 3px rgba(0,0,0,0.85), 0 0 3px rgba(0,0,0,0.85)";
 
 					el.dataset.keep = "1";
 
@@ -1065,11 +1075,16 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const svgRect = svg.getBoundingClientRect();
 					el.style.left = `${svgRect.left + 14}px`;
 
-					// lock to lane vertical position (no wobble)
-					const BASELINE_TOP_PAD = 22; // keep your tuned value
+					// Center on the rendered lanes. The SVG band group is 3px below the old 22px pad.
+					// Keep this deterministic; querying the rect here can fail during live rebuild/rerender timing.
+					const BASELINE_TOP_PAD = 25;
 					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2);
-					const laneCenterY = baselineCenterY + (isOverlay ? -(H + GAP) : 0);
-					el.style.top = `${laneCenterY - 18}px`;
+					const overlayLabelNudgeY = isOverlay ? 2 : 0;
+					const laneCenterY = baselineCenterY + (isOverlay ? -(H + GAP) : 0) + overlayLabelNudgeY;
+					el.style.top = `${laneCenterY}px`;
+					el.style.transform = "translateY(-50%)";
+					el.style.visibility = "visible";
+					el.style.opacity = "1";
 
 					const g1t = String(g1).includes("\uFE0E") ? String(g1) : (String(g1) + "\uFE0E");
 					const g2t = String(g2).includes("\uFE0E") ? String(g2) : (String(g2) + "\uFE0E");
@@ -1078,12 +1093,12 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const cycleKey = `${p1Label}|${p2Label}`;
 					const duration = CYCLE_DURATION[cycleKey] || CYCLE_DURATION["default"];
 					
-					// Build content with smaller, dimmer duration text
-					if (duration) {
-						el.innerHTML = `<span style="font-size:1.28em">${g1t}</span> ☌ <span style="font-size:1.28em">${g2t}</span><span style="font-size: 80%; opacity: 0.85; margin-left: 4px;">${duration} yrs</span>`;
-					} else {
-						el.innerHTML = `<span style="font-size:1.28em">${g1t}</span> ☌ <span style="font-size:1.28em">${g2t}</span>`;
-					}
+					const planetGlyph = (g) => `<span class="conjHudPlanetGlyph" style="font-size:1.55em; line-height:1; display:inline-block; transform: translateY(0.02em);">${g}</span>`;
+					const conjGlyph = `<span class="conjHudConjGlyph" style="font-size:0.58em; line-height:1; opacity:0.9; display:inline-block; transform: translateY(-0.03em);">☌</span>`;
+					const durationText = duration ? `<span style="font-size: 80%; opacity: 0.85; margin-left: 4px; line-height:1;">${duration}${String(duration).includes("mo") ? "" : " yrs"}</span>` : "";
+
+					// Larger planet glyphs, smaller conjunction mark, vertically centered as one flex row
+					el.innerHTML = `${planetGlyph(g1t)}${conjGlyph}${planetGlyph(g2t)}${durationText}`;
 				}
 
 				// -----------------------------
@@ -1149,7 +1164,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					t.setAttribute("y", Y + (H / 2) + capBump); // true vertical center
 					t.setAttribute("text-anchor", "middle");
 					t.setAttribute("dominant-baseline", "central");
-					t.setAttribute("font-size", "13");
+					t.setAttribute("font-size", "15");
 					t.setAttribute("font-weight", "800");
 					t.setAttribute("fill", `rgb(${rgb})`);
 					t.setAttribute("opacity", "0.95");

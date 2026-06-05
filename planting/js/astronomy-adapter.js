@@ -192,13 +192,14 @@
 		neptune: swissLon(pid("SE_NEPTUNE")),
 		pluto:   swissLon(pid("SE_PLUTO")),
 
-		// Asteroids (Chiron, Ceres, Pallas, Juno, Vesta)
+		// Asteroids (Chiron, Ceres, Pallas, Juno, Vesta, Eros 433)
 		// Use fallback if Swiss Eph doesn't have the data
 		chiron:  (() => { const p = pid("SE_CHIRON"); const l = p ? swissLon(p) : 0; return l || norm(214.0 + ((jd - 2451545.0) / 365.25 * 360 / 50.7)); })(),
 		ceres:   (() => { const p = pid("SE_CERES"); const l = p ? swissLon(p) : 0; return l || norm(117.0 + ((jd - 2451545.0) / 365.25 * 360 / 4.61)); })(),
 		pallas:  (() => { const p = pid("SE_AST_OFFSET"); const l = p ? swissLon(p + 2) : 0; return l || norm(312.0 + ((jd - 2451545.0) / 365.25 * 360 / 4.62)); })(),
 		juno:    (() => { const p = pid("SE_AST_OFFSET"); const l = p ? swissLon(p + 3) : 0; return l || norm(245.0 + ((jd - 2451545.0) / 365.25 * 360 / 4.36)); })(),
 		vesta:   (() => { const p = pid("SE_AST_OFFSET"); const l = p ? swissLon(p + 7) : 0; return l || norm(150.0 + ((jd - 2451545.0) / 365.25 * 360 / 3.63)); })(),
+		eros:    (() => { const p = pid("SE_AST_OFFSET"); const l = p ? swissLon(p + 433) : 0; return l || norm(11.0 + ((jd - 2451545.0) / 365.25 * 360 / 1.76)); })(),
 
 		// nodes default (smooth mean regression)
 		northNode: nodeA,
