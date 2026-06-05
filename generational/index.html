@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<!-- BUILD: 2025-04-07T23:19:00-04:00 -->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+		<meta http-equiv="Pragma" content="no-cache"/>
+		<meta http-equiv="Expires" content="0"/>
+
+<title>Grand Conjunction – Generational Timeline (Page 2)</title>
+
+	<!-- =========================================================
+		 CATHEDRAL LAYOUT PHILOSOPHY
+		 ---------------------------------------------------------
+		 • This file is written to be READ as much as RUN
+		 • Sections are large and obvious
+		 • Time flows from ONE master variable
+		 • All future systems attach to known anchors
+		 ========================================================= -->
+
+	<link href="../css/timeline.css?v=154" rel="stylesheet"/>
+	<link href="../css/astro-hud.css?v=45" rel="stylesheet"/>
+	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
+	
+	</head>
+
+		<body>
+
+			<div id="topMenu">
+
+			  <!-- Title block -->
+				<div id="menuTitle">
+					<img
+						alt="The Grand Conjunction"
+						src="../timelinetitle.webp"
+						class="menuLogo"
+						draggable="false"
+					/>
+
+					<div id="menuRightStack">
+
+						<button id="wheelFab" class="uiPill wheelFabMenu" type="button"
+							aria-haspopup="dialog"
+							aria-controls="wheelModal"
+							aria-expanded="false"
+							aria-label="Open astro wheel"><span class="zodiac-label-top">Zodiac</span><span class="zodiac-label-middle">Wheel</span><span class="zodiac-wheel-icon"></span></button>
+					</div>
+				</div>
+				
+			  <!-- Slider and Controls -->
+			  <div id="menuSlider">
+
+				<!-- Header row (centered status group only) -->
+				<div id="sliderHeaderRow">
+				  <div id="topSliderRow">
+
+					<div class="topLeftGroup">
+						<button id="unitKnob" class="uiPill unitKnob" type="button" aria-label="Speed units">
+						<span class="unitKnobTrack" id="unitKnobTrack" aria-hidden="true">
+							<span class="unitKnobStops" aria-hidden="true"></span>
+
+							<span class="unitKnobTicks" aria-hidden="true">
+							<span class="unitTick" data-unit="yrs">y</span>
+							<span class="unitTick" data-unit="months">m</span>
+							<span class="unitTick" data-unit="weeks">w</span>
+							<span class="unitTick" data-unit="days">d</span>
+							<span class="unitTick" data-unit="hours">h</span>
+							<span class="unitTick" data-unit="minutes">m</span>
+							</span>
+
+							<span class="unitKnobThumb" id="unitKnobThumb" title="Drag"></span>
+						</span>
+						</button>
+
+						<div id="speedInfo" class="uiPill">0.00 yrs/sec</div>
+					</div>
+
+					<div class="topCenterGroup">
+					<div id="dateBoxText" class="uiPill">Loading...</div>
+
+					<div id="resetGroup">
+						<button id="resetBtn" class="uiPill">Reset to 2020</button>
+						<button id="resetNowBtn" class="uiPill">Reset to now</button>
+					</div>
+					</div>
+
+					</div>
+				</div>
+
+				<div class="sliderRail">
+				  <input id="speedSlider" max="100" min="-100" step="0.01" type="range" value="0"/>
+				  <div class="sliderZeroMark"></div>
+				</div>
+
+				<!-- Controls -->
+								<div id="controlRow">
+					<button class="controlBtn uiPill" id="prevElementBtn">← Element</button>
+
+					<button class="controlBtn uiPill" id="prevCrisisBtn">
+						← <span class="crisisText">Crisis</span>
+					</button>
+
+					<!-- NEW: Dedicated Saturn/Jupiter Conjunction nav (always Sat–Jup) -->
+					<button class="controlBtn uiPill" id="prevSatJupConjBtn">← <span style="font-size:1.28em">♄</span> ☌ <span style="font-size:1.28em">♃</span></button>
+
+					<button class="controlBtn uiPill bumpBtn" id="bumpRevBtn" type="button" title="Bump back (paused only)" disabled>◀</button>
+
+					<!-- Pause wrapper: keeps main row intact; positions cycle conj buttons under Pause -->
+					<span class="pauseWrap">
+						<button class="controlBtn uiPill" id="pauseBtn">Pause</button>
+
+						<span class="cycleConjBelow">
+							<button class="controlBtn uiPill" id="prevConjBtn">← Conj</button>
+							<button id="cycleFab" class="controlBtn uiPill" type="button"
+								aria-haspopup="dialog"
+								aria-controls="cycleModal"
+								aria-label="Select conjunction cycle"><span class="cycleFabText">choose a conjunction cycle</span></button>
+							<button class="controlBtn uiPill" id="nextConjBtn">Conj →</button>
+						</span>
+					</span>
+
+					<button class="controlBtn uiPill bumpBtn" id="bumpFwdBtn" type="button" title="Bump forward (paused only)" disabled>▶</button>
+
+					<!-- NEW: Dedicated Saturn/Jupiter Conjunction nav (always Sat–Jup) -->
+					<button class="controlBtn uiPill" id="nextSatJupConjBtn"><span style="font-size:1.28em">♄</span> ☌ <span style="font-size:1.28em">♃</span> →</button>
+
+					<button class="controlBtn uiPill" id="nextCrisisBtn">
+						<span class="crisisText">Crisis</span> →
+					</button>
+
+					<button class="controlBtn uiPill" id="nextElementBtn">Element →</button>
+				</div>
+
+			  </div>
+
+			  <!-- Date panel (uniform stack: date / time / location / go) -->
+			  <div id="menuDate">
+				<!-- Timeline scale selector -->
+				<div id="scaleSelector" role="group" aria-label="Time Scale">
+					<div class="scaleLabel">Time Scale</div>
+					<div class="scaleBtns">
+						<button class="scaleOpt" type="button" data-scale="skyclock" onclick="window.location.href='/skyclock/'">Skyclock</button>
+						<button class="scaleOpt" type="button" data-scale="generational" onclick="window.location.href='?'">Generational</button>
+						<button class="scaleOpt" type="button" data-scale="personal" onclick="window.location.href='/personal/'">Personal</button>
+						<button class="scaleOpt" type="button" data-scale="planting" onclick="window.location.href='/planting/'">Planting</button>
+					</div>
+				</div>
+				<div id="dateBoxOuter">
+					<input id="dateBoxInput" type="text" placeholder="21 Jan 2026" />
+					<input id="timeBoxInput" type="time" value="12:00" step="60" />
+					<input id="locationBoxInput" type="text" placeholder="location" autocomplete="off" />
+					<div id="locationDropdown" class="location-dropdown" style="display:none;position:absolute;z-index:9999;background:#1a1a2e;border:1px solid #333;border-radius:6px;max-height:260px;overflow-y:auto;min-width:240px;box-shadow:0 4px 12px rgba(0,0,0,.5)"></div>
+					<button type="button" class="dateGoBtn" id="dateBoxGoBtn">GO</button>
+				</div>
+			  </div>
+
+			</div> <!-- ✅ END topMenu -->
+
+			<!-- =========================================================
+				 TIME SPINE (GLOBAL AXIS — NOT OWNED BY MENU)
+				 ========================================================= -->
+
+				<div id="wheelModal" class="zyModal" role="dialog" aria-modal="true" aria-hidden="true">
+				<div class="zyModalBackdrop" data-close="wheel"></div>
+
+				<div class="zyModalCard" role="document">
+					<!-- Date/Time overlay at top of wheel -->
+					<div id="wheelDateOverlay">
+						<span id="wheelDateValue">--</span>
+					</div>
+
+					<!-- Natal picker (separate box) -->
+					<div id="natalPicker" class="natalPicker">
+						<span>NATAL</span>
+						<input id="natalDateInput" type="date" />
+						<input id="natalTimeInput" type="time" step="60" value="12:00" />
+						<input id="natalLocationInput" type="text" placeholder="City" autocomplete="off" />
+						<div id="natalLocationDropdown" class="location-dropdown" style="display:none"></div>
+						<button id="natalSetBtn" class="uiPill" type="button">Set</button>
+						<button id="natalCancelBtn" class="uiPill" type="button">Clear</button>
+						<button id="hudNatalBtn" class="uiPill" type="button" title="Toggle natal chart overlay" style="display:none;">Natal -- --- ----</button>
+					</div>
+
+					<!-- Control buttons below date -->
+					<div id="controlButtonsRow" style="position:absolute;top:55px;left:10px;z-index:200;display:flex;flex-direction:column;gap:6px;align-items:flex-start;pointer-events:auto;">
+						<div style="display:flex;gap:8px;align-items:center;">
+						<button id="bodiesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Bodies</button>
+						<span id="housesBtnWrap" style="all:unset;display:inline-flex;align-items:center;gap:0;border-radius:8px;overflow:visible;border:1px solid rgba(255,255,255,.3);pointer-events:auto;">
+						<button id="housesBtn" style="all:unset;padding:6px 12px;font-size:11px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Houses</button>
+						<span id="housesToggle" style="display:inline-flex;align-items:center;cursor:pointer;width:32px;height:16px;border-radius:8px;background:rgba(34,197,94,.5);padding:2px;transition:background 0.2s;pointer-events:auto;flex-shrink:0;user-select:none;"><span id="housesToggleDot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform 0.2s;transform:translateX(14px);pointer-events:none;"></span></span></span>
+						<button id="importToNatalBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Import to Natal</button>
+						</div>
+						<div style="display:flex;gap:8px;align-items:center;">
+						<div id="skyModeToggle" style="display:flex;gap:0;border-radius:8px;overflow:visible;border:1px solid rgba(255,255,255,.3);pointer-events:auto;">
+  <button id="skyModeTropical" class="skyModeOption skyModeActive" style="all:unset;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;background:rgba(255,200,50,.35);border:none;color:rgba(255,255,255,.9);font-weight:600;display:inline-flex;align-items:center;" type="button">☉ Tropical</button>
+  <button id="skyModeTransit" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;" type="button">▶ Transit</button>
+  <button id="skyModeNatal" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;" type="button">✦ Natal</button>
+</div>
+						<button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">⟳ Cycles</button>
+						</div>
+					</div>
+
+					<!-- Transits grid overlay at top right of wheel -->
+					
+				<!-- Ruler grid - Hour and Day planetary rulers -->
+				<div id="wheelRulerOverlay">
+					<div class="grid-label">RULERS</div>
+					<div id="wheelRulerGrid"></div>
+					<div class="ruler-mode-buttons">
+						<button id="rulerTransitBtn" class="uiPill ruler-mode-btn is-active" type="button" title="Show Transit Ruler">T</button>
+						<button id="rulerNatalBtn" class="uiPill ruler-mode-btn" type="button" title="Show Natal Ruler">N</button>
+					</div>
+				</div>
+				<div id="wheelTransitsOverlay">
+							<div class="grid-label">TRANSITS</div>
+							<div id="wheelTransitsGrid"></div>
+					</div>
+
+					<!-- Natal grid overlay to the right of transits -->
+					<div id="wheelNatalOverlay">
+							<div class="grid-label">NATAL</div>
+							<div id="wheelNatalGrid"></div>
+					</div>
+
+					<!-- Hermetic Lots grid (below natal/transits) -->
+					<div id="wheelLotsOverlay">
+						<div class="lots-header">
+							<span style="display:inline-flex;align-items:center;gap:6px;pointer-events:auto;">
+								<span id="lotsMasterToggle" title="Show/hide Hermetic Lots" style="display:inline-flex;align-items:center;cursor:pointer;width:32px;height:16px;border-radius:8px;background:rgba(100,100,100,.25);padding:2px;transition:background 0.2s;pointer-events:auto;flex-shrink:0;user-select:none;vertical-align:middle;"><span id="lotsMasterDot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform 0.2s;transform:translateX(0);pointer-events:none;"></span></span>
+								<button id="lotsHeaderBtn" type="button" style="all:unset;cursor:pointer;display:inline;font-family:inherit;font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,.55);font-weight:700;pointer-events:auto;text-transform:uppercase;" onclick="if(window.openLotsModal)window.openLotsModal();else document.getElementById('lotsModal').setAttribute('aria-hidden','false');">Hermetic Lots</button>
+							</span>
+							<div class="lots-mode-buttons">
+								<button id="lotsTransitBtn" class="uiPill lots-mode-btn is-active" type="button" title="Show Transit Lots">T</button>
+								<button id="lotsNatalBtn" class="uiPill lots-mode-btn" type="button" title="Show Natal Lots">N</button>
+							</div>
+						</div>
+						<div class="lots-column-headers">
+							<span class="lots-hdr-name">Name</span>
+							<span class="lots-hdr-sign">Sign/Long</span>
+							<span class="lots-hdr-house">Hs</span>
+						</div>
+						<div id="wheelLotsGrid"></div>
+
+						<!-- Lots selector opens over this Lots box -->
+						<div id="lotsModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+							<div class="subModalCard lotsModalCard" role="document">
+								<button id="lotsClose" class="subModalClose" type="button" aria-label="Close lots selector">×</button>
+								<div class="lotsModalTitle">Select <span style="color:#C8A050">Hermetic Lots</span></div>
+								<div id="lotsGrid" class="lots-selector-grid"></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Lunar Phases grid -->
+					<div id="wheelLunarPhasesOverlay">
+						<div class="lots-header">
+							<span class="grid-label">Nearest Lunar Phases</span>
+							<div class="lots-mode-buttons">
+								<button id="lunarTransitBtn" class="uiPill lunar-mode-btn is-active" type="button" title="Show Transit Phases">T</button>
+								<button id="lunarNatalBtn" class="uiPill lunar-mode-btn" type="button" title="Show Natal Phases">N</button>
+							</div>
+						</div>
+						<div class="lunar-phases-table" id="wheelLunarPhasesGrid"></div>
+					</div>
+
+					<!-- Aspects grid overlay at bottom left of wheel -->
+					<div id="wheelAspectsOverlay">
+						<div id="wheelAspectsGrid"></div>
+					</div>
+
+					<!-- Elemental box overlay at bottom right of wheel -->
+					<div id="wheelElementalOverlay">
+						<div class="lots-header">
+							<span class="grid-label">Elements</span>
+							<div class="lots-mode-buttons">
+								<button id="elemTransitBtn" class="uiPill lunar-mode-btn is-active" type="button" title="Show Transit Elements">T</button>
+								<button id="elemNatalBtn" class="uiPill lunar-mode-btn" type="button" title="Show Natal Elements">N</button>
+							</div>
+						</div>
+						<div id="wheelElementalGrid"></div>
+					</div>
+
+					<div class="wheelStage" id="wheelStage">
+						<img id="wheelImg" alt="Astro wheel" draggable="false" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='none' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E" />
+					</div>
+
+					<div class="zyResizeHandle" id="wheelResizeHandle" title="Resize"></div>
+
+					<!-- Bodies sub-modal (inside wheel modal, moves with it) -->
+					<div id="bodiesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+						<div class="subModalCard bodiesModalCard" role="document">
+							<button id="bodiesClose" class="subModalClose" type="button" aria-label="Close bodies selector">×</button>
+							<div class="bodiesModalTitle">Select Bodies</div>
+							<div id="bodiesGrid" class="bodies-grid"></div>
+						</div>
+					</div>
+
+					<!-- Houses sub-modal (inside wheel modal, moves with it) -->
+					<div id="housesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+						<div class="subModalCard housesModalCard" role="document">
+							<button id="housesClose" class="subModalClose" type="button" aria-label="Close houses selector">×</button>
+							<div class="housesModalTitle">House System</div>
+							<div id="housesGrid" class="houses-grid">
+								<button class="house-option active" data-system="whole-sign" onclick="window.houseSystem='whole-sign';this.parentElement.querySelectorAll('.house-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('housesModal').setAttribute('aria-hidden','true');document.getElementById('housesBtn').textContent='Whole Sign';if(typeof drawAstroWheel==='function')drawAstroWheel();">Whole Sign</button>
+								<button class="house-option" data-system="P" onclick="window.houseSystem='P';this.parentElement.querySelectorAll('.house-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('housesModal').setAttribute('aria-hidden','true');document.getElementById('housesBtn').textContent='Placidus';if(typeof drawAstroWheel==='function')drawAstroWheel();">Placidus</button>
+								<button class="house-option" data-system="porphyry" onclick="window.houseSystem='porphyry';this.parentElement.querySelectorAll('.house-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('housesModal').setAttribute('aria-hidden','true');document.getElementById('housesBtn').textContent='Porphyry';if(typeof drawAstroWheel==='function')drawAstroWheel();">Porphyry</button>
+</div>
+						</div>
+					</div>
+
+				</div> <!-- END zyModalCard -->
+
+					<div id="cyclesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+					<div class="subModalCard cyclesModalCard" style="top:60px;left:10px;min-width:220px;background:rgba(10,10,12,0.97);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 16px;">
+						<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+							<span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600;letter-spacing:.05em;">PLANETARY CYCLES</span>
+							<button id="cyclesClose" class="subModalClose" style="position:static;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+						</div>
+						<select id="cyclesPlanetSelect" style="width:100%;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;outline:none;margin-bottom:10px;">
+							<option value="mercury">☿ Mercury</option>
+							<option value="venus" selected>♀ Venus</option>
+							<option value="mars">♂ Mars</option>
+							<option value="jupiter">♃ Jupiter</option>
+							<option value="saturn">♄ Saturn</option>
+							<option value="uranus">♅ Uranus</option>
+							<option value="neptune">♆ Neptune</option>
+							<option value="pluto">♇ Pluto</option>
+						</select>
+						<div style="display:flex;gap:6px;margin-bottom:10px;">
+							<button class="cycle-mode-btn" data-mode="retrograde" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">⟲ Retro</button>
+							<button class="cycle-mode-btn" data-mode="synodic" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">☌ Synodic</button>
+							<button class="cycle-mode-btn" data-mode="both" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">Both</button>
+						</div>
+						<div style="display:flex;gap:8px;justify-content:flex-end;">
+							<button id="cyclesApplyBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(180,140,80,.25);color:#e8c898;">Apply</button>
+							<button id="cyclesClearBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(30,25,18,.9);color:#ccc0a8;">Clear</button>
+						</div>
+					</div>
+				</div>
+
+				<div id="cycleModal" class="zyModal" role="dialog" aria-modal="true" aria-hidden="true">
+					<div class="zyModalBackdrop" data-close="cycle"></div>
+
+					<div class="zyModalCard cycleModalCard" role="document">
+						<button id="cycleClose" class="zyModalClose" type="button" aria-label="Close conjunction selector">×</button>
+
+						<div class="cycleModalTitle">Conjunction Cycle</div>
+
+						<div class="cycleForm">
+							<label class="cycleLabel">
+								<span>Planet 1</span>
+								<select id="cyclePlanet1" class="cycleSelect"></select>
+							</label>
+
+							<label class="cycleLabel">
+								<span>Planet 2</span>
+								<select id="cyclePlanet2" class="cycleSelect"></select>
+							</label>
+						</div>
+
+						<div class="cycleActions">
+							<button id="cycleApply" class="uiPill" type="button">Apply</button>
+						</div>
+					</div>
+				</div>
+			</div> <!-- ✅ END wheelModal -->
+
+			<!-- =========================================================
+				 TIME SPINE (GLOBAL AXIS — NOT OWNED BY MENU)
+				 ========================================================= -->
+			<div id="timeMarker"></div>
+			<div id="nowLabelAge">NOW</div>
+
+			<!-- =========================================================
+				 SECTION 04B — TIMELINE NAVE
+				 ========================================================= -->
+			<div id="timelineWrap">
+
+			  <!-- =========================================================
+					 RIVER OF LIFE — 3D LAYER (PHASE 1)
+					 ---------------------------------------------------------
+					 • Lives BEHIND the screw SVG
+					 • Driven by the same master time state
+					 • Non-interactive (pointer-events: none)
+					 ========================================================= -->
+			  <!-- RIVER HIDDEN temporarily
+				 <div id="river3dContainer" aria-hidden="true"></div>
+				 -->
+
+			  <!-- STATIC 20-YEAR TICKS -->
+			  <div id="phaseTicks">
+				<div></div><div></div><div></div><div></div>
+			  </div>
+
+			  <!-- SCREW TIMELINE (SCROLLING SPACE) -->
+			  <svg id="screwSVG" preserveaspectratio="none" xmlns="http://www.w3.org/2000/svg">
+				<g id="scrollGroup">
+				  <g id="overlayCycle"></g>
+				  <g id="elementalCycle"></g>
+				  <g id="bands"></g>
+				  <g id="presidents"></g>
+				  <g id="eventsGroup"></g>
+				  <g id="localHistoryEvents"></g>
+				  <g id="diags"></g>
+				  <g id="saeculumWave">
+					<g id="saeculumLight"></g>
+					<g id="saeculumLine"></g>
+					<g id="diagLabels"></g>
+					<g id="ticks"></g>
+					<g id="grid"></g>
+					<g id="bottomYears"></g>
+				  </g>
+				</g>
+			  </svg>
+
+			
+
+			</div> <!-- ✅ END timelineWrap -->
+
+			<!-- =========================================================
+				 CATEGORY FILTER BAR — Fixed to right side
+				 ========================================================= -->
+			<div id="categoryBarWrap" class="collapsed">
+				<div id="categoryBar">
+				<!-- Injected by events-renderer.js -->
+				</div>
+			</div>
+
+			<!-- Event tooltip (wiki-style popup on hover) -->
+			<div id="eventTooltip" class="event-tooltip-box" style="display:none;position:fixed;z-index:500010;pointer-events:auto;max-width:380px;background:rgba(16,16,28,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:12px;font-family:system-ui,sans-serif;color:#eee;font-size:13px;line-height:1.4;backdrop-filter:blur(12px);box-shadow:0 8px 24px rgba(0,0,0,0.6);">
+				<div id="tooltipThumb" style="float:right;margin-left:10px;border-radius:4px;overflow:hidden;width:120px;height:90px;flex-shrink:0;"></div>
+				<div id="tooltipTitle" style="font-weight:700;font-size:14px;margin-bottom:4px;color:#fff;"></div>
+				<div id="tooltipDesc" style="color:#bbb;margin-bottom:6px;"></div>
+				<div id="tooltipLink" style="font-size:11px;"><a href="#" target="_blank" style="color:#8ab4f8;text-decoration:none;" id="tooltipAnchor">Read more on Wikipedia</a></div>
+			</div>
+		<div id="natalModal" style="display:none;position:fixed;z-index:500010;bottom:250px;right:130px;width:400px;background:rgba(16,16,28,0.97);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:16px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.7);color:#eee;font-family:system-ui,sans-serif;">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+				<span style="font-size:14px;font-weight:700;color:#FFD700;">Natal Data</span>
+				<button id="natalModalClose" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:0;line-height:1;">×</button>
+			</div>
+
+			<div style="margin-bottom:8px;">
+				<label style="font-size:12px;color:#999;display:block;margin-bottom:3px;">Name:</label>
+				<input id="natalName" type="text" placeholder="Your name" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:6px 8px;font-size:15px;outline:none;" />
+			</div>
+
+			<div style="margin-bottom:8px;">
+				<label style="font-size:12px;color:#999;display:block;margin-bottom:3px;">Date:</label>
+				<input id="natalDate" type="date" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:6px 8px;font-size:15px;outline:none;" />
+			</div>
+
+			<div style="margin-bottom:8px;">
+				<label style="font-size:12px;color:#999;display:block;margin-bottom:3px;">Time (local):</label>
+				<input id="natalTime" type="time" step="60" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:6px 8px;font-size:15px;outline:none;" />
+			</div>
+
+			<div style="margin-bottom:12px;">
+				<label style="font-size:12px;color:#999;display:block;margin-bottom:3px;">City:</label>
+				<input id="natalCity" type="text" placeholder="City" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:6px 8px;font-size:15px;outline:none;" />
+			</div>
+
+			<div style="display:flex;gap:6px;margin-bottom:8px;">
+				<button id="natalSaveBtn" style="flex:1;padding:6px 12px;border-radius:6px;border:1px solid #C8A050;background:#2A2210;color:#FFE484;cursor:pointer;font-size:12px;font-weight:600;">Save</button>
+				<button id="natalClearBtn" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,80,80,0.25);background:rgba(255,80,80,0.2);color:#ff6666;cursor:pointer;font-size:12px;">Clear</button>
+			</div>
+
+			<div style="margin-bottom:6px;">
+				<select id="profileList" size="6" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:6px;font-size:13px;outline:none;"></select>
+			</div>
+
+			<div style="display:flex;gap:6px;margin-bottom:8px;">
+				<button id="natalLoadBtn" style="flex:1;padding:5px 10px;border-radius:5px;border:1px solid rgba(255,200,100,0.25);background:rgba(255,200,100,0.08);color:#FFD700;cursor:pointer;font-size:11px;font-weight:600;">Load</button>
+				<button id="natalDeleteBtn" style="padding:5px 10px;border-radius:5px;border:1px solid rgba(255,80,80,0.2);background:rgba(255,80,80,0.06);color:#ff6666;cursor:pointer;font-size:11px;">Delete</button>
+			</div>
+
+			<div style="text-align:right;">
+				<button id="natalCloseBtn" style="padding:4px 12px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#888;cursor:pointer;font-size:11px;">Close</button>
+			</div>
+		</div>
+		<!-- ===== Life Events Modal (anchored near category buttons) ===== -->
+		<div id="lifeEventModal" style="display:none;position:fixed;z-index:500010;bottom:80px;right:130px;width:300px;background:rgba(16,16,28,0.97);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.7);color:#eee;font-family:system-ui,sans-serif;">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+				<span style="font-size:14px;font-weight:700;color:#FFD700;">Life Events</span>
+				<button id="lifeEventModalClose" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:0;line-height:1;">×</button>
+			</div>
+
+			<div style="margin-bottom:8px;">
+				<label style="font-size:11px;color:#999;display:block;margin-bottom:3px;">Event:</label>
+				<input id="lifeEventTitle" type="text" placeholder="e.g. First kiss" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:6px 8px;font-size:13px;outline:none;" />
+			</div>
+
+			<div style="margin-bottom:10px;">
+				<label style="font-size:11px;color:#999;display:block;margin-bottom:3px;">Date (day/month):</label>
+				<input id="lifeEventDate" type="date" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:6px 8px;font-size:13px;outline:none;" />
+			</div>
+
+			<div style="display:flex;gap:6px;margin-bottom:10px;">
+				<button id="lifeEventAddBtn" style="flex:1;padding:6px 12px;border-radius:6px;border:1px solid #C8A050;background:#2A2210;color:#FFE484;cursor:pointer;font-size:12px;font-weight:600;">Save</button>
+				<button id="lifeEventDeleteBtn" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,80,80,0.25);background:rgba(255,80,80,0.2);color:#ff6666;cursor:pointer;font-size:12px;">Delete</button>
+			</div>
+
+			<div>
+				<label style="font-size:11px;color:#999;display:block;margin-bottom:3px;">Saved events:</label>
+				<select id="lifeEventList" size="4" style="width:100%;background:rgba(30,30,35,0.9);color:#eee;border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:3px;font-size:12px;outline:none;"></select>
+			</div>
+
+			<div style="margin-top:8px;text-align:right;">
+				<button id="lifeEventCloseBtn" style="padding:4px 12px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#888;cursor:pointer;font-size:11px;">Close</button>
+			</div>
+
+		</div>
+		<!-- =========================================================
+			 ARCHIVE — LEGACY HEADER & CONTROLS (REFERENCE ONLY)
+			 ---------------------------------------------------------
+			 This block documents the original pre-menu layout.
+			 It is preserved for historical and educational purposes.
+			 It MUST remain commented out.
+			 ========================================================= -->
+	<!--
+		<h2>Grand Conjunction Saeculum Timeline — Generational Layer</h2>
+
+		<div id="controls">
+			<input type="range" min="-100" max="100" value="0" id="speedSlider">
+			<div class="sliderCenterMark"></div>
+			<span id="speedInfo">0.00 yrs/sec</span>
+		</div>
+
+			-->
+			<script type="module" src="../shared/swe-init.js"></script>
+		<script src="js/vendor/astronomy.browser.min.js"></script>
+		<div id="labelSVG" style="position:fixed;right:20px;top:var(--label-top, 140px);width:var(--label-width,200px);height:var(--label-height,180px);background:#0d0d14;z-index:99999;pointer-events:none;">
+			<svg height="180" id="labelSVGInner" width="200" style="display:block;background:#0d0d14;pointer-events:none;">
+				<rect fill="#0d0d14" height="100%" width="100%" pointer-events="none"></rect>
+				<g id="labelStructure"></g>
+				<g id="diagonalIndex"></g>
+				<g id="labelBG"></g>
+				<g font-size="28" font-weight="bold" id="labelText"></g>
+				<g id="lifeCycleOverlay"></g>
+			</svg>
+		</div>
+
+		<script src="../shared/constants.js"></script>
+
+		<!-- Elemental baseline (keep if elemental band still uses it) -->
+		<script src="js/_conjunction_data_saturn_jupiter.js"></script>
+
+		<!-- Outer-cycle datasets (overlay band options) -->
+		<script src="js/_conjunction_data_saturn_uranus.js"></script>
+		<script src="js/_conjunction_data_saturn_neptune.js"></script>
+		<script src="js/_conjunction_data_saturn_pluto.js"></script>
+		<script src="js/_conjunction_data_uranus_neptune.js"></script>
+		<script src="js/_conjunction_data_uranus_pluto.js"></script>
+		<script src="js/_conjunction_data_neptune_pluto.js"></script>
+		<script src="js/_conjunction_data_jupiter_uranus.js"></script>
+		<script src="js/_conjunction_data_jupiter_neptune.js"></script>
+		<script src="js/_conjunction_data_jupiter_pluto.js"></script>
+		<script src="js/_conjunction_data_mars_venus.js"></script>
+
+		<script src="js/time-engine.js"></script>
+		<script src="js/generation-model.js"></script>
+		<script src="../shared/astronomy-adapter.js"></script>
+		<script src="js/planetary-cycles.js?v=145"></script>
+
+		<!-- Era markers must load BEFORE screw-renderer builds the SVG -->
+		<script src="js/_era_markers.js"></script>
+		<script src="../shared/heaven-data.js"></script>
+
+		<script src="js/screw-renderer.js?v=153"></script>
+		<script src="../shared/astro-wheel.js?v=153"></script>
+		<script src="js/conjunction-selector.js"></script>
+
+		<!-- 3D (Phase 1) — Three.js global build + simple renderer wrapper -->
+				
+		<!-- Historical events data and renderer -->
+		<script src="js/_historical_events.js"></script>
+		<script src="js/events-renderer.js?v=153"></script>
+		
+		<script src="js/ui-controller.js?v=154"></script>
+		<script src="js/monarchs-data.js"></script>
+
+		<!-- President Thumbnails - Fixed to bottom of viewport with overlapping -->
+		<div id="presidentThumbContainer" style="position: fixed; bottom: 10px; left: 0; width: 100%; height: 70px; z-index: 500010; pointer-events: none; border: none !important; box-shadow: none !important; border-top: none !important; border-bottom: none !important;">
+			<div id="washingtonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto; border: none !important; box-shadow: none !important;">
+				<div id="washingtonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">George Washington<br>1789–1797</div>
+				<img id="washingtonThumb" src="../images/washington-portrait.jpg" alt="Washington" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="adamsContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="adamsLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">John Adams<br>1797–1801</div>
+				<img id="adamsThumb" src="../images/adams-portrait.jpg" alt="Adams" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="jeffersonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="jeffersonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Thomas Jefferson<br>1801–1809</div>
+				<img id="jeffersonThumb" src="../images/jefferson-portrait.jpg" alt="Jefferson" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="madisonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="madisonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">James Madison<br>1809–1817</div>
+				<img id="madisonThumb" src="../images/madison-portrait.jpg" alt="Madison" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="monroeContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="monroeLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">James Monroe<br>1817–1825</div>
+				<img id="monroeThumb" src="../images/monroe-portrait.jpg" alt="Monroe" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="jqadamsContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="jqadamsLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">John Quincy Adams<br>1825–1829</div>
+				<img id="jqadamsThumb" src="../images/jqadams-portrait.jpg" alt="John Quincy Adams" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="jacksonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="jacksonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Andrew Jackson<br>1829–1837<br><span style="color:#ff3333;font-size:11px;">Assassination attempt Jan 30, 1835</span></div>
+				<img id="jacksonThumb" src="../images/jackson-portrait.jpg" alt="Jackson" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="vanburenContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="vanburenLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Martin Van Buren<br>1837–1841</div>
+				<img id="vanburenThumb" src="../images/vanburen-portrait.jpg" alt="Van Buren" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="williamharrisonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="williamharrisonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">William Henry Harrison<br>1841</div>
+				<img id="williamharrisonThumb" src="../images/williamharrison-portrait.jpg" alt="William Henry Harrison" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="tylerContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="tylerLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">John Tyler<br>1841–1845</div>
+				<img id="tylerThumb" src="../images/tyler-portrait.png" alt="Tyler" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="polkContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="polkLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">James K. Polk<br>1845–1849</div>
+				<img id="polkThumb" src="../images/polk-portrait.jpg" alt="Polk" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="taylorContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="taylorLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Zachary Taylor<br>1849–1850</div>
+				<img id="taylorThumb" src="../images/taylor-portrait.jpg" alt="Taylor" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="fillmoreContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="fillmoreLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Millard Fillmore<br>1850–1853</div>
+				<img id="fillmoreThumb" src="../images/fillmore-portrait.jpg" alt="Fillmore" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="pierceContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="pierceLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Franklin Pierce<br>1853–1857</div>
+				<img id="pierceThumb" src="../images/pierce-portrait.jpg" alt="Pierce" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="buchananContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="buchananLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">James Buchanan<br>1857–1861</div>
+				<img id="buchananThumb" src="../images/buchanan-portrait.jpg" alt="Buchanan" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="lincolnContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="lincolnLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 201; pointer-events: none;">Abraham Lincoln<br>1861–1865<br><span style="color:#ff4444;font-size:11px;">ASSASSINATED APR 14, 1865</span></div>
+				<img id="lincolnThumb" src="../images/lincoln-portrait.jpg" alt="Lincoln" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="andrewjohnsonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="andrewjohnsonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Andrew Johnson<br>1865–1869</div>
+				<img id="andrewjohnsonThumb" src="../images/andrewjohnson-portrait.jpg" alt="Andrew Johnson" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="grantContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="grantLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Ulysses S. Grant<br>1869–1877</div>
+				<img id="grantThumb" src="../images/grant-portrait.jpg" alt="Grant" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="hayesContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="hayesLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Rutherford B. Hayes<br>1877–1881</div>
+				<img id="hayesThumb" src="../images/hayes-portrait.jpg" alt="Hayes" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="garfieldContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="garfieldLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 201; pointer-events: none;">James A. Garfield<br>1881<br><span style="color:#ff4444;font-size:11px;">ASSASSINATED JUL 2, 1881</span></div>
+				<img id="garfieldThumb" src="../images/garfield-portrait.jpg" alt="Garfield" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="arthurContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="arthurLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Chester A. Arthur<br>1881–1885</div>
+				<img id="arthurThumb" src="../images/arthur-portrait.jpg" alt="Arthur" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="cleveland1Container" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="cleveland1Label" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Grover Cleveland<br>1885–1889</div>
+				<img id="cleveland1Thumb" src="../images/cleveland1-portrait.jpg" alt="Cleveland1" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="harrisonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="harrisonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Benjamin Harrison<br>1889–1893-1893</div>
+				<img id="harrisonThumb" src="../images/harrison-portrait.jpg" alt="Harrison" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="clevelandContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="clevelandLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Grover Cleveland<br>1893–1897</div>
+				<img id="clevelandThumb" src="../images/cleveland-portrait.jpg" alt="Cleveland" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="mckinleyContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="mckinleyLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 201; pointer-events: none;">William McKinley<br>1897–1901<br><span style="color:#ff4444;font-size:11px;">ASSASSINATED SEP 14, 1901</span></div>
+				<img id="mckinleyThumb" src="../images/mckinley-portrait.jpg" alt="McKinley" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="rooseveltContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="rooseveltLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Theodore Roosevelt<br>1901–1909<br><span style="color:#ff3333;font-size:11px;">Assassination attempt Oct 14, 1912</span></div>
+				<img id="rooseveltThumb" src="../images/teddy-portrait.jpg" alt="Roosevelt" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="taftContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="taftLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">William Howard Taft<br>1909-1913</div>
+				<img id="taftThumb" src="../images/taft-portrait.jpg" alt="Taft" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="wilsonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="wilsonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Woodrow Wilson<br>1913-1921</div>
+				<img id="wilsonThumb" src="../images/wilson-portrait.jpg" alt="Wilson" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="hardingContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="hardingLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Warren G. Harding<br>1921-1923</div>
+				<img id="hardingThumb" src="../images/harding-portrait.jpg" alt="Harding" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="coolidgeContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="coolidgeLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Calvin Coolidge<br>1923-1929</div>
+				<img id="coolidgeThumb" src="../images/coolidge-portrait.jpg" alt="Coolidge" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="hooverContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="hooverLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Herbert Hoover<br>1929-1933</div>
+				<img id="hooverThumb" src="../images/hoover-portrait.jpg" alt="Hoover" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="fdrContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="fdrLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">FDR<br>1933-1945</div>
+				<img id="fdrThumb" src="../images/fdr-portrait.jpg" alt="FDR" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="trumanContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="trumanLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Harry S. Truman<br>1945-1953</div>
+				<img id="trumanThumb" src="../images/truman-portrait.jpg" alt="Truman" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="eisenhowerContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="eisenhowerLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Dwight D. Eisenhower<br>1953-1961</div>
+				<img id="eisenhowerThumb" src="../images/eisenhower-portrait.jpg" alt="Eisenhower" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="kennedyContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="kennedyLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 201; pointer-events: none;">John F. Kennedy<br>1961–1963<br><span style="color:#ff4444;font-size:11px;">ASSASSINATED NOV 22, 1963</span></div>
+				<img id="kennedyThumb" src="../images/kennedy-portrait.jpg" alt="Kennedy" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="johnsonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="johnsonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Lyndon B. Johnson<br>1963–1969</div>
+				<img id="johnsonThumb" src="../images/johnson-portrait.jpg" alt="Johnson" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="nixonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="nixonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Richard Nixon<br>1969-1974</div>
+				<img id="nixonThumb" src="../images/nixon-portrait.jpg" alt="Nixon" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="fordContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="fordLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Gerald Ford<br>1974-1977</div>
+				<img id="fordThumb" src="../images/ford-portrait.jpg" alt="Ford" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="carterContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="carterLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Jimmy Carter<br>1977-1981</div>
+				<img id="carterThumb" src="../images/carter-portrait.jpg" alt="Carter" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="reaganContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="reaganLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Ronald Reagan<br>1981-1989<br><span style="color:#ff3333;font-size:11px;">Assassination attempt Mar 30, 1981</span></div>
+				<img id="reaganThumb" src="../images/reagan-portrait.jpg" alt="Reagan" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="bushSrContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="bushSrLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">George H.W. Bush<br>1989-1993</div>
+				<img id="bushSrThumb" src="../images/bushsr-portrait.jpg" alt="Bush Sr" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="clintonContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="clintonLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Bill Clinton<br>1993-2001</div>
+				<img id="clintonThumb" src="../images/clinton-portrait.jpg" alt="Clinton" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="bushContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="bushLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">George W. Bush<br>2001-2009</div>
+				<img id="bushThumb" src="../images/bush-portrait.jpg" alt="Bush" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height: 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="obamaContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="obamaLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Barack Obama<br>2009-2017</div>
+				<img id="obamaThumb" src="../images/obama-portrait.jpg" alt="Obama" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="trump1Container" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="trump1Label" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Donald Trump<br>2017-2021</div>
+				<img id="trump1Thumb" src="../images/trump1-portrait.jpg" alt="Trump (2017-2021)" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s ease; transform-origin: bottom left;">
+			</div>
+			<div id="bidenContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="bidenLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Joe Biden<br>2021-2025</div>
+				<img id="bidenThumb" src="../images/biden-portrait.jpg" alt="Biden" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s, width 0.2s, height 0.2s; transform-origin: bottom center;">
+			</div>
+			<div id="trumpContainer" style="position: absolute; bottom: 0; width: 42px; height: 63px; pointer-events: auto;">
+				<div id="trumpLabel" style="position: absolute; bottom: 200px; left: 0; width: 100%; text-align: center; max-width: none; color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 102;">Donald Trump<br>2025-2029<br><span style="color:#ff3333;font-size:11px;">Assassination attempt Jul 13, 2024</span></div>
+				<img id="trumpThumb" src="../images/trump-portrait.jpg" alt="Trump" style="position: absolute; bottom: 0; left: 0; width: 42px; height: 50px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); border: none !important; cursor: pointer; transition: transform 0.2s ease; transform-origin: bottom left;">
+			</div>
+		</div>
+
+		<script>
+			// President thumbnails - each positioned at start of term with overlapping
+			const PRESIDENTS = [
+				{ id: 'washingtonContainer', thumbId: 'washingtonThumb', labelId: 'washingtonLabel', termStart: 1789 },
+				{ id: 'adamsContainer', thumbId: 'adamsThumb', labelId: 'adamsLabel', termStart: 1797 },
+				{ id: 'jeffersonContainer', thumbId: 'jeffersonThumb', labelId: 'jeffersonLabel', termStart: 1801 },
+				{ id: 'madisonContainer', thumbId: 'madisonThumb', labelId: 'madisonLabel', termStart: 1809 },
+				{ id: 'monroeContainer', thumbId: 'monroeThumb', labelId: 'monroeLabel', termStart: 1817 },
+				{ id: 'jqadamsContainer', thumbId: 'jqadamsThumb', labelId: 'jqadamsLabel', termStart: 1825 },
+				{ id: 'jacksonContainer', thumbId: 'jacksonThumb', labelId: 'jacksonLabel', termStart: 1829 },
+				{ id: 'vanburenContainer', thumbId: 'vanburenThumb', labelId: 'vanburenLabel', termStart: 1837 },
+				{ id: 'williamharrisonContainer', thumbId: 'williamharrisonThumb', labelId: 'williamharrisonLabel', termStart: 1841 },
+				{ id: 'tylerContainer', thumbId: 'tylerThumb', labelId: 'tylerLabel', termStart: 1841 },
+				{ id: 'polkContainer', thumbId: 'polkThumb', labelId: 'polkLabel', termStart: 1845 },
+				{ id: 'taylorContainer', thumbId: 'taylorThumb', labelId: 'taylorLabel', termStart: 1849 },
+				{ id: 'fillmoreContainer', thumbId: 'fillmoreThumb', labelId: 'fillmoreLabel', termStart: 1850 },
+				{ id: 'pierceContainer', thumbId: 'pierceThumb', labelId: 'pierceLabel', termStart: 1853 },
+				{ id: 'buchananContainer', thumbId: 'buchananThumb', labelId: 'buchananLabel', termStart: 1857 },
+				{ id: 'lincolnContainer', thumbId: 'lincolnThumb', labelId: 'lincolnLabel', termStart: 1861, assassinated: true },
+				{ id: 'andrewjohnsonContainer', thumbId: 'andrewjohnsonThumb', labelId: 'andrewjohnsonLabel', termStart: 1865 },
+				{ id: 'grantContainer', thumbId: 'grantThumb', labelId: 'grantLabel', termStart: 1869 },
+				{ id: 'hayesContainer', thumbId: 'hayesThumb', labelId: 'hayesLabel', termStart: 1877 },
+				{ id: 'garfieldContainer', thumbId: 'garfieldThumb', labelId: 'garfieldLabel', termStart: 1881, assassinated: true },
+				{ id: 'arthurContainer', thumbId: 'arthurThumb', labelId: 'arthurLabel', termStart: 1881 },
+				{ id: 'cleveland1Container', thumbId: 'cleveland1Thumb', labelId: 'cleveland1Label', termStart: 1885 },
+				{ id: 'harrisonContainer', thumbId: 'harrisonThumb', labelId: 'harrisonLabel', termStart: 1889 },
+				{ id: 'clevelandContainer', thumbId: 'clevelandThumb', labelId: 'clevelandLabel', termStart: 1893 },
+				{ id: 'mckinleyContainer', thumbId: 'mckinleyThumb', labelId: 'mckinleyLabel', termStart: 1897, assassinated: true },
+				{ id: 'rooseveltContainer', thumbId: 'rooseveltThumb', labelId: 'rooseveltLabel', termStart: 1901 },
+				{ id: 'taftContainer', thumbId: 'taftThumb', labelId: 'taftLabel', termStart: 1909 },
+				{ id: 'wilsonContainer', thumbId: 'wilsonThumb', labelId: 'wilsonLabel', termStart: 1913 },
+				{ id: 'hardingContainer', thumbId: 'hardingThumb', labelId: 'hardingLabel', termStart: 1921 },
+				{ id: 'coolidgeContainer', thumbId: 'coolidgeThumb', labelId: 'coolidgeLabel', termStart: 1923 },
+				{ id: 'hooverContainer', thumbId: 'hooverThumb', labelId: 'hooverLabel', termStart: 1929 },
+				{ id: 'fdrContainer', thumbId: 'fdrThumb', labelId: 'fdrLabel', termStart: 1933 },
+				{ id: 'trumanContainer', thumbId: 'trumanThumb', labelId: 'trumanLabel', termStart: 1945 },
+				{ id: 'eisenhowerContainer', thumbId: 'eisenhowerThumb', labelId: 'eisenhowerLabel', termStart: 1953 },
+				{ id: 'kennedyContainer', thumbId: 'kennedyThumb', labelId: 'kennedyLabel', termStart: 1961, assassinated: true },
+				{ id: 'johnsonContainer', thumbId: 'johnsonThumb', labelId: 'johnsonLabel', termStart: 1963 },
+				{ id: 'nixonContainer', thumbId: 'nixonThumb', labelId: 'nixonLabel', termStart: 1969 },
+				{ id: 'fordContainer', thumbId: 'fordThumb', labelId: 'fordLabel', termStart: 1974 },
+				{ id: 'carterContainer', thumbId: 'carterThumb', labelId: 'carterLabel', termStart: 1977 },
+				{ id: 'reaganContainer', thumbId: 'reaganThumb', labelId: 'reaganLabel', termStart: 1981 },
+				{ id: 'bushSrContainer', thumbId: 'bushSrThumb', labelId: 'bushSrLabel', termStart: 1989 },
+				{ id: 'clintonContainer', thumbId: 'clintonThumb', labelId: 'clintonLabel', termStart: 1993 },
+				{ id: 'bushContainer', thumbId: 'bushThumb', labelId: 'bushLabel', termStart: 2001 },
+				{ id: 'obamaContainer', thumbId: 'obamaThumb', labelId: 'obamaLabel', termStart: 2009 },
+				{ id: 'trump1Container', thumbId: 'trump1Thumb', labelId: 'trump1Label', termStart: 2017 },
+				{ id: 'bidenContainer', thumbId: 'bidenThumb', labelId: 'bidenLabel', termStart: 2021 },
+				{ id: 'trumpContainer', thumbId: 'trumpThumb', labelId: 'trumpLabel', termStart: 2025 }
+			];
+			
+			function getPresidentScreenX(targetYear) {
+				if (typeof yearToScrewX !== 'function') return null;
+				
+				const presidentScrewX = yearToScrewX(targetYear);
+				
+				let currentScrollX = 0;
+				if (typeof timeState !== 'undefined' && timeState.scrollX !== undefined) {
+					currentScrollX = timeState.scrollX;
+				}
+				
+				if (typeof getNowScreenX !== 'function' || typeof SCREW_EPOCH_X === 'undefined') return null;
+				
+				const nowX = getNowScreenX();
+				const offsetFromEpoch = presidentScrewX - SCREW_EPOCH_X;
+				// Position at the exact year on the screw
+				const screenX = nowX + offsetFromEpoch + currentScrollX;
+				
+				return screenX;
+			}
+			
+			function updatePresidentPositions() {
+				const screwRect = document.getElementById('screwSVG')?.getBoundingClientRect();
+				if (!screwRect) return;
+				
+				PRESIDENTS.forEach((pres) => {
+					const container = document.getElementById(pres.id);
+					if (!container) return;
+					
+					const xPos = getPresidentScreenX(pres.termStart);
+					if (xPos === null) return;
+					
+					container.style.left = xPos + 'px';
+					container.style.bottom = '0px';
+				});
+			}
+			
+			// Smooth animation loop
+			function animatePresidents() {
+				updatePresidentPositions();
+				requestAnimationFrame(animatePresidents);
+			}
+			animatePresidents();
+			
+			// Update on resize
+			window.addEventListener('resize', updatePresidentPositions);
+			
+			// Hover effects - show label and expand thumb
+			PRESIDENTS.forEach((pres, index) => {
+				const container = document.getElementById(pres.id);
+				const thumb = document.getElementById(pres.thumbId);
+				const label = document.getElementById(pres.labelId);
+				
+				if (!container || !thumb) return;
+				
+				// Base z-index based on position (later presidents on top)
+				const baseZIndex = 100 + index;
+				thumb.style.zIndex = baseZIndex;
+				
+				thumb.addEventListener('mouseenter', () => {
+					thumb.style.transformOrigin = 'bottom left';
+					thumb.style.transform = 'scale(4)';
+					if (pres.assassinated) {
+						thumb.style.borderColor = 'rgba(255,0,0,0.9)';
+						thumb.style.boxShadow = '0 0 10px rgba(255,0,0,0.7)';
+					}
+					thumb.style.zIndex = '2000';
+					if (label) label.style.opacity = '1';
+				});
+				
+				thumb.addEventListener('mouseleave', () => {
+					thumb.style.transformOrigin = 'bottom left';
+					thumb.style.transform = 'scale(1)';
+					thumb.style.zIndex = baseZIndex;
+					if (label) label.style.opacity = '0';
+				});
+			});
+			
+			// Initial position
+			setTimeout(updatePresidentPositions, 100);
+
+						// Monarch thumbnails — append alongside presidents
+			const monarchContainer = document.getElementById("presidentThumbContainer");
+			if (monarchContainer && typeof MONARCHS !== "undefined") {
+				function renderMonarchs() {
+					// Remove existing monarch thumbs
+					monarchContainer.querySelectorAll(".monarchWrapper").forEach(el => el.remove());
+					MONARCHS.forEach((m, index) => {
+						const x = getPresidentScreenX(m.reignStart);
+						if (!x) return;
+
+						// Container
+						const wrapper = document.createElement("div");
+						wrapper.className = "monarchWrapper";
+						wrapper.style.cssText = "position:absolute;bottom:0;left:" + x + "px;width:42px;height:63px;pointer-events:auto;z-index:" + (90 + index) + ";";
+
+						// Label (above zoomed image, same as presidents)
+						const label = document.createElement("div");
+						label.innerHTML = m.name + "<br>" + m.reignStart + "–" + m.reignEnd;
+						label.style.cssText = "position:absolute;bottom:200px;left:0;width:100%;text-align:center;max-width:none;color:#fff;font-size:14px;font-weight:bold;text-shadow:0 2px 4px rgba(0,0,0,0.9),0 0 8px rgba(0,0,0,0.8);opacity:0;transition:opacity 0.2s;white-space:nowrap;z-index:102;pointer-events:none;";
+
+						// Image
+						const img = document.createElement("img");
+						img.src = m.img;
+						img.alt = m.name;
+						img.style.cssText = "position:absolute;bottom:0;left:0;width:42px;height:50px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.5);border:none!important;cursor:pointer;transition:transform 0.2s;width:0.2s,height:0.2s;transform-origin:bottom center;";
+						img.onerror = function() { this.style.display = "none"; };
+
+						// Hover (same as presidents)
+						img.addEventListener('mouseenter', () => {
+							img.style.transformOrigin = 'bottom left';
+							img.style.transform = 'scale(4)';
+							img.style.zIndex = '2000';
+							label.style.opacity = '1';
+						});
+						img.addEventListener('mouseleave', () => {
+							img.style.transformOrigin = 'bottom left';
+							img.style.transform = 'scale(1)';
+							img.style.zIndex = '';
+							label.style.opacity = '0';
+						});
+
+						wrapper.appendChild(label);
+						wrapper.appendChild(img);
+						monarchContainer.appendChild(wrapper);
+					});
+				}
+				setTimeout(renderMonarchs, 500);
+
+				// Animation loop: keep monarchs aligned to timeline as it scrolls
+				function updateMonarchPositions() {
+					monarchContainer.querySelectorAll(".monarchWrapper").forEach((wrapper, idx) => {
+						const m = MONARCHS[idx];
+						if (!m) return;
+						const x = getPresidentScreenX(m.reignStart);
+						if (x) wrapper.style.left = x + "px";
+					});
+				}
+
+				// Hook into the same animation loop
+				const origAnimatePresidents = animatePresidents;
+				animatePresidents = function() {
+					updatePresidentPositions();
+					updateMonarchPositions();
+					requestAnimationFrame(animatePresidents);
+				};
+			}
+		</script>
+
+	
+
+	<script>
+	// Navigation: Scale selector navigates to skyclock or timeline variants
+		document.querySelectorAll('.scaleOpt').forEach(btn => {
+			btn.addEventListener('mousedown', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				const scale = this.dataset.scale;
+				if (scale === 'skyclock') {
+					window.location.href = '/skyclock/';
+				} else if (scale === 'generational') {
+					window.location.href = '/';
+				} else if (scale === 'personal') {
+					window.location.href = '/personal/';
+				} else if (scale === 'planting') {
+					window.location.href = '/planting/';
+				}
+			}, true); // Use capture phase
+		});
+	</script>
+
+		<!-- ARCHETYPE LABELS — Div wrapper for reliable position:fixed stacking -->
+</body>
+	
+</html>

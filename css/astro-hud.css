@@ -1,0 +1,1537 @@
+/* astro-hud.css — 4-quadrant HUD layout for popout astro wheel
+   ========================================================= */
+
+/* Force zodiac symbols to render as text, not colored emoji */
+.transit-sign,
+.transit-planet,
+.natal-sign,
+.natal-planet,
+.elem-row-header,
+.aspect-step-glyph {
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", "DejaVu Sans", sans-serif;
+  font-variant-emoji: text;
+  -webkit-font-variant-emoji: text;
+  text-rendering: optimizeLegibility;
+}
+
+/* Elemental box overlay at bottom right of wheel */
+#wheelElementalOverlay {
+  position: absolute !important;
+  bottom: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  z-index: 10 !important;
+  padding: 4px 6px;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+}
+
+#wheelElementalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
+  font-size: 12px;
+}
+
+/* Elemental grid layout */
+.elem-header-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.elem-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  justify-content: flex-end;
+}
+
+/* Transits grid overlay at top right of wheel */
+/* Ruler grid - Hourly and Daily planetary rulers */
+#wheelRulerOverlay {
+  position: absolute;
+  top: 55px;
+  right: 245px;
+  z-index: 10;
+  text-align: center;
+}
+
+#wheelRulerOverlay .ruler-mode-buttons {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+#wheelRulerOverlay .grid-label,
+#wheelRulerOverlay .ruler-col-label,
+#wheelRulerOverlay .ruler-col-name {
+  color: rgba(255,255,255,0.6);
+  text-shadow: 0 0 4px rgba(0,0,0,0.9);
+}
+
+#wheelRulerOverlay .grid-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+#wheelRulerGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  align-items: center;
+}
+
+.ruler-hour-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.ruler-mode-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 6px;
+}
+
+#wheelRulerGrid .ruler-rows {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.ruler-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 60px;
+}
+
+.ruler-hour-num {
+  font-size: 12px !important;
+  font-weight: 600;
+  margin-top: 2px !important;
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: rgba(255,255,255,.6) !important;
+}
+
+.ruler-mode-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.ruler-mode-btn {
+  padding: 3px 10px;
+  font-size: 10px;
+  min-width: 24px;
+  height: 22px;
+  border: 1px solid rgba(255,255,255,.3);
+  background: rgba(255,50,50,.3);
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.ruler-mode-btn.is-active {
+  background: rgba(50,255,100,.4);
+  color: rgba(255,255,255,.95);
+  border-color: rgba(50,255,100,.6);
+}
+
+.ruler-col-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+
+.ruler-col-glyph {
+  font-size: 28px;
+  line-height: 1;
+  width: 40px;
+  text-align: center;
+}
+
+.ruler-col-name {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.05em;
+  width: 50px;
+  text-align: center;
+}
+
+#wheelTransitsOverlay {
+  position: absolute;
+  top: 10px;
+  right: 125px;
+  z-index: 10;
+  padding: 3px 5px 4px;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+}
+
+.grid-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
+#wheelTransitsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 10.5px;
+}
+
+.transit-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  line-height: 1;
+}
+
+.transit-planet {
+  width: 23px;
+  text-align: center;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.transit-planet.ac-mc-text {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.transit-angle-label {
+  font-size: 15px;
+  width: 23px;
+}
+
+.transit-sign {
+  width: 30px;
+  text-align: center;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent;
+  color: #fff;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
+  font-variant-emoji: text;
+  -webkit-font-variant-emoji: text;
+}
+
+.transit-sign.transit-fire {
+  color: #d32f2f !important;
+}
+
+.transit-sign.transit-earth {
+  color: #2e7d32 !important;
+}
+
+.transit-sign.transit-air {
+  color: #fbc02d !important;
+}
+
+.transit-sign.transit-water {
+  color: #1976d2 !important;
+}
+
+.transit-degree {
+  width: 34px;
+  text-align: right;
+  font-size: 10.5px;
+  opacity: 0.9;
+}
+
+/* Aspects grid overlay at bottom left of wheel */
+#wheelAspectsOverlay {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+/* Aspects grid moves inward when natal is enabled to make room for natal houses */
+#wheelAspectsOverlay.natal-active {
+  bottom: 150px;
+  left: 50px;
+}
+
+#wheelAspectsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+}
+
+.aspect-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Aspect stepped triangle layout - 15% larger */
+.aspect-step-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+}
+
+.aspect-step-glyph {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.aspect-step-cell {
+  width: 20px;
+  height: 22px;
+  border: 1px solid rgba(255,255,255,.3);
+  background: rgba(0,0,0,.8);
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.lots-mode-btn.is-active {
+  background: rgba(50,255,100,.4);
+  color: rgba(255,255,255,.95);
+  border-color: rgba(50,255,100,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 2px;
+  background: rgba(255,255,255,0.05);
+}
+
+.aspect-step-cell.empty {
+  opacity: 1;
+  background: rgba(0,0,0,.8);
+  border-color: rgba(255,255,255,0.1);
+  color: transparent;
+}
+
+/* Red aspects: conjunction, opposition, square */
+.aspect-step-cell.conj { border-color: rgba(255,68,68,0.4); background: rgba(255,68,68,0.1); color: #ff4444; }
+.aspect-step-cell.oppo { border-color: rgba(255,68,68,0.4); background: rgba(255,68,68,0.1); color: #ff4444; }
+.aspect-step-cell.square { border-color: rgba(255,68,68,0.4); background: rgba(255,68,68,0.1); color: #ff4444; }
+
+/* Blue aspects: trine, sextile */
+.aspect-step-cell.trine { border-color: rgba(68,68,255,0.4); background: rgba(68,68,255,0.1); color: #4444ff; }
+.aspect-step-cell.sextile { border-color: rgba(68,68,255,0.4); background: rgba(68,68,255,0.1); color: #4444ff; }
+
+.aspect-symbol {
+  width: 14px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.aspect-aspect {
+  color: #70a0ff;
+  font-size: 10px;
+}
+
+/* Wheel stage */
+.wheelStage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  transform: translateX(-200px);
+}
+
+/* Ensure no pseudo-elements on wheelStage */
+.wheelStage::before,
+.wheelStage::after {
+  display: none !important;
+  content: none !important;
+}
+
+#wheelImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Date/Time overlay at top of wheel */
+#wheelDateOverlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  box-sizing: border-box;
+  padding: 0 10px;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  width: 400px;
+  min-width: 400px;
+  height: 40px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+#wheelDateValue {
+  width: 100%;
+  text-align: center;
+}
+
+/* Bodies button - below the wheel date readout */
+#controlButtonsRow {
+  position: absolute !important;
+  top: 55px !important;
+  left: 10px !important;
+  z-index: 200 !important;
+  display: inline-flex !important;
+  gap: 8px !important;
+  pointer-events: auto !important;
+}
+
+.skyModeStack {
+  width: 68px !important;
+  align-items: flex-start !important;
+}
+
+#bodiesBtn,
+#housesBtn {
+  all: unset !important;
+  padding: 4px 12px !important;
+  font-size: 11px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,.15) !important;
+  border: 1px solid rgba(255,255,255,.3) !important;
+  color: rgba(255,255,255,.8) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 28px !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+#bodiesBtn {
+  width: 68px !important;
+}
+
+#realTimeSkyBtn {
+  box-sizing: border-box !important;
+  width: 68px !important;
+  height: 28px !important;
+  justify-content: center !important;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+#bodiesBtn:hover,
+#housesBtn:hover {
+  background: rgba(255,255,255,.25) !important;
+  border-color: rgba(255,255,255,.5) !important;
+  color: #fff !important;
+}
+
+#bodiesBtn:active,
+#housesBtn:active {
+  transform: scale(0.96) !important;
+}
+
+/* Natal button - removed (natal is now in the picker) */
+/* #hudNatalBtn { position: absolute; top: 51px; left: 10px; z-index: 10; border-radius: 8px !important; } */
+
+#hudNatalBtn.active {
+  background: rgba(212,175,55,.2);
+  border-color: rgba(212,175,55,.5);
+  color: #d4af37;
+}
+
+/* Container for the 4-quadrant HUD */
+#astroHUD {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Positions grid (top right) */
+#hudPositions {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+#hudPositions .hud-label {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.positions-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 8px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+}
+
+.pos-row {
+  display: contents;
+}
+
+.pos-planet {
+  text-align: right;
+  opacity: 0.8;
+}
+
+.pos-transit {
+  color: #70a0ff;
+}
+
+.pos-natal {
+  color: #d4af37;
+  opacity: 0.7;
+}
+
+.pos-aspect {
+  color: #70a0ff;
+  font-size: 10px;
+}
+
+/* Element-colored sign glyphs in positions grid */
+.pos-sign {
+  font-size: 11px;
+}
+
+.pos-sign.pos-fire {
+  color: #ff6b35;
+}
+
+.pos-sign.pos-earth {
+  color: #4ecdc4;
+}
+
+.pos-sign.pos-air {
+  color: #ffe66d;
+}
+
+.pos-sign.pos-water {
+  color: #6a82fb;
+}
+
+.pos-position {
+  font-size: 11px;
+}
+
+/* Aspects list (bottom left) */
+#hudAspects {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+}
+
+#hudAspects .hud-label {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.aspects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Elements grid (bottom right) */
+#hudElements {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+}
+
+#hudElements .hud-label {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.elements-grid {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  grid-template-rows: repeat(5, 36px); /* 5 rows (header + 4 elements), 36px each */
+  gap: 2px 6px;
+  font-size: 11px;
+}
+
+.elem-corner {
+  width: 0px;
+  visibility: hidden;
+}
+
+.elem-col-header {
+  width: 52px;
+  text-align: center;
+  color: rgba(255,255,255,.5);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.elem-col-header:nth-child(2) {
+  margin-left: 5px;
+}
+
+.elem-col-header:nth-child(3) {
+  margin-left: 15px;
+}
+
+.elem-col-header:nth-child(4) {
+  margin-left: 25px;
+}
+
+.elem-row-header {
+  width: 36px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.elem-row-header.fire { color: #d32f2f; }
+.elem-row-header.earth { color: #2e7d32; }
+.elem-row-header.air { color: #fbc02d; }
+.elem-row-header.water { color: #1976d2; }
+
+.elem-cell {
+  width: 70px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 2px;
+}
+
+/* Row-based background colors — Fire=row1 red, Earth=row2 teal, Air=row3 yellow, Water=row4 blue */
+.elem-cell.fire { background: rgba(211,47,47,0.15); }
+.elem-cell.earth { background: rgba(46,125,50,0.15); }
+.elem-cell.air { background: rgba(251,192,45,0.15); }
+.elem-cell.water { background: rgba(25,118,210,0.15); }
+
+/* Natal toggle button (centered at bottom) */
+#hudNatalBtn {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.8);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#hudNatalBtn:hover {
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.3);
+}
+
+#hudNatalBtn.active {
+  background: rgba(212,175,55,.2);
+  border-color: rgba(212,175,55,.5);
+  color: #d4af37;
+}
+
+/* Planet toggle buttons */
+.hud-toggles {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.hud-toggle-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.6);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-toggle-btn:hover {
+  background: rgba(255,255,255,.1);
+}
+
+.hud-toggle-btn.active {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border-color: rgba(255,255,255,.3);
+}
+
+/* Bodies and Houses sub-modals (inside wheel modal) */
+.subModal {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+}
+
+.subModal[aria-hidden="false"] {
+  display: block;
+  pointer-events: auto;
+}
+
+.subModalCard {
+  position: absolute;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.95);
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,.5);
+  min-width: 200px;
+  pointer-events: auto;
+}
+
+.subModalClose {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subModalClose:hover {
+  background: rgba(255,255,255,.2);
+}
+
+/* Bodies Modal positioning - below Bodies button */
+#bodiesModal .bodiesModalCard {
+  top: 100px;
+  left: 10px;
+}
+
+.subModalBackdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.subModalCard {
+  pointer-events: auto !important;
+}
+
+/* Houses Modal positioning - below Houses button */
+#housesModal .housesModalCard {
+  top: 100px;
+  left: 120px;
+}
+
+/* Cycles modal - rendered above zyModalCard via JS positioning */
+#cyclesModal .cyclesModalCard {
+  z-index: 99999999 !important;
+}
+
+#cyclesModal[aria-hidden="false"] {
+  pointer-events: auto !important;
+}
+
+/* Match bodies modal layout — no full-screen flex hijack */
+#housesModal {
+  z-index: 9999999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+/* Cycles Modal positioning - below Cycles button, matching housesModal pattern */
+#cyclesModal {
+  z-index: 9999999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+#cyclesModal[aria-hidden="true"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#cyclesModal[aria-hidden="false"] {
+  pointer-events: auto !important;
+}
+
+#cyclesModal .cyclesModalCard {
+  position: fixed !important;
+  top: 355px;
+  left: 12px;
+  z-index: 9999999 !important;
+}
+
+#housesModal[aria-hidden="true"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#housesModal[aria-hidden="false"] {
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+#housesModal .subModalCard {
+  pointer-events: auto !important;
+  position: relative !important;
+}
+
+#housesModal .houses-grid {
+  pointer-events: auto !important;
+}
+
+/* Bodies Modal */
+.bodiesModalCard {
+  width: 320px;
+  max-width: 90vw;
+  padding: 20px;
+}
+
+.bodiesModalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.bodies-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.body-toggle-btn {
+  padding: 10px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(76, 175, 80, 0.2); /* Green = selected by default */
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.body-toggle-btn:hover {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.body-toggle-btn.off {
+  background: rgba(244, 67, 54, 0.2); /* Red = off */
+  border-color: rgba(255,255,255,.1);
+}
+
+.body-toggle-btn.off:hover {
+  background: rgba(244, 67, 54, 0.3);
+}
+
+/* Houses Modal */
+.housesModalCard {
+  width: 280px;
+  max-width: 90vw;
+  padding: 20px;
+}
+
+.housesModalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.houses-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto !important;
+  z-index: 1001;
+  position: relative;
+}
+
+.house-option {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.8);
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  pointer-events: auto !important;
+  display: block;
+  width: 100%;
+}
+
+.house-option:hover {
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.35);
+  color: #fff;
+}
+
+.house-option.active {
+  background: rgba(212,175,55,.25);
+  border-color: rgba(212,175,55,.6);
+  color: #f0d060;
+}
+
+/* Planet glyph/name in bodies grid */
+.body-toggle-btn .planet-glyph {
+  font-size: 18px;
+}
+
+.body-toggle-btn .planet-name {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Separator line between planets and asteroids */
+.bodies-separator {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: rgba(255,255,255,.2);
+  margin: 4px 0;
+}
+
+/* President thumbnails on timeline */
+.president-thumb {
+  border-radius: 2px;
+  border: 1px solid rgba(255,215,0,0.5);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.president-thumb:hover {
+  transform: scaleX(2);
+  border-color: rgba(255,215,0,1);
+  box-shadow: 0 0 10px rgba(255,215,0,0.5);
+  z-index: 100;
+}
+
+/* Natal grid - same format as transits, to the right */
+#wheelNatalOverlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  padding: 3px 5px 4px;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+}
+
+
+#wheelNatalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 10.5px;
+  min-width: 88px;
+}
+
+/* Event Info overlay — Auspicious Event (right side, left of Hermetic Lots) */
+#wheelEventInfoOverlay {
+  position: absolute;
+  bottom: 188px;
+  right: 285px;
+  z-index: 10;
+  padding: 6px 10px 8px;
+  background: rgba(35,35,45,0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  width: fit-content;
+  min-width: 160px;
+  max-width: 240px;
+  cursor: pointer;
+  transition: background .3s, border-color .3s, box-shadow .3s;
+  pointer-events: auto !important;
+}
+#wheelEventInfoOverlay #auspiciousNavLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+#wheelEventInfoOverlay:hover {
+  background: rgba(50,50,60,0.9);
+  border-color: rgba(255,255,255,0.22);
+}
+#wheelEventInfoOverlay:hover::after {
+  content: "→ Find auspicious times";
+  display: block;
+  font-size: 9px;
+  color: rgba(255,255,255,0.35);
+  text-align: center;
+  margin-top: 3px;
+}
+/* Populated state — green tint + darker yellow/gold border */
+#wheelEventInfoOverlay.has-data {
+  background: rgba(34, 197, 94, 0.18);
+  border: 1.5px solid #d4a72c;
+  box-shadow: 0 0 10px rgba(212, 167, 44, 0.18);
+}
+#wheelEventInfoOverlay.has-data:hover {
+  background: rgba(34, 197, 94, 0.28);
+  border-color: #e0b83a;
+}
+#wheelEventInfoOverlay.has-data:hover::after {
+  content: "→ Edit in Auspicious Calculator";
+  color: rgba(255,255,255,0.6);
+}
+
+/* Hermetic Lots grid */
+#wheelLotsOverlay {
+  position: absolute;
+  bottom: 188px; /* small buffer above the elements grid */
+  right: 10px;
+  z-index: 200 !important;
+  padding: 4px 6px 5px;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+  max-height: none;
+  overflow: visible;
+  width: fit-content;
+  min-width: 200px;
+}
+
+/* Lunar Phases grid - v2 */
+#wheelLunarPhasesOverlay {
+  position: absolute !important;
+  bottom: 10px !important;
+  right: 280px !important; /* Move 30px left */
+  z-index: 100 !important;
+  padding: 6px;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+  width: fit-content;
+  min-width: 200px;
+}
+
+.lots-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.lots-column-headers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,.2);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+}
+
+.lots-hdr-name {
+  flex: 1;
+}
+
+.lots-hdr-sign {
+  width: 62px;
+  text-align: left;
+}
+
+.lots-hdr-house {
+  width: 20px;
+  text-align: right;
+}
+
+.lots-mode-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.lots-mode-btn {
+  padding: 3px 10px;
+  font-size: 10px;
+  min-width: 24px;
+  height: 22px;
+  border: 1px solid rgba(255,255,255,.3);
+  background: rgba(255,50,50,.3);
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.lots-mode-btn.is-active {
+  background: rgba(50,255,100,.4);
+  color: rgba(255,255,255,.95);
+  border-color: rgba(50,255,100,.6);
+}
+
+#wheelLotsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 15px;
+  min-width: 170px;
+}
+
+.lots-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 18px;
+  line-height: 1.05;
+}
+
+.lots-name {
+  flex: 1;
+  color: rgba(255,255,255,.7);
+  font-size: 11px;
+}
+
+.lots-sign {
+  width: 24px;
+  text-align: center;
+  font-size: 16px;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
+}
+
+.lots-sign.lots-fire { color: #d32f2f !important; }
+.lots-sign.lots-earth { color: #2e7d32 !important; }
+.lots-sign.lots-air { color: #fbc02d !important; }
+.lots-sign.lots-water { color: #1976d2 !important; }
+
+.lots-degree {
+  color: rgba(255,255,255,.7);
+  font-size: 11px;
+  min-width: 38px;
+}
+
+.lots-house {
+  color: rgba(255,255,255,.6);
+  font-size: 11px;
+  min-width: 20px;
+  text-align: right;
+}
+
+.natal-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 88px;
+  min-height: 20px;
+  line-height: 1;
+}
+
+.natal-planet {
+  width: 23px;
+  text-align: center;
+  font-size: 24px;
+  line-height: 1;
+  color: #ffd700; /* gold for natal */
+}
+
+.natal-planet.ac-mc-text {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.natal-angle-label {
+  font-size: 15px;
+  width: 23px;
+}
+
+.natal-sign {
+  min-width: 30px;
+  text-align: center;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
+  font-variant-emoji: text;
+  -webkit-font-variant-emoji: text;
+}
+
+/* Lunar Phases grid - v2 */
+.lunar-phases-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 11px;
+}
+
+.lunar-phase-row {
+  display: grid;
+  grid-template-columns: 44px 80px 50px 20px 38px;
+  gap: 2px;
+  align-items: center;
+  padding: 0;
+  min-height: 22px;
+  line-height: 1;
+}
+
+.lunar-phase-row:first-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.lunar-phase-row:last-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.lunar-phase-name {
+  color: rgba(255,255,255,.7);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.lunar-phase-date {
+  color: rgba(255,255,255,.7);
+  font-size: 11px;
+}
+
+.lunar-phase-time {
+  color: rgba(255,255,255,.7);
+  font-size: 11px;
+}
+
+.lunar-phase-position {
+  font-size: 12px !important;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif !important;
+  font-weight: 400;
+  text-align: center;
+  width: 20px;
+  justify-content: center;
+}
+
+/* Sign glyphs stay colored based on parent element class */
+.lunar-phase-position {
+  display: inline-flex;
+  align-items: center;
+}
+
+.lunar-phase-position .sign-glyph {
+  font-size: 14px !important;
+}
+
+.lunar-phase-position.lunar-fire .sign-glyph { color: #d32f2f !important; }
+.lunar-phase-position.lunar-earth .sign-glyph { color: #2e7d32 !important; }
+.lunar-phase-position.lunar-air .sign-glyph { color: #fbc02d !important; }
+.lunar-phase-position.lunar-water .sign-glyph { color: #1976d2 !important; }
+
+/* Degree text always white, separate column */
+.lunar-phase-degree {
+  color: rgba(255,255,255,.7) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  text-align: right;
+}
+
+.lunar-phase-aspect {
+  font-size: 17px !important;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif !important;
+  text-align: right;
+}
+
+.lunar-mode-btn {
+  padding: 3px 10px;
+  font-size: 10px;
+  min-width: 24px;
+  height: 22px;
+  border: 1px solid rgba(255,255,255,.3);
+  background: rgba(255,50,50,.3);
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.lunar-mode-btn.is-active {
+  background: rgba(50,255,100,.4);
+  color: rgba(255,255,255,.95);
+  border-color: rgba(50,255,100,.6);
+}
+
+.natal-sign.natal-fire { color: #d32f2f !important; }
+.natal-sign.natal-earth { color: #2e7d32 !important; }
+.natal-sign.natal-air { color: #fbc02d !important; }
+.natal-sign.natal-water { color: #1976d2 !important; }
+
+.natal-degree {
+  min-width: 34px;
+  text-align: right;
+  font-size: 10.5px;
+  opacity: 0.9;
+}
+.natal-sign.natal-placeholder { color: rgba(255,255,255,0.2); }
+.natal-degree.natal-placeholder { color: rgba(255,255,255,0.2); }
+
+
+
+/* Persistent natal picker - always visible in wheel modal */
+#natalPicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  background: rgba(0,0,0,.8);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  flex-wrap: nowrap;
+  width: max-content;
+  min-width: 320px;
+  max-width: 750px;
+  position: absolute;
+  top: 10px;
+  left: 420px;
+  right: 240px;
+  z-index: 10;
+}
+
+#natalDateInput {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: #ffffff14;
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  width: 118px;
+}
+
+#natalDateInput:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+#natalSetBtn, #natalCancelBtn {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#natalSetBtn:hover {
+  background: rgba(212,175,55,.3);
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+#natalCancelBtn:hover {
+  background: rgba(220,38,38,.3);
+  border-color: #dc2626;
+  color: #ff7b7b;
+}
+
+
+/* NATAL label span inside the persistent picker */
+#natalPicker > span {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: rgba(212, 175, 55, .9);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+
+/* Natal time and location inputs */
+#natalTimeInput {
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: #ffffff14;
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  width: 118px;
+  margin-right: 6px;
+}
+#natalTimeInput:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+#natalLocationInput {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: #ffffff14;
+  color: #fff;
+  font-size: 12px;
+  width: 170px;
+}
+#natalLocationInput:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+#natalLocationInput::placeholder {
+  color: rgba(255,255,255,.4);
+  font-size: 11px;
+}
+
+/* Houses button - removed, now styled with bodiesBtn */
+
+
+
+
+/* Hermetic Lots selector modal — nested in #wheelLotsOverlay so it opens over the Lots box */
+#wheelLotsOverlay { pointer-events: auto !important; overflow: visible !important; }
+#lotsModal {
+  position: absolute !important;
+  top: auto !important;
+  bottom: 0 !important;
+  right: calc(100% + 8px) !important;
+  z-index: 10000 !important;
+  display: none !important;
+  pointer-events: none !important;
+}
+#lotsModal[aria-hidden="false"] {
+  display: block !important;
+  pointer-events: auto !important;
+}
+#lotsModal .lotsModalCard {
+  position: static !important;
+  min-width: 210px;
+  max-width: 260px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.96);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow: 0 8px 28px rgba(0,0,0,.65);
+  pointer-events: auto !important;
+}
+.lotsModalTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,.8);
+  margin: 0 28px 10px 0;
+  letter-spacing: .04em;
+}
+.lots-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.lot-toggle-btn {
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(76,175,80,.22);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lot-toggle-btn.off {
+  background: rgba(244,67,54,.18);
+  color: rgba(255,255,255,.58);
+}
+.lot-toggle-btn:hover { background: rgba(76,175,80,.32); }
+.lot-toggle-btn.off:hover { background: rgba(244,67,54,.28); }
+.lot-name-gold { color: #C8A050; font-weight: 700; }
+#hudNatalBtn { height: 28px; padding: 0 10px; white-space: nowrap; }

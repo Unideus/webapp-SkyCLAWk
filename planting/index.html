@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<!-- BUILD: 2025-04-07T23:19:00-04:00 -->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+		<meta http-equiv="Pragma" content="no-cache"/>
+		<meta http-equiv="Expires" content="0"/>
+
+<title>Planting Scale - Zodi-Yuga Timeline</title>
+	<base href="/">
+
+	<!-- =========================================================
+		 CATHEDRAL LAYOUT PHILOSOPHY
+		 ---------------------------------------------------------
+		 • This file is written to be READ as much as RUN
+		 • Sections are large and obvious
+		 • Time flows from ONE master variable
+		 • All future systems attach to known anchors
+		 ========================================================= -->
+
+	<link href="../css/timeline.css?v=29" rel="stylesheet"/>
+	<link href="../css/astro-hud.css?v=40" rel="stylesheet"/>
+	<link href="/planting/planting.css?v=1019" rel="stylesheet"/>
+	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
+	
+	</head>
+
+		<body>
+
+			<div id="topMenu">
+
+			  <!-- Title block -->
+				<div id="menuTitle">
+					<img
+						alt="The Grand Conjunction"
+						src="../timelinetitle.webp"
+						class="menuLogo"
+						draggable="false"
+					/>
+
+					<div id="menuRightStack">
+
+						<button id="wheelFab" class="uiPill wheelFabMenu" type="button"
+							aria-haspopup="dialog"
+							aria-controls="wheelModal"
+							aria-expanded="false"
+							aria-label="Open astro wheel"><span class="zodiac-label-top">Zodiac</span><span class="zodiac-label-middle">Wheel</span><span class="zodiac-wheel-icon"></span></button>
+					</div>
+				</div>
+				
+				<div id="wheelModal" class="zyModal" role="dialog" aria-modal="true" aria-hidden="true">
+				<div class="zyModalBackdrop" data-close="wheel"></div>
+
+				<div class="zyModalCard" role="document">
+					<div class="zodiacPanelHeader">
+						<div class="zodiacPanelBrand">
+							<img src="../timelinetitle.webp" alt="" draggable="false" />
+							<span>Zodiac Wheel</span>
+						</div>
+						<button id="wheelClose" class="zyModalClose" type="button" aria-label="Collapse zodiac wheel panel">×</button>
+					</div>
+
+					<!-- Date/Time overlay at top of wheel -->
+					<div id="wheelDateOverlay">
+						<span id="wheelDateValue">--</span>
+					</div>
+
+					<!-- Natal picker (separate box) -->
+					<div id="natalPicker" class="natalPicker">
+						<span>NATAL</span>
+						<input id="natalDateInput" type="date" />
+						<input id="natalTimeInput" type="time" step="60" value="12:00" />
+						<input id="natalLocationInput" type="text" placeholder="City" autocomplete="off" />
+						<div id="natalLocationDropdown" class="location-dropdown" style="display:none"></div>
+						<button id="natalSetBtn" class="uiPill" type="button">Set</button>
+						<button id="natalCancelBtn" class="uiPill" type="button">Clear</button>
+					</div>
+
+					<!-- Control buttons below date -->
+					<div id="controlButtonsRow" style="position:absolute;top:55px;left:10px;z-index:200;display:flex;flex-direction:column;gap:6px;align-items:flex-start;pointer-events:auto;">
+						<div style="display:flex;gap:8px;align-items:center;">
+						<button id="bodiesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Bodies</button>
+						<span id="housesBtnWrap" style="all:unset;display:inline-flex;align-items:center;gap:0;border-radius:8px;overflow:visible;border:1px solid rgba(255,255,255,.3);pointer-events:auto;">
+						<button id="housesBtn" style="all:unset;padding:6px 12px;font-size:11px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Houses</button>
+						<span id="housesToggle" style="display:inline-flex;align-items:center;cursor:pointer;width:32px;height:16px;border-radius:8px;background:rgba(34,197,94,.5);padding:2px;transition:background 0.2s;pointer-events:auto;flex-shrink:0;user-select:none;"><span id="housesToggleDot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform 0.2s;transform:translateX(14px);"></span></span></span>
+						</div>
+						<div style="display:flex;gap:8px;align-items:center;">
+						<div id="skyModeToggle" style="display:flex;gap:0;border-radius:8px;overflow:visible;border:1px solid rgba(255,255,255,.3);pointer-events:auto;">
+  <button id="skyModeFixed" class="skyModeOption skyModeActive" style="all:unset;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;background:rgba(0,200,80,.35);border:none;color:rgba(255,255,255,.9);font-weight:600;display:inline-flex;align-items:center;" type="button">☉ Fixed</button>
+  <button id="skyModeLive" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;" type="button">▶ Live</button>
+</div>
+						<button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">⟳ Cycles</button>
+						</div>
+					</div>
+
+					<!-- Transits grid overlay at top right of wheel -->
+					
+				<!-- Ruler grid - Hour and Day planetary rulers -->
+				<div id="wheelRulerOverlay">
+					<div class="grid-label">RULERS</div>
+					<div id="wheelRulerGrid"></div>
+				</div>
+				<div id="wheelTransitsOverlay">
+							<button id="plantingTransitsToggle" class="plantingOverlayToggle" type="button" aria-expanded="false" aria-controls="wheelTransitsGrid">TRANSITS</button>
+							<div id="wheelTransitsGrid" hidden></div>
+					</div>
+
+					<!-- Hermetic Lots grid (below natal/transits) -->
+					<div id="wheelLotsOverlay">
+						<div class="lots-header">
+							<span class="grid-label">Hermetic Lots</span>
+							<div class="lots-mode-buttons">
+								<button id="lotsTransitBtn" class="uiPill lots-mode-btn is-active" type="button" title="Show Transit Lots">T</button>
+								<button id="lotsNatalBtn" class="uiPill lots-mode-btn" type="button" title="Show Natal Lots">N</button>
+							</div>
+						</div>
+						<div class="lots-column-headers">
+							<span class="lots-hdr-name">Name</span>
+							<span class="lots-hdr-sign">Sign/Long</span>
+							<span class="lots-hdr-house">Hs</span>
+						</div>
+						<div id="wheelLotsGrid"></div>
+					</div>
+
+					<!-- Aspects grid overlay at bottom left of wheel -->
+					<div id="wheelAspectsOverlay">
+						<div id="wheelAspectsGrid"></div>
+					</div>
+
+					<!-- Elemental box overlay at bottom right of wheel -->
+					<div id="wheelElementalOverlay">
+						<div class="lots-header">
+							<button id="plantingElementsToggle" class="plantingOverlayToggle" type="button" aria-expanded="true" aria-controls="wheelElementalGrid">Elements</button>
+						</div>
+						<div id="wheelElementalGrid"></div>
+					</div>
+
+					<div class="wheelStage" id="wheelStage">
+						<img id="wheelImg" alt="Astro wheel" draggable="false" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='none' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E" />
+					</div>
+
+					<div class="zyResizeHandle" id="wheelResizeHandle" title="Resize"></div>
+
+					<!-- Bodies sub-modal (inside wheel modal, moves with it) -->
+					<div id="bodiesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+						<div class="subModalCard bodiesModalCard" role="document">
+							<button id="bodiesClose" class="subModalClose" type="button" aria-label="Close bodies selector">×</button>
+							<div class="bodiesModalTitle">Select Bodies</div>
+							<div id="bodiesGrid" class="bodies-grid"></div>
+						</div>
+					</div>
+
+					<!-- Houses sub-modal (inside wheel modal, moves with it) -->
+					<div id="housesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+						<div class="subModalCard housesModalCard" role="document">
+							<button id="housesClose" class="subModalClose" type="button" aria-label="Close houses selector">×</button>
+							<div class="housesModalTitle">House System</div>
+							<div id="housesGrid" class="houses-grid">
+								<button class="house-option active" data-system="whole-sign" onclick="window.houseSystem='whole-sign';this.parentElement.querySelectorAll('.house-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('housesModal').setAttribute('aria-hidden','true');document.getElementById('housesBtn').textContent='Whole Sign';if(typeof drawAstroWheel==='function')drawAstroWheel();">Whole Sign</button>
+								<button class="house-option" data-system="P" onclick="window.houseSystem='P';this.parentElement.querySelectorAll('.house-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('housesModal').setAttribute('aria-hidden','true');document.getElementById('housesBtn').textContent='Placidus';if(typeof drawAstroWheel==='function')drawAstroWheel();">Placidus</button>
+								<button class="house-option" data-system="porphyry" onclick="window.houseSystem='porphyry';this.parentElement.querySelectorAll('.house-option').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('housesModal').setAttribute('aria-hidden','true');document.getElementById('housesBtn').textContent='Porphyry';if(typeof drawAstroWheel==='function')drawAstroWheel();">Porphyry</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="cyclesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+					<div class="subModalCard cyclesModalCard" style="top:60px;left:10px;min-width:220px;background:rgba(10,10,12,0.97);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 16px;">
+						<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+							<span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600;letter-spacing:.05em;">PLANETARY CYCLES</span>
+							<button id="cyclesClose" class="subModalClose" style="position:static;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+						</div>
+						<select id="cyclesPlanetSelect" style="width:100%;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:8px 10px;font-size:16px;cursor:pointer;outline:none;margin-bottom:10px;">
+							<option value="mercury">☿ Mercury</option>
+							<option value="venus" selected>♀ Venus</option>
+							<option value="mars">♂ Mars</option>
+							<option value="jupiter">♃ Jupiter</option>
+							<option value="saturn">♄ Saturn</option>
+							<option value="uranus">♅ Uranus</option>
+							<option value="neptune">♆ Neptune</option>
+							<option value="pluto">♇ Pluto</option>
+						</select>
+						<div style="display:flex;gap:6px;margin-bottom:10px;">
+							<button class="cycle-mode-btn" data-mode="retrograde" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">⟲ Retro</button>
+							<button class="cycle-mode-btn" data-mode="synodic" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">☌ Synodic</button>
+							<button class="cycle-mode-btn" data-mode="both" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">Both</button>
+						</div>
+						<div style="display:flex;gap:8px;justify-content:flex-end;">
+							<button id="cyclesApplyBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(180,140,80,.25);color:#e8c898;">Apply</button>
+							<button id="cyclesClearBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(30,25,18,.9);color:#ccc0a8;">Clear</button>
+						</div>
+					</div>
+				</div>
+
+				<div id="cycleModal" class="zyModal" role="dialog" aria-modal="true" aria-hidden="true">
+					<div class="zyModalBackdrop" data-close="cycle"></div>
+
+					<div class="zyModalCard cycleModalCard" role="document">
+						<button id="cycleClose" class="zyModalClose" type="button" aria-label="Close conjunction selector">×</button>
+
+						<div class="cycleModalTitle">Conjunction Cycle</div>
+
+						<div class="cycleForm">
+							<label class="cycleLabel">
+								<span>Planet 1</span>
+								<select id="cyclePlanet1" class="cycleSelect"></select>
+							</label>
+
+							<label class="cycleLabel">
+								<span>Planet 2</span>
+								<select id="cyclePlanet2" class="cycleSelect"></select>
+							</label>
+						</div>
+
+						<div class="cycleActions">
+							<button id="cycleApply" class="uiPill" type="button">Apply</button>
+						</div>
+					</div>
+				</div>
+				</div>
+
+			  <!-- Slider and Controls -->
+			  <div id="menuSlider">
+
+				<!-- Header row (centered status group only) -->
+				<div id="sliderHeaderRow">
+				  <div id="topSliderRow">
+
+					<div class="topLeftGroup">
+						<button id="unitKnob" class="uiPill unitKnob" type="button" aria-label="Speed units">
+						<span class="unitKnobTrack" id="unitKnobTrack" aria-hidden="true">
+							<span class="unitKnobStops" aria-hidden="true"></span>
+
+							<span class="unitKnobTicks" aria-hidden="true">
+							<span class="unitTick" data-unit="yrs">y</span>
+							<span class="unitTick" data-unit="months">m</span>
+							<span class="unitTick" data-unit="weeks">w</span>
+							<span class="unitTick" data-unit="days">d</span>
+							<span class="unitTick" data-unit="hours">h</span>
+							<span class="unitTick" data-unit="minutes">m</span>
+							</span>
+
+							<span class="unitKnobThumb" id="unitKnobThumb" title="Drag"></span>
+						</span>
+						</button>
+
+						<div id="speedInfo" class="uiPill">0.00 yrs/sec</div>
+					</div>
+
+					<div class="topCenterGroup">
+					<div id="dateBoxText" class="uiPill">Loading...</div>
+
+					<div id="resetGroup">
+						<button id="resetBtn" class="uiPill">Reset to 2020</button>
+						<button id="resetNowBtn" class="uiPill">Reset to now</button>
+					</div>
+					</div>
+
+					</div>
+				</div>
+
+				<div class="sliderRail">
+				  <input id="speedSlider" max="100" min="-100" step="0.01" type="range" value="0"/>
+				  <div class="sliderZeroMark"></div>
+				</div>
+
+				<!-- Controls -->
+								<div id="controlRow">
+					<button class="controlBtn uiPill" id="prevElementBtn">← Element</button>
+
+					<button class="controlBtn uiPill" id="prevCrisisBtn">
+						← <span class="crisisText">Crisis</span>
+					</button>
+
+					<!-- NEW: Dedicated Saturn/Jupiter Conjunction nav (always Sat–Jup) -->
+					<button class="controlBtn uiPill" id="prevSatJupConjBtn">← <span style="font-size:1.6em">♄</span> ☌ <span style="font-size:1.6em">♃</span></button>
+
+					<button class="controlBtn uiPill bumpBtn" id="bumpRevBtn" type="button" title="Bump back (paused only)" disabled>◀</button>
+
+					<!-- Pause wrapper: keeps main row intact; positions cycle conj buttons under Pause -->
+					<span class="pauseWrap">
+						<button class="controlBtn uiPill" id="pauseBtn">Pause</button>
+
+						<span class="cycleConjBelow">
+							<button class="controlBtn uiPill" id="prevConjBtn">← Conj</button>
+							<button id="cycleFab" class="controlBtn uiPill" type="button"
+								aria-haspopup="dialog"
+								aria-controls="cycleModal"
+								aria-label="Select conjunction cycle"><span class="cycleFabText">choose a conjunction cycle</span></button>
+							<button class="controlBtn uiPill" id="nextConjBtn">Conj →</button>
+						</span>
+					</span>
+
+					<button class="controlBtn uiPill bumpBtn" id="bumpFwdBtn" type="button" title="Bump forward (paused only)" disabled>▶</button>
+
+					<!-- NEW: Dedicated Saturn/Jupiter Conjunction nav (always Sat–Jup) -->
+					<button class="controlBtn uiPill" id="nextSatJupConjBtn"><span style="font-size:1.6em">♄</span> ☌ <span style="font-size:1.6em">♃</span> →</button>
+
+					<button class="controlBtn uiPill" id="nextCrisisBtn">
+						<span class="crisisText">Crisis</span> →
+					</button>
+
+					<button class="controlBtn uiPill" id="nextElementBtn">Element →</button>
+				</div>
+
+			  </div>
+
+			  <!-- Date panel (uniform stack: date / time / location / go) -->
+			  <div id="menuDate">
+				<!-- Timeline scale selector -->
+				<div id="scaleSelector" role="group" aria-label="Time Scale">
+					<div class="scaleLabel">Time Scale</div>
+					<div class="scaleBtns">
+						<button class="scaleOpt" type="button" data-scale="skyclock" onclick="window.location.href='/skyclock/'">Skyclock</button>
+						<button class="scaleOpt" type="button" data-scale="generational" onclick="window.location.href='/'">Generational</button>
+						<button class="scaleOpt" type="button" data-scale="personal" onclick="window.location.href='/personal/'">Personal</button>
+						<button class="scaleOpt" type="button" data-scale="planting" onclick="window.location.href='/planting/'">Planting</button>
+					</div>
+				</div>
+				<div id="dateBoxOuter">
+					<input id="dateBoxInput" type="text" placeholder="21 Jan 2026" />
+					<input id="timeBoxInput" type="time" value="12:00" step="60" />
+					<input id="locationBoxInput" type="text" placeholder="location" autocomplete="off" />
+					<div id="locationDropdown" class="location-dropdown" style="display:none;position:absolute;z-index:9999;background:#1a1a2e;border:1px solid #333;border-radius:6px;max-height:260px;overflow-y:auto;min-width:240px;box-shadow:0 4px 12px rgba(0,0,0,.5)"></div>
+					<button type="button" class="dateGoBtn" id="dateBoxGoBtn">GO</button>
+				</div>
+			  </div>
+
+			</div> <!-- ✅ END topMenu -->
+
+			<aside id="permaculturePlanSidebar" class="plantingSidebar" aria-labelledby="permaculturePlanTitle">
+				<h2 id="permaculturePlanTitle">Permaculture Plan</h2>
+				<p id="planConnectionStatus" class="planStatus">No food forest plan connected.</p>
+				<dl id="planContextSummary" class="planContextSummary" hidden>
+					<div>
+						<dt>Zone</dt>
+						<dd id="planZone">--</dd>
+					</div>
+					<div>
+						<dt>Sun Sign</dt>
+						<dd id="planSunSign">--</dd>
+					</div>
+					<div>
+						<dt>Plants</dt>
+						<dd id="planPlants">--</dd>
+					</div>
+				</dl>
+				<div id="planEmptyActions" class="planActionStack">
+					<a class="uiPill" id="startNewPlanBtn" href="http://permaculture.zodi-yugaskyclock.com/?source=planting&amp;action=new" target="_blank" rel="noopener noreferrer">Start New Plan</a>
+					<button type="button" class="uiPill">Import Existing Plan</button>
+				</div>
+				<div id="planConnectedActions" class="planActionStack" hidden>
+					<button type="button" class="uiPill">Open Plan</button>
+					<button type="button" class="uiPill">Change Plan</button>
+				</div>
+			</aside>
+
+			<!-- =========================================================
+				 TIME SPINE (GLOBAL AXIS — NOT OWNED BY MENU)
+				 ========================================================= -->
+			<div id="timeMarker"></div>
+			<div id="nowLabelAge">NOW</div>
+
+			<!-- =========================================================
+				 SECTION 04B — TIMELINE NAVE
+				 ========================================================= -->
+			<div id="timelineWrap">
+
+			  <!-- =========================================================
+					 RIVER OF LIFE — 3D LAYER (PHASE 1)
+					 ---------------------------------------------------------
+					 • Lives BEHIND the screw SVG
+					 • Driven by the same master time state
+					 • Non-interactive (pointer-events: none)
+					 ========================================================= -->
+			  <!-- RIVER HIDDEN temporarily
+				 <div id="river3dContainer" aria-hidden="true"></div>
+				 -->
+
+			  <!-- STATIC 20-YEAR TICKS -->
+			  <div id="phaseTicks">
+				<div></div><div></div><div></div><div></div>
+			  </div>
+
+			  <!-- SCREW TIMELINE (SCROLLING SPACE) -->
+			  <svg id="screwSVG" preserveaspectratio="none" xmlns="http://www.w3.org/2000/svg">
+				<g id="scrollGroup">
+				  <g id="overlayCycle"></g>
+				  <g id="elementalCycle"></g>
+				  <g id="bands"></g>
+				  <g id="diags"></g>
+				  <g id="saeculumWave">
+					<g id="saeculumLight"></g>
+					<g id="saeculumLine"></g>
+					<g id="diagLabels"></g>
+					<g id="ticks"></g>
+					<g id="grid"></g>
+					<g id="bottomYears"></g>
+				  </g>
+				</g>
+			  </svg>
+			  <section id="plantingMoonPhaseReadout" class="plantingMoonPhaseReadout" aria-live="polite">
+				<div class="moonPhaseKicker">Moon phase</div>
+				<div class="moonPhaseLine">
+				  <span id="moonPhaseReadoutGlyph" class="moonPhaseGlyph">🌑</span>
+				  <span id="moonPhaseReadoutName">New Moon</span>
+				  <span id="moonPhaseReadoutMeta">0° from New · age 0.0d · illum 0%</span>
+				</div>
+				<p id="moonPhaseReadoutAdvice">Plan, observe, and set intentions for the next planting cycle.</p>
+			  </section>
+
+			
+
+				<!-- ARCHETYPE LABELS -->
+			  <svg height="180" id="labelSVG" width="450">
+
+				<rect fill="rgba(0,0,0,0.88)" height="100%" width="100%"></rect>
+				<g id="labelStructure"></g>
+				<g id="diagonalIndex"></g>
+				<g id="labelBG"></g>
+				<g font-size="28" font-weight="bold" id="labelText"></g>
+				<g id="lifeCycleOverlay"></g>
+			  </svg>
+
+			</div> <!-- ✅ END timelineWrap -->
+	<!-- =========================================================
+			 MOVED TO 
+			 
+			 SECTION 05B — ASTRO SANCTUARY (PLANETARY CONTEXT)
+			 ---------------------------------------------------------
+			 • Exists outside linear time
+			 • Never scrolls with the screw
+			 • Sole owner of the astroWheel canvas
+			 ========================================================= -->
+
+	<!-- =========================================================
+			 ARCHIVE — LEGACY HEADER & CONTROLS (REFERENCE ONLY)
+			 ---------------------------------------------------------
+			 This block documents the original pre-menu layout.
+			 It is preserved for historical and educational purposes.
+			 It MUST remain commented out.
+			 ========================================================= -->
+	<!--
+		<h2>Grand Conjunction Saeculum Timeline — Generational Layer</h2>
+
+		<div id="controls">
+			<input type="range" min="-100" max="100" value="0" id="speedSlider">
+			<div class="sliderCenterMark"></div>
+			<span id="speedInfo">0.00 yrs/sec</span>
+		</div>
+
+			-->
+			<div id="plantingForkBadge" aria-hidden="true">Planting page v1</div>
+
+			<script>
+				window.TIMELINE_SCALE = "planting";
+			</script>
+			<script type="module" src="../shared/swe-init.js"></script>
+		<script src="js/constants.js"></script>
+
+		<!-- Elemental baseline (keep if elemental band still uses it) -->
+
+		<!-- Outer-cycle datasets (overlay band options) -->
+
+		<script src="js/astronomy-adapter.js"></script>
+		<script src="js/planetary-cycles.js"></script>
+
+		<script src="js/heaven-data.js"></script>
+
+		<script src="js/screw-renderer.js"></script>
+		<script src="js/astro-wheel.js"></script>
+		<script src="js/conjunction-selector.js"></script>
+
+		<!-- 3D (Phase 1) — Three.js global build + simple renderer wrapper -->
+		<script src="js/ui-controller.js"></script>
+		<script src="js/planting.js"></script>
+	<script>
+	// Navigation: Scale selector navigates to skyclock or timeline variants
+		document.querySelectorAll('.scaleOpt').forEach(btn => {
+			btn.addEventListener('mousedown', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				const scale = this.dataset.scale;
+				if (scale === 'skyclock') {
+					window.location.href = '/skyclock/';
+				} else if (scale === 'generational') {
+					window.location.href = '/';
+				} else if (scale === 'personal') {
+					window.location.href = '/personal/';
+				} else if (scale === 'planting') {
+					window.location.href = '/planting/';
+				}
+			}, true); // Use capture phase
+		});
+	</script>
+
+</body>
+	
+</html>

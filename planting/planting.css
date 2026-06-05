@@ -1,0 +1,724 @@
+/* Minimal planting-fork affordances. The page intentionally inherits the
+   Personal timeline shell and visual system from css/timeline.css. */
+
+:root {
+  --planting-sidebar-w: 260px;
+  --planting-sidebar-gap: 24px;
+  --label-width: 450px;
+  --zodiac-panel-width: clamp(655px, 53vw, 875px);
+  --planting-now-anchor-closed: 0.34;
+  --planting-now-anchor-open: 0.30;
+}
+
+#dateBoxOuter {
+  width: 200px;
+}
+
+.plantingSidebar {
+  position: fixed;
+  left: 24px;
+  top: var(--top-menu-bottom, 190px);
+  bottom: 62px;
+  z-index: 220;
+  width: var(--planting-sidebar-w);
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--ui-radius);
+  background: rgba(10, 10, 10, 0.82);
+  color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.26);
+  overflow: auto;
+}
+
+.plantingSidebar h2 {
+  margin: 0 0 10px;
+  color: rgba(255, 238, 190, 0.92);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.planStatus {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.planContextSummary {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.planContextSummary[hidden],
+.planActionStack[hidden] {
+  display: none;
+}
+
+.planContextSummary div {
+  display: grid;
+  gap: 3px;
+}
+
+.planContextSummary dt {
+  color: rgba(212, 175, 55, 0.78);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.planContextSummary dd {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.planActionStack {
+  display: grid;
+  gap: 8px;
+}
+
+.planActionStack .uiPill {
+  width: 100%;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+body.zodiac-panel-open .plantingSidebar {
+  left: var(--planting-guild-left, calc(var(--zodiac-panel-width) + 28px));
+  top: calc(var(--planting-guild-top, var(--top-menu-bottom, 190px)) + 122px);
+  bottom: auto;
+  width: min(var(--planting-guild-width, 300px), calc(100vw - var(--zodiac-panel-width) - 56px));
+  max-height: 230px;
+  padding: 11px 12px 12px;
+  z-index: 190;
+  border-color: rgba(212, 175, 55, 0.26);
+  background: rgba(7, 10, 8, 0.9);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.34);
+}
+
+body.zodiac-panel-open .plantingSidebar h2 {
+  margin-bottom: 6px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+body.zodiac-panel-open .planStatus {
+  margin-bottom: 9px;
+  font-size: 11px;
+}
+
+body.zodiac-panel-open .planContextSummary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+body.zodiac-panel-open .planContextSummary dt {
+  font-size: 9px;
+}
+
+body.zodiac-panel-open .planContextSummary dd {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+body.zodiac-panel-open .planActionStack {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+body.zodiac-panel-open #planConnectedActions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.zodiac-panel-open .planActionStack .uiPill {
+  min-width: 0;
+  height: 30px;
+  padding-inline: 8px;
+  font-size: 11px;
+}
+
+body.zodiac-panel-open #wheelModal .zyModalCard {
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+  padding-top: 0 !important;
+  gap: 0 !important;
+}
+
+#wheelModal .zodiacPanelHeader {
+  display: none !important;
+}
+
+#wheelModal #natalPicker,
+#wheelModal #wheelLotsOverlay {
+  display: none !important;
+}
+
+body.zodiac-panel-open #wheelModal .wheelStage {
+  min-height: clamp(500px, 58vh, 640px);
+  height: clamp(500px, 58vh, 640px);
+  width: 100%;
+  margin-top: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+body.zodiac-panel-open #wheelModal #wheelImg {
+  inset: 50% auto auto 50% !important;
+  width: 150% !important;
+  height: 150% !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(-50%, -30.5%);
+  object-fit: contain;
+}
+
+body.zodiac-panel-open #wheelModal #wheelDateOverlay {
+  top: 8px;
+  left: 10px !important;
+  right: auto !important;
+  width: fit-content;
+  min-width: 0;
+  max-width: calc(100% - 20px);
+  height: 59px;
+  padding-inline: 21px;
+  font-size: 21px;
+  justify-content: flex-start;
+}
+
+body.zodiac-panel-open #wheelModal #wheelDateValue {
+  width: auto;
+  text-align: left;
+}
+
+body.zodiac-panel-open #wheelModal #controlButtonsRow {
+  top: 73px !important;
+  align-items: flex-start !important;
+}
+
+body.zodiac-panel-open #wheelModal #realTimeSkyBtn {
+  all: unset;
+  order: 2;
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: max-content;
+  padding: 6px 12px;
+  font-size: 11px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  color: rgba(255,255,255,.8);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+body.zodiac-panel-open #wheelModal #realTimeSkyBtn[hidden] {
+  display: none !important;
+}
+
+body.zodiac-panel-open #wheelModal #realTimeSkyBtn[aria-pressed="true"] {
+  border-color: rgba(34,197,94,.7);
+  background: rgba(34,197,94,.28);
+  color: #fff;
+}
+
+
+
+body.zodiac-panel-open #wheelModal #wheelTransitsOverlay {
+  top: 118px !important;
+  right: 12px !important;
+  transform: scale(1.20);
+  transform-origin: top right;
+}
+
+body.zodiac-panel-open.planting-transits-open #wheelModal #wheelTransitsOverlay {
+  top: 10px !important;
+  right: 10px !important;
+  transform: scale(1.20);
+  transform-origin: top right;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsOverlay {
+  padding: 5px 7px 6px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsOverlay .plantingOverlayToggle {
+  margin-bottom: 5px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsGrid {
+  gap: 0;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsGrid .transit-row {
+  min-height: 19px;
+  gap: 4px;
+  line-height: 1;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsGrid .transit-planet {
+  width: 14px;
+  font-size: 13px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsGrid .transit-sign {
+  width: 27px;
+  font-size: 13px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsGrid .transit-degree {
+  width: 32px;
+  font-size: 9px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelRulerOverlay {
+  top: 10px !important;
+  right: 8px !important;
+  transform: scale(1.00);
+  transform-origin: top right;
+}
+
+body.zodiac-panel-open.planting-transits-open #wheelModal #wheelRulerOverlay {
+  right: 158px !important;
+}
+
+body.zodiac-panel-open #wheelModal .plantingOverlayToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  margin-bottom: 7px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.zodiac-panel-open #wheelModal .plantingOverlayToggle::after {
+  content: "▾";
+  color: rgba(212, 175, 55, 0.86);
+  font-size: 12px;
+  line-height: 1;
+}
+
+body.zodiac-panel-open #wheelModal .plantingOverlayToggle[aria-expanded="false"]::after {
+  content: "▸";
+}
+
+body.zodiac-panel-open #wheelModal #wheelTransitsGrid[hidden],
+body.zodiac-panel-open #wheelModal #wheelElementalGrid[hidden] {
+  display: none !important;
+}
+
+body.zodiac-panel-open #wheelModal #natalPicker {
+  margin-top: 8px;
+}
+
+
+
+body.zodiac-panel-open #wheelModal #wheelElementalOverlay {
+  right: 12px !important;
+  bottom: 12px !important;
+  transform: scale(1);
+  transform-origin: bottom right;
+  min-height: auto !important;
+  padding: 5px 6px 6px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalOverlay .plantingOverlayToggle {
+  margin-bottom: 4px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid {
+  min-height: auto;
+  gap: 1px;
+  font-size: 10px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-header-row {
+  gap: 1px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-row {
+  height: 32px;
+  gap: 1px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-col-header {
+  width: 62px;
+  font-size: 10px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-col-header:nth-child(2),
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-col-header:nth-child(3),
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-col-header:nth-child(4) {
+  margin-left: 0;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-cell {
+  width: 62px;
+  height: 32px;
+  gap: 3px;
+  font-size: 13px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelElementalGrid .elem-row-header {
+  width: 28px;
+  font-size: 18px;
+}
+
+body.zodiac-panel-open #wheelModal #wheelAspectsOverlay {
+  left: 12px !important;
+  bottom: 12px !important;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  transform: scale(1.5);
+  transform-origin: bottom left;
+}
+
+body #timelineWrap {
+  padding-left: calc(var(--planting-sidebar-w) + var(--planting-sidebar-gap) + 24px) !important;
+}
+
+body #screwSVG {
+  left: calc(var(--planting-sidebar-w) + var(--planting-sidebar-gap) + 24px);
+  width: calc(100% - var(--planting-sidebar-w) - var(--planting-sidebar-gap) - 44px);
+  overflow: hidden;
+}
+
+.plantingMoonPhaseReadout {
+  position: fixed;
+  left: var(--planting-moon-readout-left, 16px);
+  top: var(--planting-moon-readout-top, 330px);
+  width: var(--planting-moon-readout-width, min(720px, calc(100vw - 32px)));
+  z-index: 160;
+  display: grid;
+  gap: 4px;
+  padding: 10px 13px 11px;
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  border-left: 3px solid rgba(203, 213, 225, 0.86);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(3, 7, 18, 0.9), rgba(8, 18, 29, 0.82));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34), inset 0 0 18px rgba(148, 163, 184, 0.06);
+  color: #e5edf7;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+
+.moonPhaseKicker {
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.moonPhaseLine {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.moonPhaseGlyph {
+  font-size: 17px;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(203, 213, 225, 0.5));
+}
+
+#moonPhaseReadoutName {
+  color: #f8fafc;
+}
+
+#moonPhaseReadoutMeta {
+  color: #b9c6d4;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+#moonPhaseReadoutAdvice {
+  margin: 0;
+  color: #d7e8d8;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+body #labelSVG {
+  position: fixed;
+  top: var(--label-top, 140px);
+  left: var(--time-marker-left);
+  right: auto;
+  width: var(--label-width) !important;
+  z-index: 99999;
+}
+
+body.zodiac-panel-open #timelineWrap {
+  width: calc(100% - var(--zodiac-panel-width));
+  margin-left: var(--zodiac-panel-width);
+  padding-left: 20px !important;
+}
+
+body.zodiac-panel-open #screwSVG {
+  left: 20px;
+  width: calc(100% - 40px);
+}
+
+body.zodiac-panel-open .plantingMoonPhaseReadout {
+  left: calc(var(--zodiac-panel-width) + 16px);
+  width: var(--planting-moon-readout-width, min(620px, calc(100vw - var(--zodiac-panel-width) - 32px)));
+  transition: left 0.2s ease, width 0.2s ease;
+}
+
+
+#plantingForkBadge {
+  position: fixed;
+  left: 32px;
+  bottom: 20px;
+  z-index: 220;
+  padding: 5px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.68);
+  color: rgba(255, 238, 190, 0.76);
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+@media (max-width: 980px) {
+  .plantingSidebar {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 16px;
+    width: auto;
+    max-height: 210px;
+  }
+
+  body #timelineWrap {
+    padding-left: 20px !important;
+  }
+
+  body #screwSVG {
+    left: 20px;
+    width: calc(100% - 40px);
+  }
+
+  .plantingMoonPhaseReadout {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    top: var(--planting-moon-readout-top, 330px);
+  }
+
+  body #labelSVG {
+    position: fixed;
+    top: var(--label-top, 140px);
+    left: var(--time-marker-left);
+    right: auto;
+    width: var(--label-width) !important;
+    z-index: 99999;
+  }
+
+  #plantingForkBadge {
+    display: none;
+  }
+}
+
+@media (max-width: 980px) {
+  body.zodiac-panel-open .plantingSidebar {
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 16px;
+    width: auto;
+    max-height: 210px;
+  }
+
+  body.zodiac-panel-open #timelineWrap {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 20px !important;
+  }
+
+  body.zodiac-panel-open #screwSVG {
+    left: 20px;
+    width: calc(100% - 40px);
+  }
+}
+
+/* =========================================================
+   Zodiac Wheel docked panel (planting scale only)
+   ========================================================= */
+
+body.zodiac-panel-open #timelineWrap{
+  width: calc(100% - var(--zodiac-panel-width));
+  margin-left: var(--zodiac-panel-width);
+}
+
+body.zodiac-panel-open #decadeTabsContainer{
+  left: var(--zodiac-panel-width);
+  width: calc(100% - var(--zodiac-panel-width));
+}
+
+body.zodiac-panel-open #presidentThumbContainer{
+  left: var(--zodiac-panel-width) !important;
+  width: calc(100% - var(--zodiac-panel-width)) !important;
+}
+
+#wheelModal.zyModal{
+  inset: var(--top-menu-bottom, 140px) auto 0 0 !important;
+  width: var(--zodiac-panel-width) !important;
+  height: calc(100vh - var(--top-menu-bottom, 140px)) !important;
+  z-index: 650 !important;
+  pointer-events: none !important;
+}
+
+#wheelModal.zyModal[aria-hidden="false"]{
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+#wheelModal .zyModalBackdrop{
+  display: none;
+}
+
+#wheelModal .zyModalCard{
+  position: absolute !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 10px 10px 14px !important;
+  border-radius: 0 10px 10px 0 !important;
+  border-left: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(24,24,24,.98), rgba(3,3,3,.99)) !important;
+  box-shadow: 16px 0 40px rgba(0,0,0,.46) !important;
+  overflow: auto !important;
+  gap: 10px !important;
+}
+
+#wheelModal .zyModalClose{
+  position: static;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 20px;
+}
+
+#wheelModal .zyResizeHandle{
+  display: none;
+}
+
+body.zodiac-panel-open #wheelFab{
+  border-color: rgba(212,175,55,.58);
+  box-shadow: inset 0 0 0 1px rgba(212,175,55,.22), 0 0 18px rgba(212,175,55,.14);
+}
+
+#wheelModal .wheelStage{
+  width: 100%;
+  min-height: 300px;
+  aspect-ratio: 1 / 1;
+  transform: none !important;
+  margin-top: 44px;
+  overflow: visible;
+}
+
+#wheelModal #wheelImg{
+  inset: 0;
+}
+
+#wheelModal #wheelDateOverlay{
+  top: 62px;
+  left: 10px;
+  right: 10px;
+  width: auto;
+  min-width: 0;
+  height: 34px;
+  font-size: 12px;
+  letter-spacing: .03em;
+}
+
+
+
+#wheelModal #natalPicker{
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+#wheelModal #wheelTransitsOverlay,
+#wheelModal #wheelNatalOverlay,
+#wheelModal #wheelRulerOverlay,
+#wheelModal #wheelLotsOverlay,
+#wheelModal #wheelElementalOverlay,
+#wheelModal #wheelAspectsOverlay{
+  transform: scale(.92);
+  transform-origin: top right;
+}
+
+#wheelModal #wheelRulerOverlay{ right: 158px !important; }
+#wheelModal #wheelTransitsOverlay{ right: 76px !important; }
+#wheelModal #wheelNatalOverlay{ right: 0 !important; }
+#wheelModal #wheelLotsOverlay{ right: 0 !important; }
+#wheelModal #wheelElementalOverlay{ right: 0 !important; }
+
+@media (max-width: 900px){
+  body.zodiac-panel-open #timelineWrap,
+  body.zodiac-panel-open #decadeTabsContainer,
+  body.zodiac-panel-open #presidentThumbContainer{
+    margin-left: 0;
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  #wheelModal.zyModal{
+    width: min(92vw, 420px) !important;
+    z-index: 9999999 !important;
+  }
+}
+
+/* ── Push timeline content right when zodiac panel is open ── */
+body.zodiac-panel-open #timelineWrap,
+body.zodiac-panel-open #menuSlider {
+  /* stays centered — do NOT shift */
+}
+body.zodiac-panel-open .plantingSidebar {
+  z-index: 220;
+}

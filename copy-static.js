@@ -1,0 +1,116 @@
+#!/usr/bin/env node
+// Post-build: copy static assets that Vite doesn't bundle
+import { cpSync, mkdirSync, existsSync } from 'fs'
+import { resolve } from 'path'
+
+const root = resolve(import.meta.dirname)
+const dist = resolve(root, 'dist')
+
+// Copy shared modules (referenced by generational + personal as non-module scripts)
+const sharedSrc = resolve(root, 'shared')
+const sharedDst = resolve(dist, 'shared')
+if (existsSync(sharedSrc)) {
+    mkdirSync(sharedDst, { recursive: true })
+    cpSync(sharedSrc, sharedDst, { recursive: true })
+    console.log('Copied: shared/')
+}
+
+// Copy generational js dependencies (vendor, conjunction data, engine files)
+const genJsSrc = resolve(root, 'generational/js')
+const genJsDst = resolve(dist, 'generational/js')
+if (existsSync(genJsSrc)) {
+    mkdirSync(genJsDst, { recursive: true })
+    cpSync(genJsSrc, genJsDst, { recursive: true })
+    console.log('Copied: generational/js/')
+}
+
+// Copy personal js dependencies
+const perJsSrc = resolve(root, 'personal/js')
+const perJsDst = resolve(dist, 'personal/js')
+if (existsSync(perJsSrc)) {
+    mkdirSync(perJsDst, { recursive: true })
+    cpSync(perJsSrc, perJsDst, { recursive: true })
+    console.log('Copied: personal/js/')
+}
+
+// Copy planting js dependencies
+const pltJsSrc = resolve(root, 'planting/js')
+const pltJsDst = resolve(dist, 'planting/js')
+if (existsSync(pltJsSrc)) {
+    mkdirSync(pltJsDst, { recursive: true })
+    cpSync(pltJsSrc, pltJsDst, { recursive: true })
+    console.log('Copied: planting/js/')
+}
+
+// Copy CSS files
+const cssSrc = resolve(root, 'css')
+const cssDst = resolve(dist, 'css')
+if (existsSync(cssSrc)) {
+    mkdirSync(cssDst, { recursive: true })
+    cpSync(cssSrc, cssDst, { recursive: true })
+    console.log('Copied: css/')
+}
+
+// Copy data
+const dataSrc = resolve(root, 'data')
+const dataDst = resolve(dist, 'data')
+if (existsSync(dataSrc)) {
+    mkdirSync(dataDst, { recursive: true })
+    cpSync(dataSrc, dataDst, { recursive: true })
+    console.log('Copied: data/')
+}
+
+// Copy images
+const imgSrc = resolve(root, 'images')
+const imgDst = resolve(dist, 'images')
+if (existsSync(imgSrc)) {
+    mkdirSync(imgDst, { recursive: true })
+    cpSync(imgSrc, imgDst, { recursive: true })
+    console.log('Copied: images/')
+}
+
+// Copy ephe
+const epheSrc = resolve(root, 'public/ephe')
+const epheDst = resolve(dist, 'ephe')
+if (existsSync(epheSrc)) {
+    mkdirSync(epheDst, { recursive: true })
+    cpSync(epheSrc, epheDst, { recursive: true })
+    console.log('Copied: ephe/')
+}
+
+// Copy skyclock CSS
+const scSrc = resolve(root, 'skyclock/skyclock.css')
+const scDst = resolve(dist, 'skyclock/skyclock.css')
+if (existsSync(scSrc)) {
+    cpSync(scSrc, scDst)
+    console.log('Copied: skyclock/skyclock.css')
+}
+
+// Copy planting CSS
+const ptSrc = resolve(root, 'planting/planting.css')
+const ptDst = resolve(dist, 'planting/planting.css')
+if (existsSync(ptSrc)) {
+    cpSync(ptSrc, ptDst)
+    console.log('Copied: planting/planting.css')
+}
+
+// Copy _redirects
+const rdSrc = resolve(root, '_redirects')
+const rdDst = resolve(dist, '_redirects')
+if (existsSync(rdSrc)) {
+    cpSync(rdSrc, rdDst)
+    console.log('Copied: _redirects')
+}
+
+
+// Copy root-level files (heaven_constellations.svg, timelinetitle.webp)
+for (const f of ['heaven_constellations.svg', 'timelinetitle.webp']) {
+    const src = resolve(root, f)
+    const dst = resolve(dist, f)
+    if (existsSync(src)) {
+        cpSync(src, dst)
+        console.log('Copied: ' + f)
+    }
+}
+
+console.log('Post-build copy complete!')

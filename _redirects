@@ -1,0 +1,27 @@
+# SkyCLAWk Cloudflare Pages _redirects
+# Root → generational
+/ /generational/ 301
+
+# Generational
+/generational/ /generational/index.html 200
+/generational/* /generational/:splat 200
+
+# Personal
+/personal/ /personal/index.html 200
+/personal/* /personal/:splat 200
+
+# Skyclock
+/skyclock/ /skyclock/index.html 200
+/skyclock/* /skyclock/:splat 200
+
+# Planting
+/planting/ /planting/index.html 200
+/planting/* /planting/:splat 200
+
+# Auspicious
+/auspicious/ /auspicious/index.html 200
+/auspicious/* /auspicious/:splat 200
+
+# Swiss Ephemeris WASM + data files
+/ephe/* /ephe/:splat 200
+/swiss_eph.wasm /swiss_eph.wasm 200

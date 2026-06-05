@@ -1,0 +1,2198 @@
+
+
+/* =========================================================
+   SECTION 01 — GLOBAL RESET & BASE STYLING
+   ========================================================= */
+
+* { box-sizing: border-box; }
+
+:root {
+    /* Global palette */
+    --cathedral-black: #0b0b0b;
+
+    /* Layout */
+    --label-width: 200px;
+    --time-marker-offset: 0px;
+    --show-diagonal-index: none;
+
+    --cycle-stack-offset: 20px;     /* your desired “push down” */
+    --cycle-stack-bandpad: 5px;    /* extra room so the 2nd band (overlay) is not clipped */
+
+    /* CATHEDRAL: time spine bounds/anchors (JS updates these) */
+    --time-marker-top: 0px;
+    --time-marker-left: calc(100% - var(--label-width) - 20px + var(--time-marker-offset));
+    --now-label-age-top: 0px;
+
+    /* UI system */
+    --ui-radius: 10px;
+    --ui-h: 34px;
+    --ui-pad-x: 12px;
+    --ui-bg: rgba(255, 255, 255, 0.06);
+    --ui-bg-hover: rgba(255, 255, 255, 0.10);
+    --ui-border: rgba(255, 255, 255, 0.22);
+    --ui-border-hover: rgba(255, 255, 255, 0.36);
+    --ui-accent: #d4af37;
+    --zodiac-panel-width: clamp(320px, 28vw, 420px);
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--cathedral-black);
+    color: #fff;
+    font-family: Arial, sans-serif;
+
+    /* CATHEDRAL LAW: NO SCROLLBARS (anything that exceeds viewport must be clipped) */
+    overflow: hidden;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+/* =========================================================
+   SECTION 02.1 — TOP MENU BAR (PRIMARY CONTROL BEAM)
+   ========================================================= */
+
+#topMenu {
+    width: 100%;
+    min-width: 1200px;
+    background: linear-gradient(#151515, #0f0f0f);
+    border-bottom: 2px solid #333;
+    border-bottom: none !important;
+    padding: 10px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;        /* keep center */
+    gap: 24px;
+
+    position: relative;
+    z-index: 999;
+    border-bottom: none !important;
+}
+
+.uiPill{
+  height: var(--ui-h);
+  padding: 0 var(--ui-pad-x);
+  border-radius: var(--ui-radius);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg);
+  color: #fff;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Crisis button: arrows stay white, only the word "Crisis" changes */
+#prevCrisisBtn, #nextCrisisBtn {
+  color: #ffffff;
+}
+
+.crisisText {
+  color: #ffffff;        /* default = white (no JS flash) */
+  font-weight: 700;
+  transition: color 120ms ease;
+}
+
+#prevCrisisBtn:hover .crisisText,
+#nextCrisisBtn:hover .crisisText{
+  color: #dc2626;        /* hover = red */
+}
+
+/* ===========================
+   UI Pills (shared behavior)
+   Drop-in replacement block
+   =========================== */
+
+button.uiPill{ cursor: pointer; }
+
+button.uiPill:hover{
+  background: var(--ui-bg-hover);
+  border-color: var(--ui-border-hover);
+}
+
+button.uiPill:active{
+  transform: translateY(1px);
+}
+
+/* --- Title block should be a row (logo + right stack) --- */
+#menuTitle{
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;   /* bottom-align with logo */
+  gap: 14px !important;
+  width: fit-content !important;      /* prevents stretching */
+}
+
+#menuTitle{ --logo-h: 170px; } /* NEW: single source of truth */
+
+#menuTitle .menuLogo{
+  height: var(--logo-h);
+  width: auto;
+  display: block;
+}
+
+/* --- Right-side stack (Conj / Scale / Zodiac) as one grouped column --- */
+#menuTitle #menuRightStack{
+  height: var(--logo-h);    /* EXACTLY matches logo */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 4px 0;           /* tighter so it fits */
+  width: auto;
+  overflow: hidden;         /* prevents any push-down */
+}
+
+/* Scale wrapper: two boxes side by side */
+#menuTitle #menuRightStack #scaleWrapper{
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+  width: auto;
+}
+
+/* Force stack children to full column width (fixes narrow Zodiac) */
+#menuTitle #menuRightStack > .uiPill,
+#menuTitle #menuRightStack > #scaleSelector,
+#menuTitle #menuRightStack > #scaleWrapper{
+  width: 100% !important;
+}
+
+/* Scale selector - its own box */
+#menuTitle #menuRightStack #scaleSelector{
+  flex: 0 0 auto;
+}
+
+/* Zodiac button in menuRightStack (left of scale selector) */
+#menuTitle #menuRightStack #wheelFab.wheelFabMenu{
+  flex: 0 0 auto;
+  width: calc(var(--logo-h) - 60px);
+  min-width: calc(var(--logo-h) - 60px);
+  height: calc(var(--logo-h) - 8px);
+  padding: 4px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius) !important;
+  background: var(--ui-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+#menuTitle #menuRightStack #wheelFab.wheelFabMenu::before{
+  content: "";
+  display: none;
+}
+
+#menuTitle #menuRightStack #wheelFab.wheelFabMenu::after{
+  content: "";
+  display: none;
+}
+
+#menuTitle #menuRightStack #wheelFab.wheelFabMenu .zodiac-label-top{
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+}
+
+#menuTitle #menuRightStack #wheelFab.wheelFabMenu .zodiac-label-middle{
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+}
+
+/* Inner zodiac wheel circle */
+#menuTitle #menuRightStack #wheelFab.wheelFabMenu .zodiac-wheel-icon{
+  width: 55%;
+  padding-bottom: 55%;
+  height: 0;
+  border-radius: 50%;
+  position: absolute;
+  top: 68%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    #d32f2f 0deg 30deg,   /* Fire - Aries */
+    #1976d2 30deg 60deg,  /* Water - Taurus */
+    #fbc02d 60deg 90deg,  /* Air - Gemini */
+    #2e7d32 90deg 120deg, /* Earth - Cancer */
+    #d32f2f 120deg 150deg, /* Fire - Leo */
+    #1976d2 150deg 180deg, /* Water - Virgo */
+    #fbc02d 180deg 210deg, /* Air - Libra */
+    #2e7d32 210deg 240deg, /* Earth - Scorpio */
+    #d32f2f 240deg 270deg, /* Fire - Sagittarius */
+    #1976d2 270deg 300deg, /* Water - Capricorn */
+    #fbc02d 300deg 330deg, /* Air - Aquarius */
+    #2e7d32 330deg 360deg  /* Earth - Pisces */
+  );
+  -webkit-mask: radial-gradient(transparent 35%, black 36%);
+  mask: radial-gradient(transparent 35%, black 36%);
+}
+#cycleFab{
+  display: inline-flex !important;
+  flex: 0 1 auto !important;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: var(--ui-h);
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: var(--ui-radius) !important;
+}
+
+#cycleFab .cycleFabText{
+  display: inline-block;
+}
+
+/* --- Scale selector (in menuDate, left of date input) --- */
+#menuDate{
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#menuDate #scaleSelector{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+#menuDate #scaleSelector .scaleLabel{
+  font-size: 11px;
+  color: rgba(255,255,255,.55);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  line-height: 1;
+}
+
+#menuDate #scaleSelector .scaleBtns{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 110px;
+}
+
+#menuDate #scaleSelector .scaleOpt{
+  height: var(--ui-h);
+  padding: 0 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-bg);
+  color: rgba(255,255,255,.90);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+#menuDate #scaleSelector .scaleOpt:hover{
+  background: var(--ui-bg-hover);
+  border-color: var(--ui-border-hover);
+}
+
+#menuDate #scaleSelector .scaleOpt[aria-checked="true"],
+#menuDate #scaleSelector .scaleOpt.active{
+  background: rgba(34,197,94,0.18);
+  border-color: rgba(34,197,94,0.55);
+  font-weight: 800;
+}
+
+#menuDate #scaleSelector .scaleOpt:focus-visible{
+  outline: 2px solid rgba(255,255,255,.35);
+  outline-offset: 2px;
+}
+
+/* Hide the old knob */
+#menuDate #scaleSelector .scaleKnob{ display: none; }
+
+/* --- Zodiac button (circle with zodiac wheel) --- */
+#menuTitle #wheelFab.wheelFabMenu{
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  justify-content: center;
+
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+
+  /* Circle shape */
+  border-radius: 50% !important;
+}
+
+/* Optional: subtle separators so the group reads cleanly (delete if you hate it) */
+#menuTitle #menuRightStack > .scaleSelector{
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: none !important;
+}
+
+/* modal sizing override (unchanged) */
+.cycleModalCard{
+  width: 360px !important;
+  height: auto !important;
+
+  position: fixed !important;   /* <-- allows anchoring to button via JS */
+  left: 0;
+  top: 0;
+
+  padding-bottom: 14px;
+}
+
+/* Cycle modal popup — shrink-wrap, not full viewport */
+#cycleModal.zyModal{
+  position: fixed !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+}
+
+#cycleModal.zyModal[aria-hidden="false"]{
+  display: block !important;
+}
+
+/* Cycle modal card overrides — must beat .zyModalCard height rule */
+#cycleModal .zyModalCard,
+#cycleModal .cycleModalCard{
+  height: auto !important;
+  min-height: unset !important;
+  max-height: 80vh !important;
+}
+
+.cycleModalTitle{
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  padding: 4px 2px 2px;
+}
+
+.cycleForm{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.cycleLabel{
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+}
+
+.cycleSelect{
+  height: var(--ui-h);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.55);  /* darker field */
+  color: #fff;
+  padding: 0 10px;
+  color-scheme: dark;           /* helps native dropdown UI */
+  font-size: 18px;
+}
+
+/* Makes dropdown list dark in browsers that allow styling <option> (Chrome/Edge) */
+.cycleSelect option{
+  background: #0b0b0b;
+  color: #fff;
+  font-size: 18px;
+}
+
+.cycleSelect:focus{
+  outline: none;
+  border-color: rgba(255,255,255,.32);
+}
+
+.cycleActions{
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* ---- SLIDER BLOCK ---- */
+/* =========================================================
+   CATHEDRAL — SLIDER & CONTROL ALTAR (CLEAN GRID HEADER)
+   ---------------------------------------------------------
+   Layout law:
+   • Top row is a 3-column grid: [left] [center] [right]
+   • Center date is ALWAYS centered over slider 0 (no absolute)
+   • Left and right never overlap the center
+   • All pills have fixed widths (no jitter)
+   ========================================================= */
+
+#menuSlider{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  align-self: center;
+  transform: translateY(-10px);
+}
+
+/* Header row wrapper */
+#sliderHeaderRow{
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+/* Status group: LEFT (unit + speed) | CENTER (date + reset) — no overlap possible */
+#topSliderRow{
+  width: 100%;
+  position: relative;
+  height: var(--ui-h);
+}
+
+/* LEFT lane: hard-left, but never allowed to invade center */
+#topSliderRow .topLeftGroup{
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+
+ /* Reserve only: half the DATE pill (210/2 = 105) + gap (12) */
+  max-width: calc(50% - 117px);
+  overflow: hidden;
+}
+
+/* CENTER group becomes "layout-less" so we can anchor the DATE exactly */
+#topSliderRow .topCenterGroup{
+  display: contents;
+}
+
+/* Anchor DATE pill to the slider 0-mark */
+#topSliderRow #dateBoxText{
+  position: absolute;
+  left: calc(50% + 2px);      /* MUST match .sliderZeroMark */
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+/* =========================================================
+   RESET BUTTONS — equal width + fill the entire right gap
+   (from date’s right edge → slider’s right edge)
+   ========================================================= */
+
+#topSliderRow{
+  /* keep these in one place */
+  --zero-x: calc(50% + 2px);   /* MUST match .sliderZeroMark */
+  --date-w: 210px;             /* MUST match #dateBoxText width */
+  --gap: 12px;
+
+  /* start of the “right zone” = right edge of date + gap */
+  --right-start: calc(var(--zero-x) + (var(--date-w) / 2) + var(--gap));
+  --right-zone: calc(100% - var(--right-start));
+  --btn-w: calc((var(--right-zone) - var(--gap)) / 2);
+}
+
+/* both buttons are absolutely positioned and share the right zone */
+#topSliderRow #resetBtn,
+#topSliderRow #resetNowBtn{
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  height: var(--ui-h);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* left button fills left half of the zone */
+#topSliderRow #resetBtn{
+  left: var(--right-start);
+  width: var(--btn-w);
+}
+
+/* right button fills right half of the zone */
+#topSliderRow #resetNowBtn{
+  left: calc(var(--right-start) + var(--btn-w) + var(--gap));
+  width: var(--btn-w);
+}
+
+/* =========================================================
+   UNIT KNOB — 5-position horizontal selector (y m w d h)
+   Click a tick OR drag the thumb (snaps to 5 exact stops)
+   ========================================================= */
+
+#menuSlider .unitKnob{
+  --unit-i: 0;           /* 0..4 set by JS */
+  --track-w: 120px;
+  --thumb: 18px;
+  --pad: 6px;   /* tick inset from edges (must match thumb math) */
+  --steps: 5;            /* 6 positions => 5 gaps */
+
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Remove "button push" feel from unit knob only */
+#menuSlider #unitKnob:active{
+  transform: none;
+}
+
+/* --- UNIT KNOB (mixer-style: thinner track, subtle thumb, no gold pills) --- */
+
+#menuSlider .unitKnobTrack{
+  position: relative;
+  width: var(--track-w);
+  height: 16px;
+  border-radius: 999px;
+  overflow: visible;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+#menuSlider .unitKnobTrack::before{
+  display: none;
+}
+
+/* REMOVE the “dot” gradients completely (keep the element but hide it) */
+#menuSlider .unitKnobStops{
+  display: none;
+}
+
+#menuSlider .unitKnobTicks{ z-index: 3; }
+#menuSlider .unitKnobThumb{ z-index: 2; }
+
+#menuSlider .unitKnobThumb::after{
+  content: none;
+}
+
+/* Thumb: smaller, flatter, “hardware” vibe */
+#menuSlider .unitKnobThumb{
+  position: absolute;
+  top: 50%;
+  left: var(--unit-p, 0%);   /* JS sets 0/25/50/75/100 */
+  z-index: 2;
+  width: var(--thumb);
+  height: 16px;
+  border-radius: 6px;
+
+  transform: translate(-50%, -50%);
+
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.24);
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.16);
+  cursor: grab;
+}
+
+#menuSlider .unitKnobThumb:active{ cursor: grabbing; }
+
+/* letters INSIDE the bar (lighter + less “shouty”) */
+/* ticks are pinned to exact positions (0/25/50/75/100) */
+#menuSlider .unitKnobTicks{
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  z-index: 3;
+}
+
+#menuSlider .unitKnobThumb::after{
+  content: none;
+}
+
+#menuSlider .unitTick{
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  color: rgba(255,255,255,0.70);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.65);
+  opacity: 0.8;
+  line-height: 1;
+}
+
+/* exact positions */
+#menuSlider .unitTick[data-unit="yrs"]{ left: 7%; }
+#menuSlider .unitTick[data-unit="months"]{ left: 24.2%; }
+#menuSlider .unitTick[data-unit="weeks"]{ left: 41.4%; }
+#menuSlider .unitTick[data-unit="days"]{ left: 58.6%; }
+#menuSlider .unitTick[data-unit="hours"]{ left: 75.8%; }
+#menuSlider .unitTick[data-unit="minutes"]{ left: 93%; }
+
+/* Active tick stays in the same fixed text slot. */
+#menuSlider .unitTick.isActive{
+  color: #f8fafc;
+  text-shadow: 0 0 7px rgba(255,255,255,0.38), 0 1px 0 rgba(0,0,0,0.72);
+  background: none;
+  border: none;
+  opacity: 1;
+  text-transform: uppercase;
+}
+
+#menuSlider .unitTick.isActive::after{
+  content: none;
+}
+
+/* =========================================================
+   STATIC WIDTHS (no jitter)
+   ========================================================= */
+#menuSlider #speedInfo{
+  width: 130px;
+  text-align: center;
+}
+
+#speedInfo .speedNum{
+  display: inline-block;
+}
+
+#speedInfo .speedUnit{
+  display: inline-block;
+  margin-left: 6px;   /* adjust: 4–8px */
+  opacity: 0.65;
+}
+
+#menuSlider #dateBoxText{
+  width: 210px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+/* CATHEDRAL LAW: dateBoxText inherits uiPill shape; we only tint it by phase */
+#menuSlider #dateBoxText {
+    --phase-rgb: 255,255,255;
+
+    background: rgba(var(--phase-rgb), 0.16);
+    border: 1px solid rgba(var(--phase-rgb), 0.65);
+    box-shadow: 0 0 14px rgba(var(--phase-rgb), 0.14);
+
+    height: 34px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    /* stay in grid flow (prevents overlap) */
+    position: relative;
+    overflow: visible;
+}
+
+/* CATHEDRAL: Period label ABOVE the date pill (absolute, zero layout impact) */
+#menuSlider #dateBoxText::before{
+    content: attr(data-turning);
+    position: absolute;
+    left: 50%;
+    top: -7px;
+    transform: translate(-50%, -100%);
+
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+
+    color: rgb(var(--phase-rgb));
+    text-shadow:
+      0 1px 2px rgba(0,0,0,0.95),
+      0 0 10px rgba(0,0,0,0.75);
+
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Reset accent */
+#resetBtn{
+  border-color: rgba(212,175,55,0.55);
+}
+
+#resetBtn:hover{
+  background: rgba(212,175,55,0.18);
+  border-color: rgba(212,175,55,0.80);
+}
+
+/* Slider rail */
+.sliderRail{
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+}
+
+#speedSlider{ width: 100%; }
+
+/* 0 mark behind slider */
+.sliderZeroMark{
+  position: absolute;
+  left: calc(50% + 2px);
+  top: 50%;
+  width: 4px;
+  height: 26px;
+  background: white;
+  opacity: 0.9;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 2px;
+  z-index: -1;
+}
+
+/* REV/FWD + nav buttons — ONE LINE */
+#controlBeamRow{
+  width: 100%;
+  max-width: 800px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+
+  margin-top: 2px;
+}
+
+#controlBeamRow .dirTag{
+  pointer-events: none;
+}
+
+/* Direction tags (small pill) */
+.dirTag{
+  height: 22px;
+  padding: 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+
+.dirTag.rev{
+  background: rgba(220,38,38,0.16);
+  border-color: rgba(220,38,38,0.55);
+  color: rgba(255,210,210,0.95);
+}
+
+.dirTag.fwd{
+  background: rgba(34,197,94,0.16);
+  border-color: rgba(34,197,94,0.55);
+  color: rgba(210,255,230,0.95);
+}
+
+/* Control Button Row */
+#controlRow{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Put selectable-cycle conj buttons under Pause WITHOUT affecting the main row layout */
+.pauseWrap{
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.cycleConjBelow{
+	position: absolute;
+	left: 50%;
+	top: calc(100% + 8px); /* vertical gap under Pause */
+	transform: translateX(-50%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	white-space: nowrap;
+	z-index: 10;
+	pointer-events: none; /* container ignores clicks... */
+}
+
+/* ...but the buttons themselves should still be clickable */
+.cycleConjBelow > button{
+	pointer-events: auto;
+}
+
+/* Center cluster keeps Pause on the main row, with cycle conj buttons centered below it */
+.centerCluster{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;           /* vertical spacing between Pause row and Conj row */
+	margin: 0 8px;      /* keep symmetry between Sat/Jup buttons */
+}
+
+.pauseCluster{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;          /* matches your main row gaps */
+}
+
+.cycleConjCluster{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;          /* matches your main row gaps */
+}
+
+.controlBtn{
+  font-size: 16px;
+}
+
+/* Bump buttons: RED when unavailable, GREEN when available
+   Match Pause button translucency */
+.bumpBtn{
+  background: rgba(34,197,94,0.18);
+  border-color: rgba(34,197,94,0.55);
+  color: #fff;
+  opacity: 0.95;
+}
+
+.bumpBtn:hover:not(:disabled){
+  background: rgba(34,197,94,0.26);
+  border-color: rgba(34,197,94,0.75);
+}
+
+/* Unavailable (disabled) = red, same opacity style as Pause */
+.bumpBtn:disabled{
+  background: rgba(220,38,38,0.18);
+  border-color: rgba(220,38,38,0.55);
+  color: rgba(255,255,255,0.92);
+
+  opacity: 0.85;
+  cursor: not-allowed;
+  filter: none;
+  transform: none !important;
+}
+
+/* Pause button: translucent red when running, green when paused */
+#pauseBtn{
+  min-width: 86px; /* keeps Play/Pause same width */
+  background: rgba(220,38,38,0.18);
+  border-color: rgba(220,38,38,0.55);
+}
+
+#pauseBtn:hover{
+  background: rgba(220,38,38,0.26);
+  border-color: rgba(220,38,38,0.75);
+}
+
+#pauseBtn.paused{
+  background: rgba(34,197,94,0.18);
+  border-color: rgba(34,197,94,0.55);
+}
+
+#pauseBtn.paused:hover{
+  background: rgba(34,197,94,0.26);
+  border-color: rgba(34,197,94,0.75);
+}
+
+/* ---- CHECKBOX TOGGLES ---- */
+#menuFuture {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    /* keep it visually “part of” the slider block */
+    width: 100%;
+    max-width: 800px;
+
+    /* allow wrap if viewport gets tight */
+    flex-wrap: wrap;
+
+    padding-top: 6px;
+    font-size: 14px;
+    margin-right: 0;
+}
+
+/* ---- INPUT MENU PANEL (Date / Time / Location / GO) ---- */
+#menuDate{
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-top: 6px;
+  align-self: center;
+
+  /* CATHEDRAL: match timeline right inset (topMenu is 24px, timeline is 20px) */
+  transform: translateX(4px);
+}
+
+#dateBoxOuter{
+  width: var(--label-width);    /* aligns left edge to NOW line */
+  padding: 10px;
+  position: relative;
+  border-radius: var(--ui-radius);
+  border: 1px solid var(--ui-border);
+  background: rgba(0,0,0,0.22);
+  backdrop-filter: blur(4px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;         /* makes children full width */
+}
+
+/* Uniform field styling */
+#dateBoxInput,
+#timeBoxInput,
+#locationBoxInput{
+  width: 100%;
+  height: var(--ui-h);
+  padding: 0 var(--ui-pad-x);
+  border-radius: var(--ui-radius);
+  border: 1px solid var(--ui-border);
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+#dateBoxInput:focus,
+#timeBoxInput:focus,
+#locationBoxInput:focus{
+  outline: none;
+  border-color: rgba(212,175,55,0.70);
+  box-shadow: 0 0 0 2px rgba(212,175,55,0.14);
+}
+
+#timeBoxInput:disabled,
+#locationBoxInput:disabled{
+  opacity: 0.60;
+}
+
+.location-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  max-height: 240px;
+  overflow-y: auto;
+  background: rgba(15, 12, 8, 0.97);
+  border: 1px solid rgba(212, 175, 55, 0.40);
+  border-top: none;
+  border-radius: 0 0 var(--ui-radius) var(--ui-radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.location-dropdown-item {
+  padding: 7px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.location-dropdown-item:hover {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.location-dropdown-item .city-name {
+  color: #e8e0d0;
+  font-weight: 500;
+}
+
+.location-dropdown-item .city-country {
+  color: #8a8060;
+  font-size: 11px;
+}
+
+/* GO button: thin + full width at bottom */
+.dateGoBtn{
+  width: 100%;
+  height: 24px;                 /* thin strip */
+  padding: 0;
+  border-radius: calc(var(--ui-radius) - 2px);
+
+  background: rgba(212,175,55,0.14);
+  border: 1px solid rgba(212,175,55,0.55);
+  color: #fff;
+
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.dateGoBtn:hover{
+  background: rgba(212,175,55,0.22);
+  border-color: rgba(212,175,55,0.80);
+}
+
+.dateGoBtn:hover {
+    background: #333;
+}
+
+.zodiacGlyph {
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols", "Symbola", "Apple Symbols", "DejaVu Sans", sans-serif;
+    font-weight: normal;
+}
+
+.elementGlyph{
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols", "Symbola", "Apple Symbols", "DejaVu Sans", sans-serif;
+    font-weight: 700;
+
+    /* CATHEDRAL: glyphs must NEVER steal clicks from their button */
+    pointer-events: none;
+}
+
+/* =========================================================
+   SECTION 04A — TIMELINE NAVE (TIME × AGE × ARCHETYPES)
+   ---------------------------------------------------------
+   This section establishes the canonical spatial relationship
+   between:
+   • Linear Time (horizontal scroll — screwSVG)
+   • Generational Archetypes (fixed — labelSVG)
+   ========================================================= */
+
+#timelineWrap {
+width: 100%;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+height: 650px;     /* ⬅ MUST exceed screwSVG height */
+    margin-bottom: 80px;
+    overflow: visible;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+}
+
+/* ---------------------------------------------------------
+   RIVER OF LIFE — 3D BACKDROP (PHASE 1)
+   --------------------------------------------------------- */
+#river3dContainer{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+
+  /* Sit behind all UI, but still visible */
+  z-index: 3;
+
+  /* Never steal clicks from UI */
+  pointer-events: none;
+}
+
+/* 3D river layer: full-screen, but we will CLIP it in JS to the screw band */
+#river3dContainer{
+  position: fixed;
+  inset: 0;
+  z-index: 3;           /* behind screwSVG (z=2), above background */
+  pointer-events: none; /* never steal clicks */
+  /* clip-path is set dynamically in JS */
+}
+
+#river3dContainer canvas{
+  width: 100%;
+  height: 100%;
+  display: block;
+  mix-blend-mode: screen;
+}
+
+#river3dContainer {
+    /* Create a "Cosmic Eye" effect behind the timeline */
+    background: radial-gradient(circle at 50% 50%, 
+        rgba(20, 20, 35, 1) 0%, 
+        rgba(5, 5, 10, 1) 70%, 
+        rgba(0, 0, 0, 1) 100%);
+    z-index: 0; /* Move it to the very back */
+}
+
+/* Make the SVG "Screw" feel like it's floating */
+#screwSVG {
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+}
+
+#historyPanel {
+    position: fixed;
+    bottom: 30px;
+    right: 250px; /* Offset from your 'mytimeline' button */
+    width: 320px;
+    height: 200px;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 5;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#historyPanel .panelHeader {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: gold;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+}
+
+#historyContent {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #ccc;
+}
+
+#historyContent h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #fff;
+}
+
+#screwSVG {
+    width: calc(100% - 40px);
+    height: var(--screw-svg-height, calc(100vh - 80px));
+    min-height: calc(100vh - 80px);
+    position: absolute;
+    top: 0;
+    left: 20px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* CATHEDRAL: no SVG content may intercept UI clicks */
+#screwSVG * { pointer-events: none !important; }
+#eventsGroup * { pointer-events: auto !important; }
+
+
+
+/* ---------------------------------------------------------
+   TIME MARKER — GLOBAL TIME SPINE (confined to viz area)
+   --------------------------------------------------------- */
+#timeMarker{
+  position: fixed;
+  top: var(--time-marker-top);
+  bottom: 0;
+  left: var(--time-marker-left);
+
+  width: 0.5px;
+  background: rgba(255,255,255,0.90);
+
+  z-index: 500000;
+  pointer-events: none;
+}
+
+/* subtle “cap” so the line feels intentionally terminated */
+#timeMarker::after{
+  content:"";
+  position:absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 2px;
+  background: rgba(255,255,255,0.85);
+}
+
+/* ---------------------------------------------------------
+   NOW LABEL — lives in the element/age band (not at viewport bottom)
+   --------------------------------------------------------- */
+#nowLabelAge{
+  position: fixed;
+  left: var(--time-marker-left);
+  top: var(--time-marker-top);
+  transform: translate(-50%, -50%);
+
+  /* CATHEDRAL: no pill — only readable text */
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  /* “black feather” */
+  text-shadow:
+    0 1px 2px rgba(0,0,0,0.95),
+    0 0 6px rgba(0,0,0,0.95),
+    0 0 14px rgba(0,0,0,0.80),
+    0 0 24px rgba(0,0,0,0.55);
+
+  z-index: 500001;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   PHASE TICKS — 20-year ticks pointing INTO label box
+   --------------------------------------------------------- */
+#phaseTicks {
+    position: absolute;
+    top: 0;
+
+    /* MUST align with timeMarker */
+    right: 180px;
+
+    height: 180px;
+    width: 12px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    z-index: 3;
+    pointer-events: none;
+}
+
+#diagonalIndex {
+    display: var(--show-diagonal-index);
+}
+
+/* =========================================================
+   SECTION 04A.1 — REFERENCE PANEL (OUTSIDE SCREW, SCROLL-TIED)
+   ---------------------------------------------------------
+   Visual scaffold only.
+   • Not inside SVG (no clipping)
+   • Moves horizontally with scrollX
+   • Lives near / under astro wheel
+   ========================================================= */
+
+#referencePanel {
+    position: absolute;
+
+    top: 480px;
+    left: 20px;
+    right: 20px;
+
+    height: 765px;
+    overflow: hidden;
+
+    /* 🔒 BLACK SCRIM — prevents bleed under astro wheel */
+        background: var(--cathedral-black);
+
+    /* =====================================================
+       VERTICAL VEIL (FINAL POSITION)
+       -----------------------------------------------------
+       • Solid black to the left
+       • Hard veil at 550px
+       • 50px feather (550 → 600)
+       ===================================================== */
+
+    -webkit-mask-image: linear-gradient(
+        to right,
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0) 550px,
+        rgba(0,0,0,1) 600px
+    );
+    mask-image: linear-gradient(
+        to right,
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0) 550px,
+        rgba(0,0,0,1) 600px
+    );
+
+    pointer-events: none;
+    z-index: 1;
+}
+
+#referenceImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    /* Preserve aspect ratio — NO SQUISH */
+    height: 774px;
+    width: auto;
+
+    /* Lighter, clearer reference */
+    opacity: 0.6;
+
+    /* Slight lift without overpowering geometry */
+    filter: brightness(1.08) contrast(1.05);
+
+    /* Keep pixels clean during transforms */
+    transform: translate3d(0,0,0);
+    will-change: transform;
+
+    /* DEBUG (remove when satisfied) */
+    border: 2px solid red;
+}
+
+#referencePanel {
+    z-index: 1;
+}
+
+#astroContainer {
+    z-index: 2;
+}
+
+/* =========================================================
+   SECTION 05A — ASTRO SANCTUARY (OVERLAY MODE)
+   ---------------------------------------------------------
+   Visually anchored to timeline, not document flow
+   ========================================================= */
+
+#astroContainer {
+    /*
+      IMPORTANT:
+      The 3D river is a fixed backdrop and the screwSVG is a full-screen SVG.
+      To keep the wheel visible, it must be a fixed overlay ABOVE the screw.
+    */
+    position: fixed;
+
+    /* Anchor it in the lower-left quadrant, below the top menu */
+    left: 20px;
+    top: calc(var(--top-menu-bottom, 140px) + 260px);
+
+    width: 600px;
+    height: 600px;
+
+    z-index: 500;
+    pointer-events: auto;   /* allow HUD clicks */
+}
+
+/* canvas itself stays “non-interactive” */
+#astroWheel {
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   ASTRO HUD — centered date + planet toggles (inside wheel)
+   --------------------------------------------------------- */
+
+/* legacy centered HUD (only if astroContainer exists) */
+#astroContainer #astroHUD{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  z-index: 5;
+  pointer-events: auto;
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+
+/* Center date text (no box) */
+#astroDateText{
+  border: none;
+  background: transparent;
+  padding: 0;
+
+  font-size: 26px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+
+  text-shadow: 0 2px 6px rgba(0,0,0,0.75);
+  white-space: nowrap;
+}
+
+/* Planet toggles row */
+#astroPlanetToggles{
+  display: flex;
+  gap: 8px;
+}
+
+/* Natal toggle row (under planet toggles) */
+#astroNatalToggle{
+  display: flex;
+  justify-content: center;
+}
+
+/* Shared toggle button style (Inner / Outer / Natal) */
+#astroPlanetToggles .toggleBtn,
+#astroNatalToggle .toggleBtn{
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  background-color: rgba(140, 0, 0, 0.35); /* OFF = translucent red */
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+
+  transition: background-color 0.15s ease, filter 0.15s ease;
+}
+
+#astroPlanetToggles .toggleBtn.active,
+#astroNatalToggle .toggleBtn.active{
+  background-color: rgba(0, 140, 0, 0.35); /* ON = translucent green */
+  border-color: rgba(140, 255, 140, 0.45);
+}
+
+#astroPlanetToggles .toggleBtn:hover,
+#astroNatalToggle .toggleBtn:hover{
+  filter: brightness(1.15);
+}
+
+/* ✅ Natal button ALSO shows the date (fixed width, no jumping) */
+#natalToggle{
+  width: 20ch;                 /* fits: "Natal 00 Jan 0000" */
+  text-align: center;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+
+  white-space: nowrap;         /* ✅ keep on one line */
+  display: inline-block;       /* ✅ prevents flex shrink weirdness */
+  line-height: 1;              /* ✅ no extra vertical spacing */
+}
+
+#astroWheel{
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================================================
+   SECTION 05A — ASTRO WHEEL (POPOUT MODAL)
+   ---------------------------------------------------------
+   Popout wheel modal (no page dim, no click-blocking overlay)
+   ========================================================= */
+
+/* Wheel button in menuRightStack */
+.wheelFabMenu{
+  /* Box with zodiac wheel icon - override base styles */
+  --logo-h: 170px;
+  width: calc(var(--logo-h) - 60px);
+  min-width: calc(var(--logo-h) - 60px);
+  height: calc(var(--logo-h) - 8px);
+  padding: 4px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius) !important;
+  background: var(--ui-bg);
+  font-size: 18px;
+  line-height: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Zodiac wheel icon inside the button */
+.zodiac-wheel-icon{
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 55%;
+  height: 0;
+  padding-bottom: 55%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #d32f2f 0deg 30deg,   /* Fire - Aries */
+    #1976d2 30deg 60deg,  /* Water - Taurus */
+    #fbc02d 60deg 90deg,  /* Air - Gemini */
+    #2e7d32 90deg 120deg, /* Earth - Cancer */
+    #d32f2f 120deg 150deg, /* Fire - Leo */
+    #1976d2 150deg 180deg, /* Water - Virgo */
+    #fbc02d 180deg 210deg, /* Air - Libra */
+    #2e7d32 210deg 240deg, /* Earth - Scorpio */
+    #d32f2f 240deg 270deg, /* Fire - Sagittarius */
+    #1976d2 270deg 300deg, /* Water - Capricorn */
+    #fbc02d 300deg 330deg, /* Air - Aquarius */
+    #2e7d32 330deg 360deg  /* Earth - Pisces */
+  );
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -webkit-mask: radial-gradient(transparent 35%, black 36%);
+  mask: radial-gradient(transparent 35%, black 36%);
+}
+
+/* optional hover (uiPill probably already has this; keep if you want consistency) */
+.wheelFabMenu:hover{
+  background: var(--ui-bg-hover);
+  border-color: var(--ui-border-hover);
+}
+.wheelFab:hover{ background: rgba(0,0,0,.68); }
+
+/* Fullscreen modal wrapper */
+.zyModal{
+  position: fixed !important;
+  inset: 0 !important;
+  display: none !important;
+  z-index: 9999999 !important;
+
+  /* allow clicks inside modal (so close works) */
+  pointer-events: none !important;
+}
+
+.zyModal[aria-hidden="false"]{ 
+  display: block !important; 
+}
+
+/* Bodies and Houses modals - higher z-index than wheel modal so they appear on top */
+#bodiesModal,
+#housesModal {
+  z-index: 10000000 !important;
+}
+
+#bodiesModal .zyModalCard,
+#housesModal .zyModalCard {
+  z-index: 10000001 !important;
+}
+
+.zyModal[aria-hidden="false"]{ display: block; }
+
+/* Backdrop exists for structure but is fully transparent + non-interactive */
+.zyModalBackdrop{
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* modal HUD lives BELOW the wheel (not centered) */
+.zyModalCard #astroHUD{
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 100%;
+}
+
+/* The draggable/interactable card */
+.zyModalCard{
+  position: absolute;
+  left: 22px;
+  top: calc(var(--top-menu-bottom, 140px) + 170px);
+  width: var(--wheelW, min(1320px, calc(100vw - 44px)));
+  max-width: calc(100vw - 44px);
+  padding: 14px 14px 18px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  background: rgba(0,0,0,.98) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55) !important;
+  z-index: 9999998 !important;
+  /* resizable sizing (defaults) */
+  height: var(--wheelH, min(920px, calc(100vh - var(--top-menu-bottom, 140px) - 60px))) !important;
+  /* KEY: allow interactions only on the card */
+  pointer-events: auto !important;
+}
+
+/* Make the modal card a vertical layout so HUD can live at the bottom */
+.zyModalCard{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zyModalClose{
+  z-index: 9999999 !important;
+  pointer-events: auto !important;
+}
+
+/* =========================================================
+   Zodiac Wheel — shared structural components (all pages)
+   ========================================================= */
+
+.zodiacPanelHeader{
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+
+.zodiacPanelBrand{
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: rgba(255,255,255,.92);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.zodiacPanelBrand img{
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+/* Wheel stays square */
+.wheelStage, #wheelImg{
+  pointer-events: none;
+}
+
+.wheelStage{
+  flex: 0 0 auto;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+/* HUD bottom panel */
+.zyHudBottom{
+  flex: 0 0 auto;
+  padding: 10px 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.38);
+}
+
+/* Close button stays clickable */
+.zyModalClose{
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  width: auto;
+  height: 28px;
+  padding: 0 8px;
+  gap: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.9);
+  font-size: 22px;
+  cursor: pointer;
+
+  pointer-events: auto;
+}
+
+.wheelStage{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  overflow: visible;
+}
+
+#wheelImg{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Resize handle */
+.zyResizeHandle{
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 18px;
+  height: 18px;
+  border-right: 2px solid rgba(255,255,255,.35);
+  border-bottom: 2px solid rgba(255,255,255,.35);
+  border-bottom: none !important;
+  cursor: nwse-resize;
+  opacity: .8;
+  pointer-events: auto;
+}
+.zyResizeHandle:hover{ opacity: 1; }
+
+/* Ensure HUD sits above image */
+#astroHUD{ z-index: 5; }
+
+/* Legacy fixed container stays hidden */
+#astroContainer{ display:none !important; }
+#presidentThumbContainer {
+  border: none !important;
+  box-shadow: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+#presidentThumbContainer > div {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+#presidentThumbContainer img {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+/* =========================================================
+   DECADE TABS - Historical events by decade (scrolls with timeline)
+   ========================================================= */
+#decadeTabsContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100 !important; /* Below modal (z-index: 9999999) */
+  pointer-events: none;
+  overflow: visible; /* Allow panels to extend beyond container */
+  border: none !important;
+  box-shadow: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+}
+
+#decadeTabsContainer::before,
+#decadeTabsContainer::after {
+  display: none !important;
+  content: none !important;
+}
+
+.decade-tab-bar {
+  position: absolute;
+  display: flex;
+  gap: 0;
+  left: 0;
+  /* Position updated by JS to match timeline scroll */
+  border: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.decade-tab-bar::before,
+.decade-tab-bar::after {
+  display: none !important;
+  content: none !important;
+}
+
+.decade-tab {
+  position: absolute;
+  padding: 4px 6px;
+  background: transparent;
+  border: none !important;
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  pointer-events: auto;
+  text-align: center;
+}
+
+.decade-tab:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.decade-tab.active {
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.decade-panel {
+  position: absolute;
+  /* Panel positioned by JS: opens upward from tab */
+  left: 0;
+  width: 800px; /* ~100 year width - much wider than tab */
+  overflow-y: auto;
+  background: rgba(10, 10, 20, 0.98);
+  border: none !important;
+  border-radius: 8px;
+  pointer-events: auto;
+  bottom: 0;
+  display: block; /* Always display, JS controls height */
+}
+
+.decade-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(20, 20, 35, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: none !important;
+}
+
+.decade-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.decade-panel-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.2s ease;
+}
+
+.decade-panel-close:hover {
+  color: #fff;
+}
+
+.decade-panel:not(.active) {
+  height: 0 !important;
+}
+
+.decade-panel.active {
+  min-height: 750px !important; /* Force minimum height */
+  height: auto !important; /* Let content determine actual height */
+}
+
+.decade-panel.active {
+  display: block;
+  max-height: 300px;
+}
+
+.decade-panel-title {
+  position: sticky;
+  top: 0;
+  padding: 10px 14px;
+  background: rgba(20, 20, 35, 0.95);
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1;
+}
+
+/* =========================================================
+   CATEGORY FILTER BAR — Fixed right side
+   ========================================================= */
+/* ---------- Category bar collapse/expand (glass box) ---------- */
+#categoryBarWrap {
+  position: fixed;
+  right: 20px;
+  top: 840px;
+  bottom: auto;
+  max-height: max(140px, calc(100vh - 870px));
+  z-index: 100000;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 10px;
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: visible;
+  scrollbar-width: thin;
+}
+
+#categoryBarWrap.collapsed {
+  transform: translateX(calc(100% - 4px));
+}
+
+#categoryBarWrap.collapsed.hover-peek {
+  transform: translateX(0);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#categoryBarWrap:not(.collapsed) {
+  padding: 4px;
+  cursor: default;
+}
+
+#categoryBar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+#categoryBarWrap.collapsed #categoryBar {
+  padding: 4px;
+}
+
+#categoryBarWrap:not(.collapsed) #categoryBar {
+  padding: 0;
+}
+
+.cat-btn {
+  width: auto;
+  height: 28px;
+  padding: 0 10px;
+  gap: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(0,0,0,.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cat-btn:hover {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.3);
+}
+
+.cat-btn.active {
+  border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 0 8px rgba(255,255,255,.1);
+}
+
+.cat-btn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-btn-label {
+  display: inline;
+  font-size: 10px;
+  color: rgba(255,255,255,.8);
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.cat-btn:hover .cat-btn-label {
+  display: inline; /* always visible */
+}
+
+/* =========================================================
+   EVENT ZONE — Category events below screw
+   ========================================================= */
+
+.category-event-marker {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  min-height: 16px;
+  max-height: 60px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+.category-event-marker:hover {
+  opacity: 1;
+  min-height: 24px;
+  max-height: 80px;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.category-event-marker .event-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.9);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 9px;
+  color: rgba(255,255,255,.9);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.category-event-marker:hover .event-tooltip {
+  opacity: 1;
+}
+
+/* History event label hover expansion */
+.event-label-sm {
+  transition: font-size 0.12s ease, font-weight 0.12s ease, fill 0.12s ease;
+}
+.event-label-sm:hover {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  fill: rgba(255,255,255,1) !important;
+}
+.event-label-lg {
+  transition: font-size 0.12s ease, font-weight 0.12s ease, fill 0.12s ease;
+}
+.event-label-lg:hover {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  fill: rgba(255,255,255,1) !important;
+}
+
+/* Expand era bar on hover */
+.category-event-marker:hover,
+.eventsGroup rect:hover {
+  opacity: 1 !important;
+}
+
+/* Event tooltip — Wikipedia summary on hover */
+#eventTooltip {
+  transition: opacity 0.12s ease;
+}
+#eventTooltip img {
+  max-width: 120px;
+  max-height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+#eventTooltip a:hover {
+  text-decoration: underline !important;
+}
+
+
+/* ────────── Personal Scale: Life Events ────────── */
+
+/* Life Events button in category bar */
+.life-events-btn {
+  background: rgba(255,200,100,0.12) !important;
+  border: 1px solid rgba(255,200,100,0.3) !important;
+  margin-bottom: 6px !important;
+
+}
+.life-events-btn .cat-btn-dot {
+  font-size: 11px !important;
+  line-height: 1;
+}
+.life-events-btn:hover {
+  background: rgba(255,200,100,0.2) !important;
+}
+
+/* Life Events modal */
+#lifeEventModal {
+  font-family: system-ui, -apple-system, sans-serif;
+  animation: fadeIn 0.15s ease;
+}
+#lifeEventModal input:focus {
+  border-color: rgba(255,200,100,0.5) !important;
+  box-shadow: 0 0 0 2px rgba(255,200,100,0.1);
+}
+#lifeEventModal select option {
+  background: #1a1a2e;
+  color: #eee;
+}
+#lifeEventAddBtn:hover {
+  background: rgba(255,200,100,0.25) !important;
+}
+#lifeEventDeleteBtn:hover {
+  background: rgba(255,80,80,0.2) !important;
+}
+
+/* Lifeline SVG elements */
+#personalLifeline {
+  pointer-events: none;
+}
+#personalLifeline text {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Personal events under lifeline */
+#personalEventsGroup rect {
+  cursor: default;
+}
+#personalEventsGroup text {
+  pointer-events: none;
+}
+
+/* Diagonal inside band area */
+#personalDiagonal {
+  pointer-events: none;
+}
+#personalDiagonal text {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Natal Data button */
+.natal-btn {
+  background: rgba(255,200,100,0.12) !important;
+  border: 1px solid rgba(255,200,100,0.3) !important;
+  margin-bottom: 4px !important;
+}
+.natal-btn .cat-btn-dot {
+  font-size: 11px !important;
+  line-height: 1;
+}
+.natal-btn:hover {
+  background: rgba(255,200,100,0.2) !important;
+}
+
+
+/* Force ALL children of labelSVG to pass clicks through */
+#labelSVG,
+#labelSVG * {
+  pointer-events: none !important;
+}

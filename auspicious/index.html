@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auspicious Time Calculator</title>
+<script type="module" src="js/main.js"></script>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --accent: #e94560;
+  --accent2: #0f3460;
+  --text: #e0e0e0;
+  --dim: #888;
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --border: rgba(255,255,255,0.06);
+  --tooltip-bg: #252545;
+  --tooltip-border: #3a3a5a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+header { text-align: center; padding: 20px 0 10px; }
+header h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+header p { color: var(--dim); margin-top: 4px; font-size: 0.85rem; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 500px) {
+  .container { padding: 10px; }
+  .card { padding: 12px; border-radius: 10px; }
+  .grid { gap: 10px; margin-top: 10px; }
+  .row { flex-direction: column; gap: 0; }
+  .result-box { padding: 10px; }
+  .planet-grid { grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); }
+  .mini-chart-table { font-size: .6rem; }
+  .mini-chart-table td, .mini-chart-table th { padding: 3px 4px; }
+  .range-btns .btn-sm { font-size: .7rem; padding: 5px 8px; }
+  .score-ring { width: 60px; height: 60px; font-size: 1rem; }
+  .score-ring .inner { width: 48px; height: 48px; font-size: .9rem; }
+  .score-details .pct { font-size: 1.2rem; }
+  .tooltip-overlay { max-width: calc(100vw - 24px); left: 12px !important; }
+  .profile-bar { flex-direction: column; align-items: stretch; }
+  .profile-bar .actions { margin-left: 0; justify-content: flex-end; }
+}
+@media (max-width: 380px) {
+  .card { padding: 8px; border-radius: 8px; }
+  .container { padding: 6px; }
+  header h1 { font-size: 1.1rem; }
+  .mode-tab { padding: 6px 10px; font-size: .75rem; }
+  .planet-modal { max-height: 90vh; }
+}
+.card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+.card h2 { font-size: 1rem; margin-bottom: 14px; color: var(--accent); font-weight: 600; }
+
+.form-group { margin-bottom: 12px; }
+label { display: block; font-size: 0.8rem; color: var(--dim); margin-bottom: 3px; font-weight: 500; }
+input, select { width: 100%; padding: 9px 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: border .2s; }
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+select option { background: var(--card); color: var(--text); }
+input[type=time]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+
+.btn { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: opacity .2s; margin-top: 6px; }
+.btn:hover { opacity: .9; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-sm { padding: 6px 14px; width: auto; display: inline-block; font-size: .8rem; margin-top: 0; }
+.btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+
+.result-box { margin-top: 14px; padding: 14px; border-radius: 8px; background: rgba(255,255,255,0.03); min-height: 50px; }
+
+.score-display { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+.score-ring { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; flex-shrink: 0; position: relative; cursor: help; }
+.score-ring.good { background: conic-gradient(var(--good) var(--pct), rgba(255,255,255,0.05) 0); }
+.score-ring.okay { background: conic-gradient(var(--warn) var(--pct), rgba(255,255,255,0.05) 0); }
+.score-ring.bad { background: conic-gradient(var(--bad) var(--pct), rgba(255,255,255,0.05) 0); }
+.score-ring .inner { background: var(--card); border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.score-details { flex: 1; min-width: 140px; }
+.score-details .pct { font-size: 1.5rem; font-weight: 700; }
+.score-details .pct.good { color: var(--good); }
+.score-details .pct.okay { color: var(--warn); }
+.score-details .pct.bad { color: var(--bad); }
+.score-details .meta { font-size: .75rem; color: var(--dim); margin-top: 3px; }
+
+.warning-item { padding: 5px 0 5px 16px; border-left: 3px solid var(--warn); margin-bottom: 5px; font-size: .8rem; color: var(--warn); cursor: help; }
+.note-item { padding: 5px 0 5px 16px; border-left: 3px solid var(--good); margin-bottom: 5px; font-size: .8rem; color: var(--good); cursor: help; }
+
+/* ── Result header (date/time/location context) ── */
+.result-header { padding: 14px 16px; background: rgba(255,255,255,0.04); border-radius: 10px; margin-bottom: 14px; }
+.result-header .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.result-header .header-left { flex: 1; min-width: 0; }
+.result-header .topic-label { font-weight: 700; color: var(--accent); font-size: 1.05rem; display: block; }
+.result-header .user-name { font-size: .82rem; color: #b0b0c8; margin-top: 4px; display: block; }
+.result-header .header-details { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.result-header .detail-line { font-size: .82rem; color: var(--dim); }
+.result-header .detail-line b { color: #c0c0d8; font-weight: 500; }
+.wheel-thumb-link { flex-shrink: 0; display: inline-block; cursor: pointer; border-radius: 8px; overflow: hidden; line-height: 0; border: 2px solid rgba(255,255,255,0.08); transition: border-color .2s; }
+.wheel-thumb-link:hover { border-color: var(--accent); }
+.wheel-thumb { width: 72px; height: 72px; display: block; }
+.wheel-thumb-sm { width: 40px; height: 40px; display: block; border-radius: 4px; }
+
+/* ── Mini glyph chart ── */
+.mini-chart { display: flex; gap: 0; margin: 12px 0 8px; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px 8px; overflow-x: auto; }
+.mini-chart-table { width: 100%; border-collapse: collapse; font-size: .7rem; }
+.mini-chart-table th { color: var(--dim); font-weight: 500; padding: 4px 6px; text-align: center; font-size: .65rem; border-bottom: 1px solid var(--border); }
+.mini-chart-table td { padding: 5px 6px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.mini-chart-table .planet-cell { color: var(--accent); font-weight: 700; }
+.mini-chart-table .sign-cell { font-size: .8rem; }
+.mini-chart-table .deg-cell { color: #b0b0c8; font-family: monospace; }
+.mini-chart-table .house-cell { color: var(--dim); }
+.mini-chart-table .asc-row td { background: rgba(74,222,128,0.08); font-weight: 600; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .7rem; font-weight: 600; margin-right: 3px; cursor: help; }
+.badge-day { background: rgba(233,69,96,0.2); color: var(--accent); }
+.badge-night { background: rgba(79,70,229,0.2); color: #818cf8; }
+.badge-voc { background: rgba(248,113,113,0.2); color: var(--bad); }
+
+.planet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 6px; margin-top: 8px; }
+.planet-item { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; font-size: .75rem; cursor: pointer; position: relative; transition: background .15s; }
+.planet-item:hover { background: rgba(255,255,255,0.07); }
+.planet-item:active { background: rgba(255,255,255,0.12); }
+.planet-item .pname { color: var(--accent); font-weight: 600; }
+.planet-item .ppos { display: block; color: var(--dim); font-size: .7rem; }
+.dig-badge { padding: 1px 5px; border-radius: 3px; font-size: .65rem; margin-right: 2px; cursor: help; }
+.dig-good { background: rgba(74,222,128,0.2); color: var(--good); }
+.dig-mid { background: rgba(251,191,36,0.2); color: var(--warn); }
+.dig-bad { background: rgba(248,113,113,0.2); color: var(--bad); }
+
+.city-widget { position: relative; }
+.city-list { position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 0 0 8px 8px; z-index: 100; display: none; }
+.city-item { padding: 8px 10px; cursor: pointer; font-size: .85rem; border-bottom: 1px solid var(--border); }
+.city-item:hover { background: rgba(255,255,255,0.06); }
+.city-item .cc { color: var(--dim); font-size: .7rem; }
+
+.profile-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--card); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+.profile-bar .name { font-weight: 600; }
+.profile-bar .detail { color: var(--dim); font-size: .8rem; }
+.profile-bar .actions { margin-left: auto; display: flex; gap: 6px; }
+
+.search-results { margin-top: 12px; max-height: 360px; overflow-y: auto; }
+.search-item { padding: 8px 10px; background: rgba(255,255,255,0.02); border-radius: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.search-item:hover { background: rgba(255,255,255,0.05); }
+.search-item .dt { font-weight: 600; font-size: .85rem; }
+.search-item .spct { color: var(--good); font-weight: 700; font-size: .85rem; }
+.search-item .spct.okay { color: var(--warn); }
+.search-item .spct.bad { color: var(--bad); }
+
+.loading { text-align: center; padding: 30px; color: var(--dim); font-size: .85rem; }
+.loading::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 2px solid var(--dim); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-left: 8px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.section-label { font-size: .85rem; color: var(--accent); font-weight: 600; margin: 12px 0 6px; }
+
+/* ── Tooltip ── */
+.tooltip-overlay {
+  display: none;
+  position: fixed;
+  max-width: 380px;
+  width: auto;
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  z-index: 9999;
+  font-size: .8rem;
+  line-height: 1.45;
+  color: #d0d0e0;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+.tooltip-overlay .tt-title { font-weight: 700; color: #fff; font-size: .85rem; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.tooltip-overlay .tt-title .tt-icon { font-size: 1rem; }
+.tooltip-overlay .tt-body { color: #b0b0c8; }
+.tooltip-overlay .tt-body b { color: #d0d0f0; }
+.tooltip-overlay .tt-section { margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.08); }
+.tooltip-overlay .tt-section:first-of-type { margin-top: 5px; padding-top: 0; border-top: none; }
+.tooltip-overlay .tt-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: .65rem; font-weight: 600; margin-right: 3px; }
+.tt-tag-dom { background: rgba(74,222,128,0.2); color: var(--good); }
+.tt-tag-ex { background: rgba(74,222,128,0.15); color: #6ee7b7; }
+.tt-tag-det { background: rgba(251,191,36,0.2); color: var(--warn); }
+.tt-tag-per { background: rgba(248,113,113,0.2); color: var(--bad); }
+
+/* ── Quick range buttons ── */
+.range-btns { display: flex; gap: 6px; margin-bottom: 10px; }
+.range-btns .btn-sm { flex: 1; text-align: center; }
+
+/* ── Tab-style divider ── */
+.mode-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.mode-tab { padding: 8px 16px; font-size: .85rem; font-weight: 600; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
+.mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.mode-tab:hover { color: var(--text); }
+
+.mode-content { display: none; }
+.mode-content.active { display: block; }
+
+/* ── PLANET DETAIL MODAL ── */
+.planet-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.planet-modal-backdrop.open { display: flex; }
+.planet-modal { background: var(--bg-2, #1a1a2e); border: 1px solid var(--tooltip-border); border-radius: 10px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.planet-modal-head { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-2, #1a1a2e); }
+.planet-modal-head h3 { margin: 0; font-size: 1.1rem; color: var(--accent); }
+.planet-modal-close { background: none; border: none; color: var(--dim); font-size: 1.4rem; cursor: pointer; padding: 0 4px; line-height: 1; }
+.planet-modal-close:hover { color: #fff; }
+.planet-modal-body { padding: 16px 18px; font-size: .85rem; line-height: 1.5; color: #c0c0d8; }
+.planet-modal-body .pm-section { margin-bottom: 14px; }
+.planet-modal-body .pm-section h4 { font-size: .75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dim); margin: 0 0 6px 0; font-weight: 600; }
+.planet-modal-body .pm-section p { margin: 0 0 6px 0; }
+.planet-modal-body .pm-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted rgba(255,255,255,0.06); }
+.planet-modal-body .pm-row .lbl { color: var(--dim); }
+.planet-modal-body .pm-row .val { color: #e0e0f0; font-weight: 600; }
+.planet-modal-body .pm-codes { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin-top: 6px; }
+.planet-modal-body .pm-codes .code { font-family: monospace; font-weight: 700; padding: 2px 6px; border-radius: 3px; background: rgba(255,255,255,0.08); text-align: center; }
+.planet-modal-body .pm-codes .code.good { background: rgba(123,224,168,0.2); color: #7be0a8; }
+.planet-modal-body .pm-codes .code.mid { background: rgba(224,201,123,0.2); color: #e0c97b; }
+.planet-modal-body .pm-codes .code.bad { background: rgba(224,123,123,0.2); color: #e07b7b; }
+.planet-modal-body .pm-codes .desc { color: #b0b0c8; font-size: .8rem; }
+.planet-modal-body .pm-glossary { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>&#9925; Auspicious Time Calculator</h1>
+  <p>Hellenistic electional astrology — find the best time for any event</p>
+</header>
+
+<!-- Saved Profiles -->
+<div id="profile-bar-area"></div>
+
+<!-- Main Layout -->
+<div class="grid">
+  <!-- LEFT: Find Best Time + Check Moment -->
+  <div class="card">
+    <h2>Your Birth Data</h2>
+    <div class="form-group">
+      <label>Name (optional)</label>
+      <input type="text" id="name" placeholder="e.g. Steve" maxlength="60" value="Steve">
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>Birth Date</label>
+        <input type="date" id="birth-date" value="1961-04-13">
+      </div>
+      <div class="form-group">
+        <label>Birth Time</label>
+        <input type="time" id="birth-time" value="12:00">
+      </div>
+    </div>
+    <div class="form-group city-widget">
+      <label>Birth City</label>
+      <input type="text" id="city-input" placeholder="Type city, state..." autocomplete="off" value="Chicago, IL">
+      <div class="city-list" id="city-list"></div>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <div class="form-group">
+        <label>Latitude</label>
+        <input type="number" id="lat" step="any" value="41.88" readonly style="background:rgba(255,255,255,0.03)">
+      </div>
+      <div class="form-group">
+        <label>Longitude</label>
+        <input type="number" id="lon" step="any" value="-87.63" readonly style="background:rgba(255,255,255,0.03)">
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline" onclick="saveProfile()" style="margin-bottom:14px">&#11088; Save Profile</button>
+
+    <hr style="border-color:var(--border);margin:14px 0">
+
+    <div class="mode-tabs">
+      <div class="mode-tab active" onclick="switchMode('find')">&#128269; Find Best Time</div>
+      <div class="mode-tab" onclick="switchMode('check')">&#128200; Check a Specific Time</div>
+    </div>
+
+    <!-- Find Best Time mode -->
+    <div class="mode-content active" id="mode-find">
+      <div class="form-group">
+        <label>Event Topic</label>
+        <select id="topic-find"></select>
+      </div>
+      <label style="font-size:.8rem;color:var(--dim);margin-bottom:6px">Search window</label>
+      <div class="range-btns">
+        <button class="btn btn-sm btn-outline" onclick="setRange(7)">7 Days</button>
+        <button class="btn btn-sm btn-outline" onclick="setRange(14)">14 Days</button>
+        <button class="btn btn-sm btn-outline" onclick="setRange(30)">30 Days</button>
+        <button class="btn btn-sm btn-outline" onclick="setRange(60)">60 Days</button>
+        <button class="btn btn-sm btn-outline" onclick="toggleCustomRange()">Custom</button>
+      </div>
+      <div id="custom-range" style="display:none">
+        <div class="row">
+          <div class="form-group">
+            <label>From</label>
+            <input type="date" id="search-start">
+          </div>
+          <div class="form-group">
+            <label>To</label>
+            <input type="date" id="search-end">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Event Location</label>
+        <select id="loc-choice-find">
+          <option value="natal">Same as birth location</option>
+          <option value="custom" selected>Different location</option>
+        </select>
+      </div>
+      <div id="event-loc-find" style="display:block">
+        <div class="form-group city-widget">
+          <label>Event City</label>
+          <input type="text" id="event-city-find" placeholder="Type city, state..." autocomplete="off" value="Las Vegas, NV">
+          <div class="city-list" id="event-city-list-find"></div>
+        </div>
+        <input type="hidden" id="event-lat-find">
+        <input type="hidden" id="event-lon-find">
+        <input type="hidden" id="event-tz-find">
+      </div>
+      <button class="btn" onclick="searchTimes()">&#128270; Search Best Times</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm btn-outline" onclick="resetForm()" style="flex:1">&#10227; Reset</button>
+      </div>
+      <p style="color:var(--dim);font-size:.7rem;margin-top:6px">Scans every 2 hours, returns top 10 results.</p>
+    </div>
+
+    <!-- Check a Specific Time mode -->
+    <div class="mode-content" id="mode-check">
+      <div class="form-group">
+        <label>Event Topic</label>
+        <select id="topic-check"></select>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="check-date">
+        </div>
+        <div class="form-group">
+          <label>Time</label>
+          <input type="time" id="check-time" value="12:00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Event Location</label>
+        <select id="loc-choice-check">
+          <option value="natal">Same as birth location</option>
+          <option value="custom" selected>Different location</option>
+        </select>
+      </div>
+      <div id="event-loc-check" style="display:block">
+        <div class="form-group city-widget">
+          <label>Event City</label>
+          <input type="text" id="event-city-check" placeholder="Type city, state..." autocomplete="off" value="Las Vegas, NV">
+          <div class="city-list" id="event-city-list-check"></div>
+        </div>
+        <input type="hidden" id="event-lat-check">
+        <input type="hidden" id="event-lon-check">
+        <input type="hidden" id="event-tz-check">
+      </div>
+      <button class="btn" onclick="scoreEvent()">&#128270; Score This Moment</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm btn-outline" onclick="resetForm()" style="flex:1">&#10227; Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="card">
+    <h2>Results</h2>
+    <div id="result" class="result-box">
+      <p style="color:var(--dim)">Select a mode and search for the best time, or check a specific moment.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="search-section" style="margin-top:16px;display:none">
+  <h2>&#128269; Best Windows Found</h2>
+  <div id="search-result" class="result-box" style="margin-top:0">
+    <p style="color:var(--dim)">Search results will appear here.</p>
+  </div>
+</div>
+</div>
+
+<!-- Tooltip overlay -->
+<div class="tooltip-overlay" id="tooltip"></div>
+<div class="planet-modal-backdrop" id="planetModal" onclick="if(event.target===this)closePlanetModal()">
+  <div class="planet-modal">
+    <div class="planet-modal-head">
+      <h3 id="pmTitle">Planet</h3>
+      <button class="planet-modal-close" onclick="closePlanetModal()">&times;</button>
+    </div>
+    <div class="planet-modal-body" id="pmBody"></div>
+  </div>
+</div>
+
+<script>
+let CITY_DATA = [];
+let profiles = JSON.parse(localStorage.getItem('auspicious_profiles') || '[]');
+
+// ── GLOSSARY ──
+const GLOSSARY = {
+  'R': { icon: '&#127919;', title: 'Domicile (Rulership)', body: 'The planet is in its own sign — its home. This is the strongest possible placement. The planet acts freely, with full authority and no restriction. Like being king in your own castle.', tag: 'KEY STRENGTH', tagClass: 'tt-tag-dom' },
+  'EX': { icon: '&#11088;', title: 'Exaltation', body: 'The planet is in its sign of exaltation — a place of honor and dignity second only to domicile. The planet is "welcomed as an honored guest" and expresses its highest, most benefic qualities.', tag: 'STRONG', tagClass: 'tt-tag-ex' },
+  'T': { icon: '&#9889;', title: 'Triplicity Ruler', body: 'The planet rules the triplicity (elemental group) of the sign it occupies. This gives moderate strength — the planet has some authority but shares it with other triplicity rulers (day, night, and participating).', tag: 'MODERATE', tagClass: 'tt-tag-det' },
+  'F': { icon: '&#127775;', title: 'Bound/Term Ruler', body: 'The planet rules the Egyptian bound (term) of the degree range. A lesser but still positive dignity — authority over this specific 5-6° zone within the sign.', tag: 'MILD', tagClass: 'tt-tag-det' },
+  'P': { icon: '&#128200;', title: 'Peregrine', body: 'The planet has no essential dignity — not in its domicile, exaltation, triplicity, or bound. Like a foreigner without papers. Peregrine planets act erratically or malefically, even benefics like Venus or Jupiter, because they lack authority to act constructively.', tag: 'WEAK', tagClass: 'tt-tag-per' },
+  'dignity_score': { icon: '&#128181;', title: 'Dignity Score (the number)', body: 'The number after the letter code is the <b>point weight</b> awarded for that dignity:<br><br><b>Rulership (R) = +5</b> — strongest, the planet acts with full authority<br><b>Exaltation (EX) = +4</b> — honored, highly constructive<br><b>Triplicity (T) = +3</b> — moderate strength<br><b>Bound/Term (F) = +1</b> — minor positive influence<br><b>Peregrine (P) = 0</b> — no essential dignity, neutral-to-malefic<br><br>A planet\'s total points (sum of dignity + house bonuses + aspect bonuses) flow into the overall election score. The color of the badge shows the tier: <span style="color:#7be0a8">green</span> ≥5, <span style="color:#e0c97b">yellow</span> 3-4, <span style="color:#e07b7b">red</span> 0-2.', tag: 'SCORING', tagClass: 'tt-tag-det' },
+  'Rx': { icon: '&#128260;', title: 'Retrograde', body: 'The planet appears to move backwards from Earth\'s perspective. This turns its action inward — more subjective, reflective, unconventional. In elections, retrograde benefics can still help; retrograde malefics are more unpredictable.', tag: 'INTERNALIZED', tagClass: 'tt-tag-det' },
+  'Combust': { icon: '&#9728;', title: 'Combust (Under the Sun\'s Beams)', body: 'The planet is within 8° of the Sun and hidden by its light. Its influence is "burned up" — cannot operate independently. In elections, combust planets are unreliable regardless of essential dignity.', tag: 'WEAKENED', tagClass: 'tt-tag-per' },
+  'score': { icon: '&#9888;', title: 'How the Score Works', body: 'The percentage reflects how well this moment aligns with Hellenistic electional rules for your selected topic. Each planet is assessed for its relationship to the topic houses, essential/accidental dignity, and aspects.<br><br><b>50%+</b> = Favorable (good alignment)<br><b>25-49%</b> = Mixed (some factors work, some don\'t)<br><b>0-24%</b> = Unfavorable (significant obstacles)<br><br>Raw points (e.g. 23/185) show earned vs max possible.', tag: 'ELECTIONAL', tagClass: 'tt-tag-det' },
+  'sect': { icon: '&#127769;', title: 'Sect (Day/Night Chart)', body: 'Every chart is a <b>Day</b> (diurnal) or <b>Night</b> (nocturnal) chart depending on whether the Sun is above or below the horizon.<br><br><b>Day chart:</b> Sun, Jupiter, Saturn are diurnal "team" — act constructively. Moon, Venus are out-of-sect.<br><b>Night chart:</b> Moon, Venus, Mars are nocturnal "team" — act constructively. Sun, Jupiter are out-of-sect.<br><br>The foundational layer — everything is interpreted through the lens of sect.', tag: 'FOUNDATIONAL', tagClass: 'tt-tag-dom' },
+  'void_of_course': { icon: '&#127800;', title: 'Void of Course Moon', body: 'The Moon has made its last major aspect before leaving its sign. In electional astrology, VoC Moon is unfavorable for beginning anything important — things "come to nothing." Some traditions allow VoC for routine tasks.', tag: 'AVOID FOR EVENTS', tagClass: 'tt-tag-per' },
+  'planetary_hour': { icon: '&#9200;', title: 'Planetary Hour', body: 'Each hour is ruled by a planet in Chaldean order. Choosing an hour ruled by a planet aligned with your event topic strengthens the election. Venus hour for a wedding, Mars hour for competition, Jupiter hour for business.', tag: 'TIMING', tagClass: 'tt-tag-det' },
+  'planetary_day': { icon: '&#127764;', title: 'Planetary Day', body: 'Each weekday is ruled by a planet. Matching the day ruler to your event topic adds favorable alignment. Day + hour combination is one of the most accessible ways to strengthen a chart.', tag: 'WEEKLY RHYTHM', tagClass: 'tt-tag-det' },
+  'ascendant': { icon: '&#127758;', title: 'Ascendant (ASC)', body: 'The zodiac sign rising on the eastern horizon at the exact moment. Represents the "body" or "beginning" of the event. A rising sign aligned with the event topic is favorable. Malefic planets on the Ascendant are undesirable.', tag: 'ANGLE', tagClass: 'tt-tag-dom' },
+  'malefic_in_house': { icon: '&#9762;', title: 'Malefic in Topic House', body: 'A malefic planet (Mars or Saturn) occupies a house specifically important for your topic. Mars in the 7th for a wedding, Saturn in the 1st for a launch — these bring restriction, conflict, or delay to the affairs of that house.', tag: 'WARNING', tagClass: 'tt-tag-per' },
+  'saturn_angular': { icon: '&#9888;', title: 'Saturn in an Angular House', body: 'Saturn is in one of the angular houses (1st, 4th, 7th, or 10th). Angular houses are the most powerful, and Saturn here brings restrictive, heavy influence to the chart\'s forefront. Delays, obstacles, or need for extraordinary effort.', tag: 'CAUTION', tagClass: 'tt-tag-det' },
+  'moon_bad_dignity': { icon: '&#127769;', title: 'Moon in Poor Dignity', body: 'The Moon lacks essential dignity in its sign. The Moon is the "universal significator" in electional astrology — its condition affects everything. A poorly dignified Moon suggests the event may not unfold smoothly.', tag: 'UNIVERSAL', tagClass: 'tt-tag-per' },
+  'asc_favorable': { icon: '&#127758;', title: 'Ascendant Favorable for Topic', body: 'The rising sign is well-aligned with the selected topic. Sagittarius for travel, Leo for creative events, Taurus for money/agriculture, etc. A positive contributory factor in the overall score.', tag: 'POSITIVE', tagClass: 'tt-tag-dom' },
+  'moon_good_dignity': { icon: '&#127769;', title: 'Moon in Good Dignity for Topic', body: 'The Moon is well-placed by sign and house for the event topic. A strong Moon in an election chart is one of the most reliable favorable indicators.', tag: 'STRONG', tagClass: 'tt-tag-ex' },
+  'venus_benefic': { icon: '&#10084;&#65039;', title: 'Venus as Benefic', body: 'Venus acts in her benefic nature — harmony, pleasure, relationship support. Favorable for love, beauty, art, social gatherings, finance, and any topic where harmony is desired.', tag: 'BENEFIC', tagClass: 'tt-tag-dom' },
+  'jupiter_benefic': { icon: '&#128293;', title: 'Jupiter as Benefic', body: 'Jupiter acts in his benefic nature — expansion, abundance, success, protection. The most powerful favorable factor for new beginnings, business, education, travel, legal matters.', tag: 'BENEFIC', tagClass: 'tt-tag-dom' },
+  'peregrine_explanation': { icon: '&#128200;', title: 'What "Peregrine" Means', body: 'From Latin <i>peregrinus</i> — "foreigner." A planet is peregrine when it lacks all five essential dignities (domicile, exaltation, triplicity, bound, decan). Even benefics become unreliable when peregrine — they have no "home" to leverage natural authority.', tag: 'ESSENTIAL DIGNITY', tagClass: 'tt-tag-per' },
+  'planet_retrograde_effect': { icon: '&#128260;', title: 'Planet Retrograde in Election', body: 'A retrograde planet in the event chart. Not automatically bad — Mercury Rx may suit creative revision but not contracts. Jupiter Rx may still expand but unconventionally. Does the retrograde nature align with the event\'s purpose?', tag: 'CONTEXTUAL', tagClass: 'tt-tag-det' },
+  'sun': { icon: '&#9728;', title: 'Sun — The Luminary of Will', body: 'The Sun represents vitality, authority, and conscious purpose. In electional astrology, the Sun shows the "face" of the event — its visibility and leadership. A well-dignified Sun is favorable for career launches, public announcements, and any event needing recognition.<br><br><b>Day chart:</b> Sun is in-sect (diurnal team) — acts constructively.<br><b>Night chart:</b> Sun is out-of-sect — may be too forceful or visible for private matters.', tag: 'LUMINARY', tagClass: 'tt-tag-dom' },
+  'moon': { icon: '&#127769;', title: 'Moon — The Universal Significator', body: 'The Moon is the most important planet in electional astrology. It represents the body, emotions, and the unfolding of events. The Moon\'s condition (sign, dignity, phase, aspects) affects everything — it is the "timer" of the event.<br><br><b>Key factors:</b> Not void of course, well-dignified, applying to benefics, waxing for growth-oriented events, waning for banishing/completions.<br><br><b>Night chart:</b> Moon is in-sect — strongest and most constructive.', tag: 'UNIVERSAL', tagClass: 'tt-tag-ex' },
+  'mercury': { icon: '&#9992;', title: 'Mercury — Communication & Commerce', body: 'Mercury rules communication, contracts, travel, commerce, and mental activity. In elections, Mercury is key for signing documents, starting a business (paperwork), education, negotiations, and travel bookings.<br><br>Mercury retrograde is not automatically bad — useful for revision, research, and internal planning. Avoid Mercury Rx for contracts and launches.<br><br>Rulership: Gemini (day), Virgo (night).', tag: 'COMMUNICATION', tagClass: 'tt-tag-det' },
+  'venus': { icon: '&#10084;&#65039;', title: 'Venus — Love, Beauty & Harmony', body: 'Venus rules love, marriage, art, beauty, pleasure, social harmony, and money. She is the "lesser benefic" and is always constructive when well-placed.<br><br><b>Best for:</b> Weddings, partnerships, art launches, social events, financial transactions, and any event where harmony and pleasure are desired.<br><br><b>Night chart:</b> Venus is in-sect — strongest and most constructive.<br><br>Rulership: Taurus (day), Libra (night).', tag: 'BENEFIC', tagClass: 'tt-tag-dom' },
+  'mars': { icon: '&#9876;', title: 'Mars — Action, Competition & Conflict', body: 'Mars rules action, competition, conflict, surgery, sports, war, and sexual energy. He is the "lesser malefic" and brings cutting, forceful energy.<br><br><b>Best for:</b> Athletic events, surgery, competitions, starting a business (aggressive growth), martial arts, gambling/poker (aggression).<br><b>Avoid for:</b> Weddings, partnerships, peace negotiations, delicate matters.<br><br><b>Day chart:</b> Mars is out-of-sect — more unpredictable. <b>Night chart:</b> Mars is in-sect — more constructive.', tag: 'MALEFIC', tagClass: 'tt-tag-per' },
+  'jupiter': { icon: '&#128293;', title: 'Jupiter — Expansion & Abundance', body: 'Jupiter rules expansion, abundance, wisdom, luck, law, religion, higher education, and travel. He is the "greater benefic" — the most fortunate planet in electional astrology.<br><br><b>Best for:</b> Business launches, legal matters, weddings, travel, education, investments, and any event seeking growth and success. A well-placed Jupiter is the single strongest favorable factor in any election.<br><br>Rulership: Sagittarius (day), Pisces (night).', tag: 'GREATER BENEFIC', tagClass: 'tt-tag-dom' },
+  'saturn': { icon: '&#9822;', title: 'Saturn — Structure, Restriction & Time', body: 'Saturn rules restriction, delay, structure, discipline, boundaries, karma, and long-term results. He is the "greater malefic" but his influence is not always negative — he builds what lasts.<br><br><b>Good for:</b> Long-term investments, contracts, real estate, commitment ceremonies, building foundations, legal structures.<br><b>Avoid for:</b> New ventures needing quick growth, travel, creative projects, social events.<br><br><b>Day chart:</b> Saturn is in-sect — more constructive (stable, patient). <b>Night chart:</b> Saturn is out-of-sect — more restrictive and harsh.', tag: 'GREATER MALEFIC', tagClass: 'tt-tag-det' }
+};
+
+const GLYPHS = {
+  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄',
+  Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋', Leo: '♌', Virgo: '♍',
+  Libra: '♎', Scorpio: '♏', Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓'
+};
+
+// Small static zodiac ring SVG for search-result timeline links
+const ZODIAC_RING_SVG = (() => {
+  const s = 28, cx = s/2, cy = s/2, or = 12, ir = 7;
+  const c = ['#d32f2f','#1976d2','#fbc02d','#2e7d32',
+             '#d32f2f','#1976d2','#fbc02d','#2e7d32',
+             '#d32f2f','#1976d2','#fbc02d','#2e7d32'];
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><rect width="${s}" height="${s}" fill="#0f0f1a" rx="4"/>`;
+  for (let i = 0; i < 12; i++) {
+    const sa = i*30-90, ea = (i+1)*30-90;
+    const dr = d => d*Math.PI/180;
+    const x1=cx+or*Math.cos(dr(sa)), y1=cy+or*Math.sin(dr(sa));
+    const x2=cx+or*Math.cos(dr(ea)), y2=cy+or*Math.sin(dr(ea));
+    const x3=cx+ir*Math.cos(dr(ea)), y3=cy+ir*Math.sin(dr(ea));
+    const x4=cx+ir*Math.cos(dr(sa)), y4=cy+ir*Math.sin(dr(sa));
+    svg += `<path d="M${x1},${y1} A${or},${or} 0 0,1 ${x2},${y2} L${x3},${y3} A${ir},${ir} 0 0,0 ${x4},${y4} Z" fill="${c[i]}" opacity="0.7" stroke="rgba(0,0,0,.25)" stroke-width="0.3"/>`;
+  }
+  svg += `</svg>`;
+  return "data:image/svg+xml," + encodeURIComponent(svg);
+})();
+
+const TOPIC_KEY_PLANETS = {
+  'business_launch': ['Sun','Jupiter','Mercury'],
+  'marriage': ['Venus','Jupiter','Moon'],
+  'relocation': ['Jupiter','Mercury','Sun'],
+  'education': ['Mercury','Jupiter','Moon'],
+  'legal_matter': ['Jupiter','Mercury','Sun'],
+  'medical_surgery': ['Mars','Venus','Moon'],
+  'job_interview': ['Saturn','Venus','Moon'],
+  'real_estate': ['Saturn','Venus','Moon'],
+  'poker': ['Mars','Venus','Jupiter','Mercury'],
+  'travel': ['Jupiter','Mercury','Sun'],
+  'creative_project': ['Venus','Mercury','Jupiter','Moon'],
+  'spiritual_practice': ['Moon','Jupiter','Mercury','Venus'],
+  'starting_family': ['Moon','Venus','Jupiter','Mars'],
+  'partnership': ['Venus','Jupiter','Sun','Moon'],
+  'contract': ['Mercury','Jupiter','Saturn','Sun'],
+  'job_start': ['Saturn','Sun','Jupiter','Venus','Moon'],
+  'conception': ['Moon','Venus','Jupiter','Mars']
+};
+
+function glossaryMatch(text) {
+  const l = text.toLowerCase();
+  if (l.includes('peregrine')) return 'peregrine_explanation';
+  if (l.includes('malefic')) return 'malefic_in_house';
+  if (l.includes('saturn') && l.includes('angular')) return 'saturn_angular';
+  if (l.includes('void of course') || l.includes('voc')) return 'void_of_course';
+  if (l.includes('retrograde')) return 'planet_retrograde_effect';
+  if (l.includes('ascendant')) return 'asc_favorable';
+  if (l.includes('venus')) return 'venus_benefic';
+  if (l.includes('jupiter')) return 'jupiter_benefic';
+  if (l.includes('moon') && (l.includes('good') || l.includes('favorable'))) return 'moon_good_dignity';
+  if (l.includes('moon') && (l.includes('bad') || l.includes('poor') || l.includes('weak'))) return 'moon_bad_dignity';
+  return null;
+}
+
+// ── TOOLTIP ──
+const tooltipEl = document.getElementById('tooltip');
+let tooltipTimeout = null;
+
+function showTooltip(e, key) {
+  const g = GLOSSARY[key];
+  if (!g) return;
+  if (tooltipTimeout) clearTimeout(tooltipTimeout);
+  tooltipTimeout = setTimeout(() => {
+    const rect = e.target.getBoundingClientRect();
+    tooltipEl.innerHTML = `<div class="tt-title"><span class="tt-icon">${g.icon}</span> ${g.title}</div>
+      <div class="tt-body">${g.body}</div>
+      <div class="tt-section"><span class="tt-tag ${g.tagClass || 'tt-tag-det'}">${g.tag || ''}</span></div>`;
+    tooltipEl.style.display = 'block';
+    let top = rect.bottom + 8;
+    let left = rect.left + 10;
+    if (top + 300 > window.innerHeight) top = rect.top - 10 - tooltipEl.offsetHeight;
+    if (left + 380 > window.innerWidth) left = window.innerWidth - 390;
+    if (left < 10) left = 10;
+    tooltipEl.style.top = top + 'px';
+    tooltipEl.style.left = left + 'px';
+  }, 200);
+}
+function hideTooltip() {
+  if (tooltipTimeout) { clearTimeout(tooltipTimeout); tooltipTimeout = null; }
+  tooltipEl.style.display = 'none';
+}
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest('[data-glossary]');
+  if (el) showTooltip(e, el.getAttribute('data-glossary'));
+  else hideTooltip();
+});
+document.addEventListener('mouseout', e => { if (e.target.closest('[data-glossary]')) hideTooltip(); });
+
+// ── PLANET DETAIL MODAL ──
+function openPlanetModal(name, p, d, ch, scoreData) {
+  const glyph = (GLYPHS && GLYPHS[name]) || '';
+  let digLetter = 'P', digTier = 'bad';
+  if (d.domicile) { digLetter = 'R'; digTier = 'good'; }
+  else if (d.exaltation) { digLetter = 'EX'; digTier = 'good'; }
+  else if ((d.score||0) >= 3) { digLetter = 'T'; digTier = 'mid'; }
+  else if ((d.score||0) >= 1) { digLetter = 'F'; digTier = 'mid'; }
+
+  const planGloss = (typeof GLOSSARY !== 'undefined' && GLOSSARY[name.toLowerCase()]) ? GLOSSARY[name.toLowerCase()] : null;
+
+  document.getElementById('pmTitle').innerHTML = `${glyph} ${name} — ${p.sign || ''} ${p.degree != null ? p.degree.toFixed(1)+'°' : ''}`;
+
+  let html = '';
+
+  // Topic context (what the user is doing)
+  const topicLabel = (scoreData && scoreData.topic_label) || 'this event';
+  const topic = (scoreData && scoreData.topic) || '';
+  const isKeyPlanet = topic && TOPIC_KEY_PLANETS[topic] && TOPIC_KEY_PLANETS[topic].includes(name);
+
+  // ── Planet-specific description (contextual to chart) ──
+  if (planGloss) {
+    html += `<div class="pm-section"><h4>${planGloss.title || name}</h4><p>${planGloss.body || ''}</p></div>`;
+  } else {
+    html += `<div class="pm-section"><h4>${name}</h4><p>Position: ${p.sign} ${p.degree ? p.degree.toFixed(1)+'°' : ''}, house ${p.house != null ? p.house : '?'}${p.retrograde ? ', retrograde' : ''}.</p></div>`;
+  }
+
+  // ── For this topic section ──
+  html += `<div class="pm-section">
+    <h4>For This Topic: ${topicLabel}</h4>`;
+
+  // Check if this planet is in the key planet list
+  if (isKeyPlanet) {
+    html += `<p><b>★ Key planet for ${topicLabel}.</b> ${name}'s placement directly drives the score for this event type. ${name} rules: ${planGloss ? (planGloss.body.match(/<b>Best for:<\/b>.*?(?=<br|$)/) || planGloss.body.match(/<b>Good for:<\/b>.*?(?=<br|$)/) || [''])[0].replace(/<[^>]+>/g,'') : 'see the rules engine config'}.</p>`;
+  } else {
+    html += `<p style="color:var(--dim)">${name} is a <b>supporting</b> planet for this event. Its placement adds or subtracts from the score based on accidental dignity (house, aspects) but is not the primary significator.</p>`;
+  }
+
+  // Find notes and warnings that mention this planet
+  const allNotes = (scoreData && scoreData.notes) || [];
+  const allWarnings = (scoreData && scoreData.warnings) || [];
+  const planetNotes = allNotes.filter(n => n.toLowerCase().includes(name.toLowerCase()));
+  const planetWarnings = allWarnings.filter(w => w.toLowerCase().includes(name.toLowerCase()));
+
+  if (planetNotes.length) {
+    html += `<div style="margin-top:8px"><b style="color:var(--good);font-size:.8rem">Favorable:</b><ul style="margin:4px 0 0 18px;padding:0;font-size:.8rem">`;
+    planetNotes.forEach(n => { html += `<li>${n}</li>`; });
+    html += `</ul></div>`;
+  }
+  if (planetWarnings.length) {
+    html += `<div style="margin-top:8px"><b style="color:var(--bad);font-size:.8rem">Warnings:</b><ul style="margin:4px 0 0 18px;padding:0;font-size:.8rem">`;
+    planetWarnings.forEach(w => { html += `<li>${w}</li>`; });
+    html += `</ul></div>`;
+  }
+  if (!planetNotes.length && !planetWarnings.length) {
+    html += `<p style="color:var(--dim);font-size:.8rem;margin-top:6px">No specific notes or warnings about ${name} in this chart.</p>`;
+  }
+
+  html += `</div>`;
+
+  // ── Aspects (what is this planet aspecting in this chart) ──
+  if (ch && ch.aspects && ch.aspects.length) {
+    const myAspects = ch.aspects.filter(a => a.planets.toLowerCase().includes(name.toLowerCase()));
+    if (myAspects.length) {
+      html += `<div class="pm-section"><h4>Aspects in This Chart</h4>`;
+      myAspects.forEach(a => {
+        const aspectType = a.aspect || a.aspect_type || '';
+        const isHard = ['square','opposition'].includes(aspectType);
+        const isSoft = ['trine','sextile'].includes(aspectType);
+        const isConj = aspectType === 'conjunction';
+        const color = isHard ? 'var(--bad)' : isSoft ? 'var(--good)' : 'var(--accent)';
+        const other = a.planets.replace(name, '').replace(/\s*-\s*/, '').replace(/\s*-\s*/, '').trim();
+        const glyph2 = (GLYPHS && GLYPHS[other]) || '';
+        html += `<div class="pm-row"><span class="lbl">${glyph2} ${other}</span><span class="val" style="color:${color}">${aspectType}${a.orb != null ? ' ('+a.orb+'°)' : ''}${a.applying ? ' applying' : ''}</span></div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  // ── Position details ──
+  html += `<div class="pm-section">
+    <h4>Position</h4>
+    <div class="pm-row"><span class="lbl">Sign</span><span class="val">${p.sign || '?'}</span></div>
+    <div class="pm-row"><span class="lbl">Degree</span><span class="val">${p.degree != null ? p.degree.toFixed(2)+'°' : '?'}</span></div>
+    <div class="pm-row"><span class="lbl">House</span><span class="val">H${p.house != null ? p.house : '?'}</span></div>
+    <div class="pm-row"><span class="lbl">Retrograde</span><span class="val">${p.retrograde ? 'Yes' : 'No'}</span></div>
+    <div class="pm-row"><span class="lbl">Combust</span><span class="val">${p.combust ? 'Yes' : 'No'}</span></div>
+  </div>`;
+
+  // ── Essential dignity codes table ──
+  html += `<div class="pm-section">
+    <h4>Essential Dignity Codes</h4>
+    <p>This chart: <span class="code ${digTier}">${digLetter}</span> <b>+${d.score||0} points</b></p>
+    <div class="pm-codes">
+      <span class="code good">R</span><span class="desc"><b>Rulership (+5)</b> — planet in its own sign. Full authority.</span>
+      <span class="code good">EX</span><span class="desc"><b>Exaltation (+4)</b> — highly honored.</span>
+      <span class="code mid">T</span><span class="desc"><b>Triplicity (+3)</b> — rules the element. Moderate.</span>
+      <span class="code mid">F</span><span class="desc"><b>Bound/Term (+1)</b> — minor positive.</span>
+      <span class="code bad">P</span><span class="desc"><b>Peregrine (0)</b> — no dignity. Unreliable.</span>
+    </div>
+  </div>`;
+
+  // ── Status flags ──
+  if (p.retrograde || p.combust) {
+    html += `<div class="pm-section"><h4>Status Flags</h4>`;
+    if (p.retrograde) html += `<p><b>Retrograde:</b> Action turns inward. Rx benefics can still help; Rx malefics are more unpredictable.</p>`;
+    if (p.combust) html += `<p><b>Combust:</b> Within 8° of the Sun. "Burned up" — cannot operate independently.</p>`;
+    html += `</div>`;
+  }
+
+  document.getElementById('pmBody').innerHTML = html;
+  document.getElementById('planetModal').classList.add('open');
+}
+function closePlanetModal() {
+  document.getElementById('planetModal').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlanetModal(); });
+
+// ── MODE SWITCHING ──
+function switchMode(mode) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mode-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.mode-tab[onclick*="'${mode}'"]`).classList.add('active');
+  document.getElementById(`mode-${mode}`).classList.add('active');
+  // Hide best-windows section only when going to check mode; preserve cached
+  // search results when going back to find mode.
+  if (mode === 'check') {
+    document.getElementById('search-section').style.display = 'none';
+  } else if (mode === 'find' && LAST_SEARCH_RESULTS) {
+    document.getElementById('search-section').style.display = 'block';
+  }
+}
+
+let LAST_SEARCH_RESULTS = null;
+let LAST_SEARCH_TZ = '';
+
+// ── CITY AUTOCOMPLETE ──
+function setupCityAutocomplete(inputId, listId, latId, lonId, tzId) {
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    if (q.length < 2) { list.style.display = 'none'; return; }
+    const matches = CITY_DATA.filter(c =>
+      c.name.toLowerCase().includes(q.toLowerCase()) ||
+      (c.country && c.country.toLowerCase().includes(q.toLowerCase()))
+    ).slice(0, 30);
+    if (matches.length) {
+      list.style.display = 'block';
+      list.innerHTML = matches.map(c =>
+        `<div class="city-item" onclick="selectEventCity('${c.name.replace(/'/g,"\\'")}', ${c.lat}, ${c.lon}, '${c.tz||''}', '${inputId}', '${listId}', '${latId}', '${lonId}', '${tzId}')">
+          ${c.name} <span class="cc">${c.country || ''}</span>
+          <span style="float:right;color:var(--dim);font-size:.65rem">${c.lat.toFixed(1)}, ${c.lon.toFixed(1)}</span>
+        </div>`
+      ).join('');
+    } else { list.style.display = 'none'; }
+  });
+  input.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 200));
+}
+
+function selectEventCity(name, lat, lon, tz, inputId, listId, latId, lonId, tzId) {
+  document.getElementById(inputId).value = name;
+  document.getElementById(latId).value = lat;
+  document.getElementById(lonId).value = lon;
+  if (tzId && document.getElementById(tzId)) document.getElementById(tzId).value = tz;
+  document.getElementById(listId).style.display = 'none';
+}
+
+// Load data
+fetch('./cities.json').then(r => r.json()).then(d => { CITY_DATA = d; });
+
+// Format an ISO datetime string in a given IANA timezone
+function fmtInTz(isoStr, tz) {
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  if (!tz) return d.toLocaleString();
+  try {
+    return d.toLocaleString('en-US', { timeZone: tz, year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch(e) {
+    return d.toLocaleString();
+  }
+}
+
+// Populate topics from exposed globals (set by js/main.js after SWE boots)
+(function waitForTopics() {
+  if (window.TOPICS) {
+    ['topic-find','topic-check'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) { sel.innerHTML = Object.entries(window.TOPICS).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join(''); sel.value = 'poker'; }
+    });
+  } else {
+    setTimeout(waitForTopics, 200);
+  }
+})();
+
+// Birth city autocomplete
+document.getElementById('city-input').addEventListener('input', () => {
+  const q = document.getElementById('city-input').value.trim();
+  if (q.length < 2) { document.getElementById('city-list').style.display = 'none'; return; }
+  const matches = CITY_DATA.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || (c.country && c.country.toLowerCase().includes(q.toLowerCase()))).slice(0, 30);
+  if (matches.length) {
+    document.getElementById('city-list').style.display = 'block';
+    document.getElementById('city-list').innerHTML = matches.map(c => `<div class="city-item" onclick="selectCity('${c.name.replace(/'/g,"\\'")}', ${c.lat}, ${c.lon})">${c.name} <span class="cc">${c.country || ''}</span><span style="float:right;color:var(--dim);font-size:.65rem">${c.lat.toFixed(1)}, ${c.lon.toFixed(1)}</span></div>`).join('');
+  } else { document.getElementById('city-list').style.display = 'none'; }
+});
+document.getElementById('city-input').addEventListener('blur', () => setTimeout(() => { document.getElementById('city-list').style.display = 'none'; }, 200));
+function selectCity(name, lat, lon) {
+  document.getElementById('city-input').value = name;
+  document.getElementById('lat').value = lat;
+  document.getElementById('lon').value = lon;
+  document.getElementById('city-list').style.display = 'none';
+}
+
+// Event location toggles
+function setupLocToggle(selectId, fieldsId) {
+  document.getElementById(selectId).addEventListener('change', function() {
+    document.getElementById(fieldsId).style.display = this.value === 'custom' ? 'block' : 'none';
+  });
+}
+setupLocToggle('loc-choice-find', 'event-loc-find');
+setupLocToggle('loc-choice-check', 'event-loc-check');
+
+// Setup event city autocompletes
+setupCityAutocomplete('event-city-find', 'event-city-list-find', 'event-lat-find', 'event-lon-find', 'event-tz-find');
+setupCityAutocomplete('event-city-check', 'event-city-list-check', 'event-lat-check', 'event-lon-check', 'event-tz-check');
+
+// Date defaults
+const today = new Date();
+document.getElementById('check-date').value = today.toISOString().slice(0,10);
+setRange(7);
+// Default event location to Las Vegas, NV
+document.getElementById('event-lat-find').value = '36.17';
+document.getElementById('event-lon-find').value = '-115.14';
+document.getElementById('event-tz-find').value = 'America/Los_Angeles';
+document.getElementById('event-lat-check').value = '36.17';
+document.getElementById('event-lon-check').value = '-115.14';
+document.getElementById('event-tz-check').value = 'America/Los_Angeles';
+
+// Quick range buttons
+function setRange(days) {
+  const start = new Date();
+  const end = new Date(start.getTime() + days * 86400000);
+  document.getElementById('search-start').value = start.toISOString().slice(0,10);
+  document.getElementById('search-end').value = end.toISOString().slice(0,10);
+  document.getElementById('custom-range').style.display = 'none';
+  // highlight the active button
+  document.querySelectorAll('.range-btns .btn-sm').forEach(b => {
+    if (parseInt(b.textContent.trim()) === days) {
+      b.style.borderColor = '#fff';
+      b.style.background = 'rgba(233,69,96,0.15)';
+    } else {
+      b.style.borderColor = 'var(--accent)';
+      b.style.background = 'transparent';
+    }
+  });
+}
+
+function toggleCustomRange() {
+  const el = document.getElementById('custom-range');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  document.querySelectorAll('.range-btns .btn-sm').forEach(b => {
+    b.style.borderColor = 'var(--accent)';
+    b.style.background = 'transparent';
+  });
+}
+
+// Save/Load profiles
+function saveProfile() {
+  const name = document.getElementById('name').value.trim() || 'Unnamed';
+  const profile = {
+    id: Date.now(), name,
+    birthDate: document.getElementById('birth-date').value,
+    birthTime: document.getElementById('birth-time').value,
+    city: document.getElementById('city-input').value,
+    lat: parseFloat(document.getElementById('lat').value),
+    lon: parseFloat(document.getElementById('lon').value),
+  };
+  if (isNaN(profile.lat) || isNaN(profile.lon)) {
+    flashSaveStatus('Select a birth city first', 'bad');
+    return;
+  }
+  const existing = profiles.findIndex(p => p.name === name && p.birthDate === profile.birthDate);
+  const isUpdate = existing >= 0;
+  if (isUpdate) profiles[existing] = profile;
+  else profiles.push(profile);
+  localStorage.setItem('auspicious_profiles', JSON.stringify(profiles));
+  renderProfiles();
+  flashSaveStatus(isUpdate ? `Updated ${name}` : `Saved ${name}`, 'good');
+}
+
+function flashSaveStatus(msg, type) {
+  let el = document.getElementById('save-status');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'save-status';
+    el.style.cssText = 'margin-top:6px;font-size:.7rem;padding:4px 8px;border-radius:6px;text-align:center;transition:opacity .3s';
+    const btn = document.querySelector('button[onclick="saveProfile()"]');
+    btn.parentNode.insertBefore(el, btn.nextSibling);
+  }
+  el.textContent = msg;
+  el.style.color = type === 'bad' ? 'var(--bad)' : 'var(--good)';
+  el.style.background = type === 'bad' ? 'rgba(248,113,113,0.1)' : 'rgba(74,222,128,0.1)';
+  el.style.opacity = '1';
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => { el.style.opacity = '0.4'; }, 1800);
+}
+function loadProfile(p) {
+  document.getElementById('name').value = p.name;
+  document.getElementById('birth-date').value = p.birthDate;
+  document.getElementById('birth-time').value = p.birthTime;
+  document.getElementById('city-input').value = p.city || '';
+  document.getElementById('lat').value = p.lat;
+  document.getElementById('lon').value = p.lon;
+  renderProfiles();
+}
+function deleteProfile(id) {
+  profiles = profiles.filter(p => p.id !== id);
+  localStorage.setItem('auspicious_profiles', JSON.stringify(profiles));
+  renderProfiles();
+}
+function renderProfiles() {
+  const area = document.getElementById('profile-bar-area');
+  if (!profiles.length) { area.innerHTML = ''; return; }
+  area.innerHTML = profiles.map(p => `
+    <div class="profile-bar">
+      <span class="name">${p.name}</span>
+      <span class="detail">${p.birthDate} ${p.birthTime} · ${p.city || (p.lat+','+p.lon)}</span>
+      <span class="actions">
+        <button class="btn btn-sm btn-outline" onclick="loadProfile(${JSON.stringify(p).replace(/\"/g,'&quot;')})">Load</button>
+        <button class="btn btn-sm" style="background:transparent;border:1px solid var(--bad);color:var(--bad);padding:4px 10px" onclick="deleteProfile(${p.id})">✕</button>
+      </span>
+    </div>
+  `).join('');
+}
+renderProfiles();
+// Auto-load the most recent profile so the form isn't blank on refresh
+if (profiles.length) {
+  const latest = profiles.reduce((a, b) => (a.id > b.id ? a : b));
+  loadProfile(latest);
+}
+
+function getEventCoords() {
+  const mode = document.querySelector('.mode-content.active')?.id;
+  const prefix = mode === 'mode-find' ? 'find' : 'check';
+  const locChoice = document.getElementById(`loc-choice-${prefix}`).value;
+  if (locChoice === 'custom') {
+    const lat = parseFloat(document.getElementById(`event-lat-${prefix}`).value);
+    const lon = parseFloat(document.getElementById(`event-lon-${prefix}`).value);
+    const tz = document.getElementById(`event-tz-${prefix}`)?.value || '';
+    if (isNaN(lat) || isNaN(lon)) return null;
+    return { lat, lon, tz };
+  }
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lon = parseFloat(document.getElementById('lon').value);
+  if (isNaN(lat) || isNaN(lon)) return null;
+  return { lat, lon, tz: '' };
+}
+
+function formatPct(pct) {
+  const n = parseFloat(pct);
+  if (n >= 50) return { cls: 'good', label: 'Favorable' };
+  if (n >= 25) return { cls: 'okay', label: 'Mixed' };
+  return { cls: 'bad', label: 'Unfavorable' };
+}
+
+function showLoading(el, msg) { el.innerHTML = `<div class="loading">${msg}</div>`; }
+
+// ── RENDER FULL SCORE ──
+function renderScore(el, data, meta) {
+  const pct = data.percentage || 0;
+  const rating = formatPct(pct);
+  const pctInt = Math.round(pct);
+  const ch = data.chart || {};
+  const moon = ch.moon || {};
+  const dignities = ch.dignities || {};
+  const planets = ch.planets || {};
+
+  // ── Result header (date/time/location/topic) ──
+  const thumbUrl = renderThumbnailWheel(ch);
+  const headerHtml = meta ? `<div class="result-header">
+    <div class="row1">
+      <div class="header-left">
+        <span class="topic-label">${meta.topicLabel || ''}</span>
+        ${meta.userName ? `<span class="user-name">👤 ${meta.userName}</span>` : ''}
+        <div class="header-details">
+          <span class="detail-line">📅 <b>${fmtInTz(meta.datetime, meta.tz)}</b></span>
+          <span class="detail-line">📍 <b>${meta.locLabel || ''}</b></span>
+        </div>
+      </div>
+      <a class="wheel-thumb-link" id="timelineLink" href="${buildTimelineUrl(meta.datetime, meta.coords, meta.userName, meta.locLabel)}" target="_blank" title="Open in Timeline app with astro wheel">
+        <img class="wheel-thumb" src="${thumbUrl}" alt="Astro chart" />
+      </a>
+    </div>
+  </div>` : '';
+
+  // ── Mini glyph chart ──
+  const planetOrder = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn'];
+  const chartRows = planetOrder.map(name => {
+    const p = planets[name];
+    if (!p) return '';
+    const sign = p.sign || '';
+    return `<tr>
+      <td class="planet-cell" data-glossary="${name.toLowerCase()}">${GLYPHS[name] || ''} ${name}</td>
+      <td class="sign-cell" data-glossary="${sign.toLowerCase()}">${GLYPHS[sign] || ''} ${sign}</td>
+      <td class="deg-cell">${p.degree != null ? p.degree.toFixed(1) + '°' : ''}</td>
+      <td class="house-cell" data-glossary="planetary_hour">H${p.house != null ? p.house : '?'}</td>
+    </tr>`;
+  }).join('');
+  const ascRow = ch.ascendant ? `<tr class="asc-row" data-glossary="ascendant">
+    <td class="planet-cell">ASC</td>
+    <td class="sign-cell">${GLYPHS[ch.ascendant.sign] || ''} ${ch.ascendant.sign || ''}</td>
+    <td class="deg-cell">${ch.ascendant.longitude != null ? (ch.ascendant.longitude % 30).toFixed(1) + '°' : ''}</td>
+    <td class="house-cell">H1</td>
+  </tr>` : '';
+  const mcRow = ch.midheaven ? `<tr data-glossary="planetary_day">
+    <td class="planet-cell">MC</td>
+    <td class="sign-cell">${GLYPHS[ch.midheaven.sign] || ''} ${ch.midheaven.sign || ''}</td>
+    <td class="deg-cell">${ch.midheaven.longitude != null ? (ch.midheaven.longitude % 30).toFixed(1) + '°' : ''}</td>
+    <td class="house-cell">H10</td>
+  </tr>` : '';
+  const miniChart = `<div class="mini-chart">
+    <table class="mini-chart-table">
+      <thead><tr><th>Planet</th><th>Sign</th><th>Degree</th><th>House</th></tr></thead>
+      <tbody>${chartRows}${ascRow}${mcRow}</tbody>
+    </table>
+  </div>`;
+
+  // Planet dignities cards (separate from the glyph chart table)
+  const planetGrid = planetOrder.map(name => {
+    const p = planets[name]; const d = dignities[name] || {};
+    if (!p) return '';
+    const c = d.score >= 5 ? 'good' : d.score >= 3 ? 'mid' : 'bad';
+    let l = 'P', gk = 'P';
+    if (d.domicile) { l = 'R'; gk = 'R'; }
+    else if (d.exaltation) { l = 'EX'; gk = 'EX'; }
+    else if (d.score >= 3) { l = 'T'; gk = 'T'; }
+    else if (d.score >= 1) { l = 'F'; gk = 'F'; }
+    else { l = 'P'; gk = 'P'; }
+    return `<div class="planet-item" onclick="openPlanetModal('${name}', ${JSON.stringify(p).replace(/"/g, '&quot;')}, ${JSON.stringify(d).replace(/"/g, '&quot;')}, ${JSON.stringify(ch).replace(/"/g, '&quot;')}, ${JSON.stringify(data).replace(/"/g, '&quot;')})">
+      <span class="pname">${name}</span>
+      <span class="ppos">${p.sign || ''} ${p.degree != null ? p.degree.toFixed(1) : ''}° H${p.house != null ? p.house : '?'} ${p.retrograde ? 'Rx' : ''}</span>
+      <div><span class="dig-badge dig-${c}">${l}</span> <span class="dig-score" style="opacity:.85">${d.score||0}</span>${p.retrograde ? ` <span class="dig-badge dig-bad">Rx</span>` : ''}${p.combust ? ` <span class="dig-badge dig-bad">Combust</span>` : ''}</div>
+    </div>`;
+  }).join('');
+
+  let warns = '';
+  if (data.warnings && data.warnings.length) {
+    warns = `<div style="margin-top:10px"><b style="color:var(--warn);font-size:.8rem;cursor:help" data-glossary="malefic_in_house">Warnings (${data.warnings.length})</b>` +
+      data.warnings.map(w => { const gk = glossaryMatch(w); return `<div class="warning-item"${gk ? ` data-glossary="${gk}"` : ''}>${w}</div>`; }).join('') + `</div>`;
+  }
+  let notes = '';
+  if (data.notes && data.notes.length) {
+    notes = `<div style="margin-top:10px"><b style="color:var(--good);font-size:.8rem;cursor:help" data-glossary="asc_favorable">Favorable Factors (${data.notes.length})</b>` +
+      data.notes.map(n => { const gk = glossaryMatch(n); return `<div class="note-item"${gk ? ` data-glossary="${gk}"` : ''}>${n}</div>`; }).join('') + `</div>`;
+  }
+
+  el.innerHTML = `
+    ${headerHtml}
+    <div class="score-display">
+      <div class="score-ring ${rating.cls}" style="--pct:${pctInt}%" data-glossary="score"><div class="inner">${pctInt}%</div></div>
+      <div class="score-details">
+        <div class="pct ${rating.cls}">${rating.label}</div>
+        <div class="meta">${data.total||0}/${data.max_possible||0} pts</div>
+        <div class="meta" style="margin-top:3px">
+          <span class="badge ${ch.is_day_chart ? 'badge-day' : 'badge-night'}" data-glossary="sect">${ch.sect||''} Chart</span>
+          ${moon.void_of_course ? '<span class="badge badge-voc" data-glossary="void_of_course">Void of Course</span>' : ''}
+          <span style="color:var(--dim);font-size:.75rem">${moon.phase||''}</span>
+        </div>
+      </div>
+    </div>
+    ${miniChart}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="font-size:.75rem;color:var(--dim);cursor:help" data-glossary="ascendant">Asc: ${ch.ascendant?.position||'?'}</div>
+      <div style="font-size:.75rem;color:var(--dim);cursor:help" data-glossary="planetary_hour">Hour: ${ch.planetary_hour||'?'}</div>
+      <div style="font-size:.75rem;color:var(--dim);cursor:help" data-glossary="planetary_day">Day: ${ch.planetary_day||'?'}</div>
+    </div>
+    <div style="margin-bottom:8px"><b style="font-size:.8rem">Planetary Dignities <span style="color:var(--dim);font-weight:400;cursor:help" data-glossary="dignity_score">ⓘ hover badges</span></b><div class="planet-grid">${planetGrid}</div></div>
+    ${warns}${notes}`;
+}
+
+// ── Mini astro wheel thumbnail (SVG data URL — full zodiac ring) ──
+function renderThumbnailWheel(ch) {
+  const S = 72, cx = S / 2, cy = S / 2, outerR = 32, innerR = 21;
+  // Zodiac colors: Fire(red), Water(blue), Air(yellow), Earth(green) — same as main page button
+  const segColors = [
+    '#d32f2f','#1976d2','#fbc02d','#2e7d32',
+    '#d32f2f','#1976d2','#fbc02d','#2e7d32',
+    '#d32f2f','#1976d2','#fbc02d','#2e7d32'
+  ];
+  const degToRad = d => d * Math.PI / 180;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">
+    <defs>
+      <clipPath id="ringClip"><rect x="0" y="0" width="${S}" height="${S}"/></clipPath>
+    </defs>
+    <rect width="${S}" height="${S}" fill="#0f0f1a" rx="6"/>`;
+  // Draw 12 zodiac segments (ring shape)
+  for (let i = 0; i < 12; i++) {
+    const startAngle = i * 30 - 90; // -90° so 0°=Aries is at top
+    const endAngle = (i + 1) * 30 - 90;
+    const sr = degToRad(startAngle);
+    const er = degToRad(endAngle);
+    const x1 = cx + outerR * Math.cos(sr);
+    const y1 = cy + outerR * Math.sin(sr);
+    const x2 = cx + outerR * Math.cos(er);
+    const y2 = cy + outerR * Math.sin(er);
+    const x3 = cx + innerR * Math.cos(er);
+    const y3 = cy + innerR * Math.sin(er);
+    const x4 = cx + innerR * Math.cos(sr);
+    const y4 = cy + innerR * Math.sin(sr);
+    const largeArc = 0; // 30° is always < 180°
+    svg += `<path d="M${x1},${y1} A${outerR},${outerR} 0 ${largeArc},1 ${x2},${y2} L${x3},${y3} A${innerR},${innerR} 0 ${largeArc},0 ${x4},${y4} Z" fill="${segColors[i]}" opacity="0.7" stroke="rgba(0,0,0,.25)" stroke-width="0.5"/>`;
+  }
+  // Planet dots
+  const lonMap = {
+    Sun:'#fbbf24', Moon:'#94a3b8', Mercury:'#60a5fa', Venus:'#f472b6',
+    Mars:'#ef4444', Jupiter:'#f59e0b', Saturn:'#a78bfa', Uranus:'#34d399',
+    Neptune:'#38bdf8', Pluto:'#fb7185'
+  };
+  const dotR = 3.5;
+  if (ch.planets) {
+    for (const [name, p] of Object.entries(ch.planets)) {
+      if (p.longitude == null) continue;
+      const midR = (outerR + innerR) / 2;
+      const a = degToRad(p.longitude);
+      const x = cx + midR * Math.cos(a);
+      const y = cy + midR * Math.sin(a);
+      const col = lonMap[name] || 'rgba(255,255,255,.5)';
+      svg += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${col}" opacity="0.95" stroke="#0f0f1a" stroke-width="0.8"/>`;
+    }
+  }
+  // Ascendant marker (slightly outside ring)
+  if (ch.ascendant && ch.ascendant.longitude != null) {
+    const a = degToRad(ch.ascendant.longitude);
+    const x = cx + (outerR + 4) * Math.cos(a);
+    const y = cy + (outerR + 4) * Math.sin(a);
+    svg += `<circle cx="${x}" cy="${y}" r="2" fill="rgba(255,255,255,.4)" stroke="rgba(255,255,255,.7)" stroke-width="1"/>`;
+  }
+  svg += `</svg>`;
+  return "data:image/svg+xml," + encodeURIComponent(svg);
+}
+
+// Build the Timeline URL with all data from the auspicious form
+function buildTimelineUrl(isoDt, coords, userName, locLabel) {
+  const params = new URLSearchParams();
+  params.set('variant', 'personal');
+  params.set('dt', isoDt);
+  if (userName) params.set('name', userName);
+  const bDate = document.getElementById('birth-date')?.value || '';
+  const bTime = document.getElementById('birth-time')?.value || '';
+  const bCity = document.getElementById('city-input')?.value || '';
+  const bLat = document.getElementById('lat')?.value || '';
+  const bLon = document.getElementById('lon')?.value || '';
+  if (bDate) { params.set('bd', bDate); params.set('bt', bTime); params.set('bc', bCity); }
+  if (bLat) params.set('blat', bLat);
+  if (bLon) params.set('blon', bLon);
+  // Event location for ASC computation
+  if (coords) {
+    params.set('elat', coords.lat);
+    params.set('elon', coords.lon);
+    if (coords.tz) params.set('etz', coords.tz);
+  }
+  // Pass the resolved event location label (city name) so Timeline shows the right place
+  if (locLabel) params.set('loc', locLabel);
+  // Pass topic and location label from the meta if available
+  const mode = document.querySelector('.mode-content.active')?.id;
+  const prefix = mode === 'mode-find' ? 'find' : 'check';
+  const topic = document.getElementById('topic-' + prefix)?.value || '';
+  if (topic) params.set('topic', topic);
+  return '/?' + params.toString();
+}
+
+// ── SCORE A SPECIFIC MOMENT ──
+function scoreEvent(overrideDt) {
+  const el = document.getElementById('result');
+  showLoading(el, 'Computing chart & scoring');
+  const coords = getEventCoords();
+  if (!coords) { el.innerHTML = `<p style="color:var(--bad)">Please set birth city or event location.</p>`; return; }
+  const dt = overrideDt || new Date(document.getElementById('check-date').value + 'T' + document.getElementById('check-time').value + ':00').toISOString();
+  const topic = document.getElementById('topic-check').value;
+  try {
+    const data = window.scoreMoment(new Date(dt), coords.lat, coords.lon, topic);
+    if (!data) { el.innerHTML = `<p style="color:var(--bad)">Calculation failed</p>`; return; }
+    const enteredCity = (document.getElementById('event-city-check')?.value || '').trim();
+    const looksLikeCoords = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(enteredCity);
+    let locLabel = looksLikeCoords ? '' : enteredCity;
+    if (!locLabel) {
+      const nearest = nearestCity(coords.lat, coords.lon);
+      locLabel = nearest ? `${nearest.name}` : `${coords.lat.toFixed(2)}°, ${coords.lon.toFixed(2)}°`;
+    }
+    const userName = (document.getElementById('name')?.value || '').trim();
+    const topicLabel = data.topic_label || topic;
+    renderScore(el, data, { datetime: dt, coords, locLabel, topic, topicLabel, userName, tz: coords.tz });
+  } catch(e) { el.innerHTML = `<p style="color:var(--bad)">Error: ${e.message}</p>`; }
+}
+
+// ── RESET / NEW SEARCH ──
+function resetForm() {
+  document.getElementById('birth-date').value = '1961-04-13';
+  document.getElementById('birth-time').value = '12:00';
+  document.getElementById('name').value = 'Steve';
+  document.getElementById('city-input').value = 'Chicago, IL';
+  document.getElementById('lat').value = '41.88';
+  document.getElementById('lon').value = '-87.63';
+  document.getElementById('loc-choice-find').value = 'custom';
+  document.getElementById('loc-choice-check').value = 'custom';
+  document.getElementById('event-loc-find').style.display = 'block';
+  document.getElementById('event-loc-check').style.display = 'block';
+  document.getElementById('event-city-find').value = 'Las Vegas, NV';
+  document.getElementById('event-city-check').value = 'Las Vegas, NV';
+  document.getElementById('event-lat-find').value = '36.17';
+  document.getElementById('event-lon-find').value = '-115.14';
+  document.getElementById('event-lat-check').value = '36.17';
+  document.getElementById('event-lon-check').value = '-115.14';
+  document.getElementById('result').innerHTML = '<p style="color:var(--dim)">Results cleared. Set your data and search again.</p>';
+  document.getElementById('search-section').style.display = 'none';
+  document.getElementById('search-result').innerHTML = '<p style="color:var(--dim)">Search results will appear here.</p>';
+  LAST_SEARCH_RESULTS = null;
+  LAST_SEARCH_TZ = '';
+}
+
+// Find nearest city in CITY_DATA within ~1.5° (great-circle approx)
+function nearestCity(lat, lon) {
+  if (!CITY_DATA.length) return null;
+  const d2r = d => d * Math.PI / 180;
+  let best = null, bestD = Infinity;
+  for (const c of CITY_DATA) {
+    const dLat = d2r(c.lat - lat);
+    const dLon = d2r(c.lon - lon);
+    const a = Math.sin(dLat/2)**2 + Math.cos(d2r(lat))*Math.cos(d2r(c.lat))*Math.sin(dLon/2)**2;
+    const d = 2 * Math.asin(Math.sqrt(a));
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  // Reject if more than ~1.5° away (about 165 km)
+  if (bestD > 1.5 * Math.PI / 180) return null;
+  return best;
+}
+
+// ── SEARCH BEST TIMES ──
+function searchTimes() {
+  const resultsEl = document.getElementById('search-result');
+  const sectionEl = document.getElementById('search-section');
+  showLoading(resultsEl, 'Scanning date range...');
+
+  const coords = getEventCoords();
+  if (!coords) { resultsEl.innerHTML = `<p style="color:var(--bad)">Please set birth city or event location.</p>`; sectionEl.style.display = 'block'; return; }
+
+  try {
+    const startDate = new Date(document.getElementById('search-start').value + 'T00:00:00Z');
+    const endDate = new Date(document.getElementById('search-end').value + 'T23:59:59Z');
+    const topic = document.getElementById('topic-find').value;
+    const results = window.findBestTime(startDate, endDate, coords.lat, coords.lon, topic, 5, 10);
+    if (!results || !results.length) {
+      resultsEl.innerHTML = `<p style="color:var(--dim)">No favorable times found. Try expanding the range.</p>`;
+      sectionEl.style.display = 'block';
+      LAST_SEARCH_RESULTS = null;
+      return;
+    }
+    LAST_SEARCH_RESULTS = results;
+    LAST_SEARCH_TZ = coords.tz || '';
+    renderSearchResults(results);
+  } catch(e) { resultsEl.innerHTML = `<p style="color:var(--bad)">Error: ${e.message}</p>`; sectionEl.style.display = 'block'; }
+}
+
+function renderSearchResults(results) {
+  const resultsEl = document.getElementById('search-result');
+  const sectionEl = document.getElementById('search-section');
+  sectionEl.style.display = 'block';
+  resultsEl.innerHTML = `<div class="search-results">${results.map(r => {
+    const pct = Math.round(r.score_percent);
+    const cls = pct >= 50 ? '' : pct >= 25 ? 'okay' : 'bad';
+    const coordStr = r.coords ? JSON.stringify(r.coords) : 'null';
+    const topic = r.topic || '';
+    const localTime = fmtInTz(r.datetime, LAST_SEARCH_TZ);
+    return `<div class="search-item" onclick='useBestTime(&quot;${r.datetime}&quot;, ${coordStr}, &quot;${topic}&quot;)' title="Click to see details">
+      <div><div class="dt">${localTime}</div><div style="font-size:.7rem;color:var(--dim)">${r.topic_label||''} · ${r.warnings?.length||0} warnings</div></div>
+      <div style="display:flex;align-items:center;gap:6px"><div class="spct ${cls}">${pct}%</div><a href="${buildTimelineUrlFromParts(r.datetime, r.coords)}" target="_blank" onclick="event.stopPropagation()" title="Open in Timeline" style="color:var(--accent2);text-decoration:none;flex-shrink:0">${ZODIAC_RING_SVG}</a></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function useBestTime(isoDt, coords, topic) {
+  // Switch to check mode and pin the score call to the exact isoDt/coords/topic
+  // from the search. The form fields are populated for the user's reference only.
+  switchMode('check');
+  const d = new Date(isoDt);
+  // Format in LOCAL time for the form fields
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  document.getElementById('check-date').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('check-time').value = `${hh}:${mi}`;
+  if (topic) {
+    const topicSel = document.getElementById('topic-check');
+    if (topicSel && [...topicSel.options].some(o => o.value === topic)) {
+      topicSel.value = topic;
+    }
+  }
+  // If we have the original search coords, pin the event location to those exact coords
+  // so the score matches the search result
+  if (coords) {
+    document.getElementById('loc-choice-check').value = 'custom';
+    document.getElementById('event-loc-check').style.display = 'block';
+    document.getElementById('event-lat-check').value = coords.lat;
+    document.getElementById('event-lon-check').value = coords.lon;
+    document.getElementById('event-city-check').value = `${coords.lat.toFixed(2)}, ${coords.lon.toFixed(2)}`;
+    if (LAST_SEARCH_TZ) document.getElementById('event-tz-check').value = LAST_SEARCH_TZ;
+  }
+  // Pass the exact ISO datetime so we don't lose timezone fidelity through the form
+  scoreEvent(isoDt);
+}
+
+// Search-results link builder (reads current form state like buildTimelineUrl)
+function buildTimelineUrlFromParts(isoDt, coords) {
+  const params = new URLSearchParams();
+  params.set('variant', 'personal');
+  params.set('dt', new Date(isoDt).toISOString());
+  const bDate = document.getElementById('birth-date')?.value || '';
+  const bTime = document.getElementById('birth-time')?.value || '';
+  const bCity = document.getElementById('city-input')?.value || '';
+  const bLat = document.getElementById('lat')?.value || '';
+  const bLon = document.getElementById('lon')?.value || '';
+  const uName = document.getElementById('name')?.value || '';
+  if (uName) params.set('name', uName);
+  if (bDate) { params.set('bd', bDate); params.set('bt', bTime); params.set('bc', bCity); }
+  if (bLat) params.set('blat', bLat);
+  if (bLon) params.set('blon', bLon);
+  if (coords) {
+    params.set('elat', coords.lat);
+    params.set('elon', coords.lon);
+    if (coords.tz) params.set('etz', coords.tz);
+    // Pass the resolved event location label (city name) from the find-mode city input
+    const eventCity = document.getElementById('event-city-find')?.value || '';
+    if (eventCity) {
+      // If it looks like raw coordinates, skip
+      if (!/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(eventCity)) {
+        params.set('loc', eventCity.trim());
+      }
+    }
+  } else {
+    const ec = getEventCoords();
+    if (ec) { params.set('elat', ec.lat); params.set('elon', ec.lon); }
+  }
+  // Topic from find mode
+  const topic = document.getElementById('topic-find')?.value || '';
+  if (topic) params.set('topic', topic);
+  return '/?' + params.toString();
+}
+
+// ── AUTO-FILL FROM URL PARAMS (when navigated from Timeline) ──
+(function autoFillFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const dt = params.get('dt');
+  if (!dt) return; // no auspicious event data in URL
+
+  // Populate birth data
+  const bd = params.get('bd');
+  if (bd) {
+    const bDate = document.getElementById('birth-date');
+    const bTime = document.getElementById('birth-time');
+    const bCity = document.getElementById('city-input');
+    const name = document.getElementById('name');
+    const blat = params.get('blat');
+    const blon = params.get('blon');
+    if (bDate) bDate.value = bd;
+    if (bTime) bTime.value = params.get('bt') || '12:00';
+    if (bCity) bCity.value = params.get('bc') || '';
+    if (name) name.value = params.get('name') || '';
+    if (blat && blon) {
+      document.getElementById('lat').value = blat;
+      document.getElementById('lon').value = blon;
+    }
+  }
+
+  // Populate event location
+  const elat = params.get('elat');
+  const elon = params.get('elon');
+  const etz = params.get('etz');
+  const topic = params.get('topic');
+  const loc = params.get('loc');
+  if (elat && elon) {
+    // Fill find-mode event location (so search works)
+    document.getElementById('loc-choice-find').value = 'custom';
+    document.getElementById('event-loc-find').style.display = 'block';
+    document.getElementById('event-lat-find').value = elat;
+    document.getElementById('event-lon-find').value = elon;
+    if (loc) document.getElementById('event-city-find').value = loc;
+    if (etz) document.getElementById('event-tz-find').value = etz;
+
+    // Also fill check-mode location
+    document.getElementById('loc-choice-check').value = 'custom';
+    document.getElementById('event-loc-check').style.display = 'block';
+    document.getElementById('event-lat-check').value = elat;
+    document.getElementById('event-lon-check').value = elon;
+    if (loc) document.getElementById('event-city-check').value = loc;
+    if (etz) document.getElementById('event-tz-check').value = etz;
+  }
+
+  // Set topic
+  if (topic) {
+    const topicFind = document.getElementById('topic-find');
+    const topicCheck = document.getElementById('topic-check');
+    if (topicFind && [...topicFind.options].some(o => o.value === topic)) topicFind.value = topic;
+    if (topicCheck && [...topicCheck.options].some(o => o.value === topic)) topicCheck.value = topic;
+  }
+
+  // Auto-score the event when SWE is ready
+  (function waitForAuspiciousScore(timeout) {
+    timeout = timeout || 0;
+    if (timeout >= 60) {
+      // Give up after ~18 seconds — show page without auto-scoring
+      document.getElementById('result').innerHTML = '<p style="color:var(--dim)">Timed out loading ephemeris. Try refreshing or use manual search.</p>';
+      document.getElementById('search-section').style.display = 'none';
+      return;
+    }
+    if (typeof scoreMoment === 'function' && typeof findBestTime === 'function') {
+      const coords = { lat: parseFloat(elat), lon: parseFloat(elon), tz: etz || '' };
+      const topicVal = topic || '';
+      // Use scoreEvent for check mode since we have a specific datetime
+      document.getElementById('check-date').value = dt.slice(0,10);
+      document.getElementById('check-time').value = dt.slice(11,16);
+      if (topicVal) {
+        const chk = document.getElementById('topic-check');
+        if (chk && [...chk.options].some(o => o.value === topicVal)) chk.value = topicVal;
+      }
+      useBestTime(dt, coords, topicVal);
+    } else {
+      setTimeout(() => waitForAuspiciousScore(timeout + 1), 300);
+    }
+  })(0);
+})();
+</script>
+</body>
+</html>
