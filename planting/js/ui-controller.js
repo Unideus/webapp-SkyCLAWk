@@ -2039,6 +2039,9 @@ if (nextElementBtn) {
 		let lastWheelDrawMs = 0;
 		const WHEEL_FPS = 10;
 		const WHEEL_FRAME_MS = 1000 / WHEEL_FPS;
+		let lastIdleFrameMs = 0;
+		const IDLE_FRAME_MS = 250; // When paused/idle, refresh at 4fps instead of burning 60fps.
+		const HIDDEN_FRAME_MS = 1000; // Browser tab hidden/backgrounded: 1fps health check only.
 
 		function requestWheelRedraw() {
 			if (typeof drawAstroWheel === 'function' && isWheelOpen()) {
@@ -2070,6 +2073,17 @@ if (nextElementBtn) {
 			const pausedNow = (Math.abs(v) < 0.0001) && !timeState.navTargetDateUTC;
 			if (bumpRevBtn) bumpRevBtn.disabled = !pausedNow;
 			if (bumpFwdBtn) bumpFwdBtn.disabled = !pausedNow;
+
+			// Idle tabs were still doing full label/layout work at 60fps.
+			// Keep controls responsive, but throttle when nothing is moving.
+			const idleNow = pausedNow && !isWheelOpen();
+			const minFrameMs = document.hidden ? HIDDEN_FRAME_MS : (idleNow ? IDLE_FRAME_MS : 0);
+			if (minFrameMs && lastIdleFrameMs && (t - lastIdleFrameMs) < minFrameMs) {
+				setTimeout(() => requestAnimationFrame(animate), Math.max(0, minFrameMs - (t - lastIdleFrameMs)));
+				return;
+			}
+			lastIdleFrameMs = t;
+
 			const rawSpeed = Math.pow(Math.abs(v), 3) * 250;
 			const speed = (v > 0 ? rawSpeed : -rawSpeed);
 

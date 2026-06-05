@@ -62,6 +62,7 @@
   // Planetary cycle overlay state (hidden when no cycle is active)
   window.cycleMode = '';   // '' | 'retrograde' | 'synodic' | 'both'
   window.cyclePlanet = ''; // '' | 'mercury' | 'venus' | 'mars' | ...
+  window.cycleAspect = window.cycleAspect || null; // { a, b, deg, label, color } for selected major-aspect patterns
 
   // Function to update which planets are shown
   window.setPlanetEnabled = function(planetId, enabled) {
@@ -464,7 +465,7 @@ let cardStartLeft = 0, cardStartTop = 0;
     let aspectTicks = "";
     let aspectLines = "";
 
-    const cycleActive = window.cycleMode && window.cyclePlanet;
+    const cycleActive = (window.cycleMode && window.cyclePlanet) || (window.cycleAspect && window.cycleAspect.a && window.cycleAspect.b);
     if (cycleActive) {
       // Hide aspect lines inside wheel when cycle overlay is active
       aspectTicks = '';
@@ -532,12 +533,37 @@ let cardStartLeft = 0, cardStartTop = 0;
     let cycleChords = '';
     const cycleMode = window.cycleMode || '';
     const cyclePlanet = window.cyclePlanet || '';
+    const cycleAspect = window.cycleAspect || null;
 
-    // Center glyph + hide aspects whenever a cycle is active (even before first event)
-    if (cycleMode && cyclePlanet) {
-      const centerGlyph = planetGlyph[cyclePlanet] || '•';
-      cycleChords += `<text x="${cx}" y="${cy}" dy="0.35em"
-        font-size="60" text-anchor="middle" dominant-baseline="middle"
+    // Center glyph + selected cycle marker(s) whenever a cycle is active.
+    // Marker sits directly above the center planet glyph:
+    //   retrograde => Rx, synodic => ☌, both => Rx + ☌
+    if ((cycleMode && cyclePlanet) || cycleAspect) {
+      let centerGlyph = planetGlyph[cyclePlanet] || '•';
+      const cycleMarkerParts = [];
+      if (cycleAspect && cycleAspect.a && cycleAspect.b) {
+        centerGlyph = `${planetGlyph[cycleAspect.a] || '•'}${planetGlyph[cycleAspect.b] || '•'}`;
+        cycleMarkerParts.push({ label: cycleAspect.label || '☌', fill: cycleAspect.color || '#e8d888' });
+      } else {
+        if (cycleMode === 'retrograde' || cycleMode === 'both') {
+          cycleMarkerParts.push({ label: 'Rx', fill: '#e0a0d0' });
+        }
+        if (cycleMode === 'synodic' || cycleMode === 'both') {
+          cycleMarkerParts.push({ label: '☌', fill: '#e8d888' });
+        }
+      }
+      const cycleMarkerText = cycleMarkerParts.map((part, idx) =>
+        `<tspan ${idx ? 'dx="12"' : ''} fill="${part.fill}">${part.label}</tspan>`
+      ).join('');
+      if (cycleMarkerText) {
+        cycleChords += `<text class="cycleCenterMarker" x="${cx}" y="${cy - 58}"
+          font-size="20" text-anchor="middle" dominant-baseline="middle"
+          font-family="Segoe UI, Inter, system-ui, sans-serif"
+          font-weight="800" letter-spacing="0.04em"
+          opacity="0.92">${cycleMarkerText}</text>`;
+      }
+      cycleChords += `<text class="cycleCenterGlyph" x="${cx}" y="${cy}" dy="0.35em"
+        font-size="${cycleAspect ? 44 : 60}" text-anchor="middle" dominant-baseline="middle"
         font-family="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans, Arial Unicode MS, sans-serif"
         font-weight="400"
         fill="white" opacity="0.6">${centerGlyph}</text>`;
@@ -548,23 +574,27 @@ let cardStartLeft = 0, cardStartTop = 0;
       // Only retrograde station pins (not direct)
       const retroPins = trackState.pins.filter(p => p.type === 'retrograde_station');
       const synPins = trackState.pins.filter(p => p.type === 'conjunction' || p.type === 'opposition');
+      const aspectPins = trackState.pins.filter(p => p.type === 'major_aspect');
 
-      function drawFromPins(pins, color, opacity) {
+      function drawFromPins(pins, color, opacity, radius = 5) {
         if (pins.length === 0) return;
         pins.forEach(p => {
+          const pinColor = p.color || color;
           const [x, y] = pt(rSignInner, ang(Number(p.lon)));
-          cycleChords += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${color}" stroke="rgba(255,255,255,0.3)" stroke-width="1" opacity="${opacity}" />`;
+          cycleChords += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius}" fill="${pinColor}" stroke="rgba(255,255,255,0.35)" stroke-width="1" opacity="${opacity}" />`;
         });
         for (let i = 1; i < pins.length; i++) {
+          const lineColor = pins[i].color || color;
           const [x0, y0] = pt(rSignInner, ang(Number(pins[i-1].lon)));
           const [x1, y1] = pt(rSignInner, ang(Number(pins[i].lon)));
           cycleChords += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"
-            stroke="${color}" stroke-width="2.5" stroke-linecap="round" opacity="${opacity}" />`;
+            stroke="${lineColor}" stroke-width="2.5" stroke-linecap="round" opacity="${opacity}" />`;
         }
       }
 
       if (retroPins.length >= 1) drawFromPins(retroPins, 'rgba(200,100,160,0.85)', '0.7');
       if (synPins.length >= 1) drawFromPins(synPins, 'rgba(200,200,100,0.85)', '0.7');
+      if (aspectPins.length >= 1) drawFromPins(aspectPins, (cycleAspect && cycleAspect.color) || 'rgba(232,216,136,0.9)', '0.78', 5.5);
     }
 
     // ---- natal overlay (dots on ecliptic + glyphs with auto-separation + feathered circular shadows)
@@ -1295,11 +1325,111 @@ for (const k of show) {
     // Update date/time overlay at top of wheel
     updateWheelDateOverlay(t);
 
-    // ---- Frame-by-frame cycle tracking — watch the tracked planet on every draw ---
+    // ---- Frame-by-frame cycle tracking — watch the tracked planet/pair on every draw ---
     const cm = window.cycleMode;
     const cp = window.cyclePlanet;
-    if (cm && cp && lons && Number.isFinite(Number(lons[cp]))) {
-      if (!window.cycleTrackState || !window.cycleTrackState.active) {
+    const ca = window.cycleAspect || null;
+    const aspectActive = ca && ca.a && ca.b && Number.isFinite(Number(ca.deg));
+
+    function signedDelta(a, b) {
+      let d = Number(a) - Number(b);
+      while (d > 180) d -= 360;
+      while (d < -180) d += 360;
+      return d;
+    }
+
+    function aspectDist(aLon, bLon, targetDeg) {
+      const target = Number(targetDeg);
+      const signed = signedDelta(aLon, bLon);
+      // Conjunction uses signed separation so true 0° crossings can change sign.
+      // Guarding in shouldDropAspectPin prevents the +/-180° wrap from masquerading as a conjunction.
+      if (target === 0) return signed;
+      // Opposition is exact at either +180 or -180, so track distance-to-180.
+      if (target === 180) return Math.abs(signed) - 180;
+      const sep = Math.abs(signed);
+      let d = sep - target;
+      while (d > 180) d -= 360;
+      while (d < -180) d += 360;
+      return d;
+    }
+
+    function shouldDropAspectPin(ts, dist, distSign, nowMs, aspectKey, targetDeg) {
+      const target = Number(targetDeg);
+      const prevSign = ts.prevAspectDistSign;
+      const prevDist = Number(ts.prevAspectDist);
+      const crossed = prevSign !== null && distSign !== 0 && prevSign !== 0 && prevSign !== distSign;
+      const orb = 2.0;
+      const nearExact = Math.abs(dist) <= orb;
+      const enteredOrb = nearExact && (!Number.isFinite(prevDist) || Math.abs(prevDist) > orb);
+
+      let validHit = false;
+      if (target === 0) {
+        // A conjunction must happen near 0°. The signed separation also flips at the 180° wrap,
+        // which was causing false conjunction pins at opposition (e.g. Mars/Uranus).
+        const nearZeroCross = crossed && (Math.abs(dist) <= 45 || (Number.isFinite(prevDist) && Math.abs(prevDist) <= 45));
+        validHit = nearZeroCross || enteredOrb;
+      } else if (target === 180) {
+        // Opposition has no useful sign crossing because +/-180 is a wrap boundary.
+        validHit = enteredOrb;
+      } else {
+        validHit = crossed || enteredOrb;
+      }
+
+      const last = ts.pins && ts.pins.length ? ts.pins[ts.pins.length - 1] : null;
+      const minGapMs = 1000 * 60 * 60 * 24 * 5; // avoid spraying duplicate pins while sitting inside orb
+      const duplicate = last && last.aspectKey === aspectKey && Math.abs(nowMs - Number(last.time || 0)) < minGapMs;
+      return validHit && !duplicate;
+    }
+
+    if (aspectActive && lons && Number.isFinite(Number(lons[ca.a])) && Number.isFinite(Number(lons[ca.b]))) {
+      if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'aspect' || window.cycleTrackState.aspectKey !== `${ca.a}|${ca.b}|${ca.deg}`) {
+        const initialDist = aspectDist(lons[ca.a], lons[ca.b], ca.deg);
+        window.cycleTrackState = {
+          pins: [],
+          active: true,
+          cycleKind: 'aspect',
+          aspectKey: `${ca.a}|${ca.b}|${ca.deg}`,
+          prevAspectDist: initialDist,
+          prevAspectDistSign: initialDist > 0.001 ? 1 : (initialDist < -0.001 ? -1 : 0),
+          startTime: t.getTime()
+        };
+      }
+      const ts = window.cycleTrackState;
+      const aspectKey = `${ca.a}|${ca.b}|${ca.deg}`;
+      const dist = aspectDist(lons[ca.a], lons[ca.b], ca.deg);
+      const distSign = dist > 0.001 ? 1 : (dist < -0.001 ? -1 : 0);
+      let aspectPinAdded = false;
+      if (shouldDropAspectPin(ts, dist, distSign, t.getTime(), aspectKey, ca.deg)) {
+        const lonA = Number(lons[ca.a]);
+        const lonB = Number(lons[ca.b]);
+        let eventLon = lonA;
+        if (Number(ca.deg) !== 0 && Number(ca.deg) !== 180) {
+          eventLon = lonB + signedDelta(lonA, lonB) / 2;
+          while (eventLon < 0) eventLon += 360;
+          while (eventLon >= 360) eventLon -= 360;
+        }
+        ts.pins.push({
+          lon: eventLon,
+          type: 'major_aspect',
+          aspect: Number(ca.deg),
+          aspectKey,
+          label: ca.label,
+          color: ca.color,
+          time: t.getTime(),
+          a: ca.a,
+          b: ca.b
+        });
+        aspectPinAdded = true;
+      }
+      ts.prevAspectDist = dist;
+      if (distSign !== 0) ts.prevAspectDistSign = distSign;
+      window.cycleTrackState = ts;
+      // renderWheelSVG ran just before tracking, so force one immediate repaint when a new pin lands.
+      if (aspectPinAdded && typeof renderWheelSVG === 'function') {
+        wheelImg.src = renderWheelSVG(lons, { baseLon: 0, showKeys: keys, natalLons, dateUTC: t });
+      }
+    } else if (cm && cp && lons && Number.isFinite(Number(lons[cp]))) {
+      if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'single') {
         // Initialize tracking fresh at this frame's time
         window.cycleTrackState = {
           pins: [],
@@ -1308,6 +1438,7 @@ for (const k of show) {
           prevSunDiffSign: null,
           prevSunDiffSignDist: null,
           active: true,
+          cycleKind: 'single',
           cycleMode: cm,
           cyclePlanet: cp,
           startTime: t.getTime()
@@ -1320,9 +1451,7 @@ for (const k of show) {
       // --- Retrograde station tracking ---
       if (cm === 'retrograde' || cm === 'both') {
         if (ts.prevLon != null) {
-          let dLon = curLon - ts.prevLon;
-          while (dLon > 180) dLon -= 360;
-          while (dLon < -180) dLon += 360;
+          const dLon = signedDelta(curLon, ts.prevLon);
           const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
           if (ts.prevSign !== null && sign !== 0 && ts.prevSign !== sign) {
             const type = sign === -1 ? 'retrograde_station' : 'direct_station';
@@ -1334,9 +1463,7 @@ for (const k of show) {
       } else {
         // Track motion sign for synodic-only mode (needed by conjunction gating)
         if (ts.prevLon != null) {
-          let dLon = curLon - ts.prevLon;
-          while (dLon > 180) dLon -= 360;
-          while (dLon < -180) dLon += 360;
+          const dLon = signedDelta(curLon, ts.prevLon);
           const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
           if (sign !== 0) ts.prevSign = sign;
         }
@@ -1346,9 +1473,7 @@ for (const k of show) {
       // --- Synodic tracking ---
       if (cm === 'synodic' || cm === 'both') {
         if (Number.isFinite(sunLon)) {
-          let diff = curLon - sunLon;
-          while (diff > 180) diff -= 360;
-          while (diff < -180) diff += 360;
+          const diff = signedDelta(curLon, sunLon);
           const isInner = ['mercury','venus'].includes(cp);
           const target = isInner ? 0 : 180;
           let dist = diff - target;
@@ -1369,7 +1494,7 @@ for (const k of show) {
 
       // Sync to window so renderWheelSVG reads it
       window.cycleTrackState = ts;
-    } else if (!cp || !cm) {
+    } else if ((!cp || !cm) && !aspectActive) {
       // No cycle active — clear state
       window.cycleTrackState = null;
     }
@@ -2929,8 +3054,40 @@ for (const k of show) {
   const cyclesBtn = document.getElementById("cyclesBtn");
   const cyclesModal = document.getElementById("cyclesModal");
   const cyclesPlanetSelect = document.getElementById("cyclesPlanetSelect");
+  const cyclesAspectSelect = document.getElementById("cyclesAspectSelect");
+  const cyclesAspectPlanetA = document.getElementById("cyclesAspectPlanetA");
+  const cyclesAspectPlanetB = document.getElementById("cyclesAspectPlanetB");
   const cyclesApplyBtn = document.getElementById("cyclesApplyBtn");
   const cyclesClearBtn = document.getElementById("cyclesClearBtn");
+  const CYCLE_ASPECT_META = {
+    0:   { label: '☌', name: 'Conjunction', color: 'rgba(232,216,136,0.92)' },
+    60:  { label: '✶', name: 'Sextile',     color: 'rgba(80,170,255,0.88)' },
+    90:  { label: '□', name: 'Square',      color: 'rgba(255,80,80,0.90)' },
+    120: { label: '△', name: 'Trine',       color: 'rgba(80,210,130,0.88)' },
+    180: { label: '☍', name: 'Opposition',  color: 'rgba(255,145,70,0.90)' }
+  };
+
+
+  function updateCyclesSectionState() {
+    const aspectOn = !!(cyclesAspectSelect && cyclesAspectSelect.value !== "");
+    const aspectBlock = cyclesAspectSelect ? cyclesAspectSelect.closest(".cyclesAspectBlock") : null;
+    const singleSelect = cyclesPlanetSelect;
+    const singleLabel = singleSelect ? singleSelect.previousElementSibling : null;
+    const singleModes = singleSelect ? singleSelect.nextElementSibling : null;
+    [singleLabel, singleSelect, singleModes].forEach(el => {
+      if (!el) return;
+      el.style.opacity = aspectOn ? "0.35" : "1";
+      el.style.filter = aspectOn ? "grayscale(0.85)" : "";
+    });
+    if (aspectBlock) {
+      aspectBlock.style.opacity = aspectOn ? "1" : "0.42";
+      aspectBlock.style.filter = aspectOn ? "" : "grayscale(0.8)";
+    }
+  }
+
+  if (cyclesAspectSelect) {
+    cyclesAspectSelect.addEventListener("change", updateCyclesSectionState);
+  }
 
   function openCyclesModal() {
     if (!cyclesModal) return;
@@ -2944,6 +3101,7 @@ for (const k of show) {
         modalCard.style.left = rect.left + "px";
       }
     }
+    updateCyclesSectionState();
     cyclesModal.setAttribute("aria-hidden", "false");
   }
 
@@ -2955,9 +3113,10 @@ for (const k of show) {
   if (cyclesBtn) {
     cyclesBtn.addEventListener("click", () => {
       // If a cycle is already active, clicking the button turns it off
-      if (window.cycleMode && window.cyclePlanet) {
+      if ((window.cycleMode && window.cyclePlanet) || (window.cycleAspect && window.cycleAspect.a && window.cycleAspect.b)) {
         window.cycleMode = "";
         window.cyclePlanet = "";
+        window.cycleAspect = null;
         window.cycleTrackState = null;
         cyclesBtn.style.borderColor = "";
         // Restore saved planet visibility
@@ -2997,22 +3156,41 @@ for (const k of show) {
         if (first) { first.classList.add("active"); mode = first.dataset.mode; }
       }
       
-      // Save current planet visibility and hide all except sun + selected
-      window.__savedCyclePlanets = {};
-      for (const key of Object.keys(window.enabledPlanets)) {
-        window.__savedCyclePlanets[key] = window.enabledPlanets[key];
+      // Save current planet visibility and hide all except the selected cycle bodies.
+      if (!window.__savedCyclePlanets) {
+        window.__savedCyclePlanets = {};
+        for (const key of Object.keys(window.enabledPlanets)) {
+          window.__savedCyclePlanets[key] = window.enabledPlanets[key];
+        }
       }
+      const aspectDegRaw = cyclesAspectSelect ? cyclesAspectSelect.value : "";
+      const aspectDeg = aspectDegRaw === "" ? null : Number(aspectDegRaw);
+      const aspectA = cyclesAspectPlanetA ? cyclesAspectPlanetA.value : "";
+      const aspectB = cyclesAspectPlanetB ? cyclesAspectPlanetB.value : "";
+      const aspectValid = Number.isFinite(aspectDeg) && aspectA && aspectB && aspectA !== aspectB;
       const selectedPlanet = cyclesPlanetSelect ? cyclesPlanetSelect.value : "";
-      for (const key of Object.keys(window.enabledPlanets)) {
-        window.enabledPlanets[key] = (key === "sun" || key === selectedPlanet);
+
+      if (aspectValid) {
+        const meta = CYCLE_ASPECT_META[aspectDeg] || CYCLE_ASPECT_META[0];
+        for (const key of Object.keys(window.enabledPlanets)) {
+          window.enabledPlanets[key] = (key === "sun" || key === aspectA || key === aspectB);
+        }
+        window.cycleMode = "";
+        window.cyclePlanet = "";
+        window.cycleAspect = { a: aspectA, b: aspectB, deg: aspectDeg, label: meta.label, name: meta.name, color: meta.color };
+      } else {
+        for (const key of Object.keys(window.enabledPlanets)) {
+          window.enabledPlanets[key] = (key === "sun" || key === selectedPlanet);
+        }
+        window.cycleMode = mode;
+        window.cyclePlanet = selectedPlanet;
+        window.cycleAspect = null;
       }
-      
-      window.cycleMode = mode;
-      window.cyclePlanet = selectedPlanet;
+
       // Reset frame-by-frame tracker — it will reinitialize on next drawAstroWheel()
       window.cycleTrackState = null;
       // Highlight the cycles button when active
-      if (cyclesBtn) cyclesBtn.style.borderColor = "rgba(200,100,160,.6)";
+      if (cyclesBtn) cyclesBtn.style.borderColor = aspectValid ? ((CYCLE_ASPECT_META[aspectDeg] || CYCLE_ASPECT_META[0]).color) : "rgba(200,100,160,.6)";
       closeCyclesModal();
       if (typeof drawAstroWheel === "function") drawAstroWheel();
       // Also invalidate aspect cache so it recomputes next time cycles turn off
@@ -3024,6 +3202,7 @@ for (const k of show) {
     cyclesClearBtn.addEventListener("click", () => {
       window.cycleMode = "";
       window.cyclePlanet = "";
+      window.cycleAspect = null;
       window.cycleTrackState = null;
       if (cyclesBtn) cyclesBtn.style.borderColor = "";
       // Restore saved planet visibility
@@ -3077,5 +3256,6 @@ for (const k of show) {
     });
   });
 
+  updateCyclesSectionState();
   window.drawAstroWheel = drawAstroWheel;
 })();

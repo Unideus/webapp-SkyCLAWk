@@ -2281,13 +2281,14 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			}
 		}
 
-		if (!window.__plantingNowLuminaryRaf) {
+		if (!window.__plantingNowLuminaryTimer) {
 			const tickPlantingNowLuminary = () => {
 				updatePlantingNowLuminary();
 				updatePlantingMoonPhaseReadout();
-				window.__plantingNowLuminaryRaf = window.requestAnimationFrame(tickPlantingNowLuminary);
+				const delay = document.hidden ? 5000 : 1000;
+				window.__plantingNowLuminaryTimer = window.setTimeout(tickPlantingNowLuminary, delay);
 			};
-			window.__plantingNowLuminaryRaf = window.requestAnimationFrame(tickPlantingNowLuminary);
+			tickPlantingNowLuminary();
 		}
 
 		function renderAnnualSeasonalWave() {

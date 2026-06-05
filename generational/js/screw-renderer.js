@@ -1035,6 +1035,36 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						"Jupiter|Venus": "~14 mo",
 						"Venus|Saturn": "~14 mo",
 						"Saturn|Venus": "~14 mo",
+						"Venus|Uranus": "~13 mo",
+						"Uranus|Venus": "~13 mo",
+						"Venus|Neptune": "~13 mo",
+						"Neptune|Venus": "~13 mo",
+						"Venus|Pluto": "~5 mo",
+						"Pluto|Venus": "~5 mo",
+						"Mars|Jupiter": "~11 mo",
+						"Jupiter|Mars": "~11 mo",
+						"Mars|Saturn": "~2.1",
+						"Saturn|Mars": "~2.1",
+						"Mars|Uranus": "~24 mo",
+						"Uranus|Mars": "~24 mo",
+						"Mars|Neptune": "~23 mo",
+						"Neptune|Mars": "~23 mo",
+						"Mars|Pluto": "~23 mo",
+						"Pluto|Mars": "~23 mo",
+						"Mercury|Venus": "~6 mo",
+						"Venus|Mercury": "~6 mo",
+						"Mercury|Mars": "~2 mo",
+						"Mars|Mercury": "~2 mo",
+						"Mercury|Jupiter": "~12 mo",
+						"Jupiter|Mercury": "~12 mo",
+						"Mercury|Saturn": "~12 mo",
+						"Saturn|Mercury": "~12 mo",
+						"Mercury|Uranus": "~12 mo",
+						"Uranus|Mercury": "~12 mo",
+						"Mercury|Neptune": "~12 mo",
+						"Neptune|Mercury": "~12 mo",
+						"Mercury|Pluto": "~12 mo",
+						"Pluto|Mercury": "~12 mo",
 						"default": ""
 					};
 
@@ -1129,6 +1159,19 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				const safeMaxX = haveViewport ? MAXX :  1e12;
 				const safePad  = haveViewport ? PX_PER_MAJOR : 0;
 
+				// Subtle temporal decay: when the zodiac/conjunction pattern repeats,
+				// older cycle dividers sit a little darker than newer adjacent dividers.
+				// This preserves the band colors while giving the repeated cadence depth.
+				const totalSegments = Math.max(1, events.length - 2);
+				function cycleDecayForIndex(idx) {
+					const t = Math.max(0, Math.min(1, idx / totalSegments)); // 0=oldest, 1=newest
+					return {
+						fill: 0.78 + t * 0.22,
+						stroke: 0.38 + t * 0.42,
+						glyph: 0.72 + t * 0.23
+					};
+				}
+
 				// --- BC-safe timestamp parser (handles "-0083-..." etc) ---
 				function parseIsoZ(t) {
 					// Accepts "YYYY-MM-DDTHH:MM:SSZ" or "-YYYY-..." (any year length)
@@ -1148,7 +1191,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					return d;
 				}
 
-				function placeGlyph(signKey, xMid, rgb) {
+				function placeGlyph(signKey, xMid, rgb, glyphOpacity = 0.95) {
 					if (typeof SIGN_GLYPHS === "undefined" || !signKey || !SIGN_GLYPHS[signKey]) return;
 
 					let glyph = SIGN_GLYPHS[signKey];
@@ -1164,7 +1207,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					t.setAttribute("font-size", "15");
 					t.setAttribute("font-weight", "800");
 					t.setAttribute("fill", `rgb(${rgb})`);
-					t.setAttribute("opacity", "0.95");
+					t.setAttribute("opacity", String(glyphOpacity));
 					t.setAttribute("paint-order", "stroke");
 					t.setAttribute("stroke", "rgba(0,0,0,0.65)");
 					t.setAttribute("stroke-width", "1");
@@ -1184,6 +1227,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				let runRgb = "";
 				let runStartX = null;
 				let runEndX = null;
+				let runGlyphOpacitySum = 0;
+				let runGlyphCount = 0;
 
 				function flushRun() {
 					if (!runSign || runStartX === null || runEndX === null) return;
@@ -1193,7 +1238,10 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const v1 = Math.min(runEndX,   safeMaxX);
 					const mid = (v0 + v1) / 2;
 
-					if (Number.isFinite(mid)) placeGlyph(runSign, mid, runRgb);
+					const runGlyphOpacity = Number.isFinite(runGlyphOpacitySum) && runGlyphCount > 0
+						? runGlyphOpacitySum / runGlyphCount
+						: 0.95;
+					if (Number.isFinite(mid)) placeGlyph(runSign, mid, runRgb, runGlyphOpacity);
 				}
 
 				for (let i = 0; i < events.length - 1; i++) {
@@ -1216,6 +1264,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					}
 
 					const signKey = normalizeSign(e0.sign || "");
+					const decay = cycleDecayForIndex(i);
 
 					const element = (
 					e0.element ||
@@ -1234,13 +1283,14 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					rect.setAttribute("width", w);
 					rect.setAttribute("height", H);
 					rect.setAttribute("fill", `rgb(${rgb})`);
-					rect.setAttribute("opacity", bandOpacity);
+					rect.setAttribute("opacity", String(bandOpacity * decay.fill));
 					rectLayer.appendChild(rect);
 
-					// White boundary line
+					// White boundary line — decays subtly so repeated older cycles recede
 					rect.setAttribute("shape-rendering", "crispEdges");
 					rect.setAttribute("stroke", "#ffffff");
 					rect.setAttribute("stroke-width", "1");
+					rect.setAttribute("stroke-opacity", String(decay.stroke));
 
 					// --- Midpoint based on what’s actually visible on screen ---
 					const vis0 = Math.max(x0, safeMinX);
@@ -1253,14 +1303,20 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						runRgb = rgb;
 						runStartX = x0;
 						runEndX = x1;
+						runGlyphOpacitySum = decay.glyph;
+						runGlyphCount = 1;
 					} else if (signKey === runSign) {
 						runEndX = x1;
+						runGlyphOpacitySum += decay.glyph;
+						runGlyphCount += 1;
 					} else {
 						flushRun();
 						runSign = signKey;
 						runRgb = rgb;
 						runStartX = x0;
 						runEndX = x1;
+						runGlyphOpacitySum = decay.glyph;
+						runGlyphCount = 1;
 					}
 				}
 

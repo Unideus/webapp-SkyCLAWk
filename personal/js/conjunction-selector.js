@@ -28,6 +28,7 @@
   const cycleBackdropEl = cycleModal.querySelector(".zyModalBackdrop");
 
     const PLANETS = [
+        { id: "Mercury", label: "Mercury ☿", glyph: "☿", outer: false },
         { id: "Venus",   label: "Venus ♀",   glyph: "♀", outer: false },
         { id: "Mars",    label: "Mars ♂",    glyph: "♂", outer: false },
         { id: "Jupiter", label: "Jupiter ♃", glyph: "♃", outer: true },

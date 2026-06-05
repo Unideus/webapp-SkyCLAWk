@@ -513,10 +513,29 @@ let cardStartLeft = 0, cardStartTop = 0;
     const cycleMode = window.cycleMode || '';
     const cyclePlanet = window.cyclePlanet || '';
 
-    // Center glyph + hide aspects whenever a cycle is active (even before first event)
+    // Center glyph + selected cycle marker(s) whenever a cycle is active.
+    // Marker sits directly above the center planet glyph:
+    //   retrograde => Rx, synodic => ☌, both => Rx + ☌
     if (cycleMode && cyclePlanet) {
       const centerGlyph = planetGlyph[cyclePlanet] || '•';
-      cycleChords += `<text x="${cx}" y="${cy}" dy="0.35em"
+      const cycleMarkerParts = [];
+      if (cycleMode === 'retrograde' || cycleMode === 'both') {
+        cycleMarkerParts.push({ label: 'Rx', fill: '#e0a0d0' });
+      }
+      if (cycleMode === 'synodic' || cycleMode === 'both') {
+        cycleMarkerParts.push({ label: '☌', fill: '#e8d888' });
+      }
+      const cycleMarkerText = cycleMarkerParts.map((part, idx) =>
+        `<tspan ${idx ? 'dx="12"' : ''} fill="${part.fill}">${part.label}</tspan>`
+      ).join('');
+      if (cycleMarkerText) {
+        cycleChords += `<text class="cycleCenterMarker" x="${cx}" y="${cy - 58}"
+          font-size="20" text-anchor="middle" dominant-baseline="middle"
+          font-family="Segoe UI, Inter, system-ui, sans-serif"
+          font-weight="800" letter-spacing="0.04em"
+          opacity="0.92">${cycleMarkerText}</text>`;
+      }
+      cycleChords += `<text class="cycleCenterGlyph" x="${cx}" y="${cy}" dy="0.35em"
         font-size="60" text-anchor="middle" dominant-baseline="middle"
         font-family="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans, Arial Unicode MS, sans-serif"
         font-weight="400"

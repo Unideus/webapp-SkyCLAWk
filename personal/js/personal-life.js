@@ -504,9 +504,9 @@ const PersonalLife = {
   // ───────────── Diagonal ─────────────
   // Final design (Sessions 5-8 + termination fix, June 2026):
   //   - Band-slope math: matches screw bands exactly (SCREW_HEIGHT/4majors = 8.53°)
-  //   - Line terminates at the NOW marker (age dot), does not extend past it
+  //   - Line follows the age marker past the screw top; above y=0 it feathers toward the viewport top
   //   - Shadow color = previous lane cyclically, based on BIRTH YEAR phase
-  //   - Fade-out mask anchored to viewport (not xBirth) so the line disappears behind labels
+  //   - Horizontal fade-out mask anchored to viewport (not xBirth) so the line disappears behind labels
   //   - Direct appendChild to #personalDiagonal (no wrapper group, no clip-path)
   renderDiagonal() {
     const g = document.getElementById("personalDiagonal");
@@ -527,17 +527,18 @@ const PersonalLife = {
     const timelineY = (typeof CANON !== "undefined") ? CANON.TIMELINE_Y : 180;
     const bandSlope = screwH / (4 * ppj);   // 0.15 → 8.53° on personal
 
-    // Band-slope math — no age fraction. Line terminates at the NOW marker.
-    // (Previous 30-band extension was for the scroll-anchored mask coverage;
-    // the user wants the line to end at the age marker instead.)
+    // Band-slope math — no age-fraction cap. The current-age point keeps travelling
+    // up the same diagonal beyond the screw top; the viewport naturally clips it.
     const xBirth = yearToScrewX(birthYear);
     const yBirth = timelineY;
-    // NOW position: where the line ends. xNow is the current year in screw-x.
-    // fracNow = (xNow - xBirth) / (4 * ppj) — capped at 1 if current year is before birth.
     const xNowForLine = yearToScrewX(now.getFullYear());
-    const fracNowForLine = Math.max(0, Math.min((xNowForLine - xBirth) / (4 * ppj), 1));
+    const fracNowForLine = Math.max(0, (xNowForLine - xBirth) / (4 * ppj));
     const xEnd = xBirth + fracNowForLine * 4 * ppj;
     const yEnd = timelineY - fracNowForLine * screwH;
+    const topFrac = timelineY / screwH; // y=0, exact top pixel of the screw body
+    const xScrewTop = xBirth + topFrac * 4 * ppj;
+    const yScrewTop = 0;
+    const extendsPastScrewTop = yEnd < yScrewTop;
 
     // Shadow color: previous lane cyclically, using BIRTH YEAR phase
     // (using current year makes everyone in the same era get the same shadow)
@@ -606,32 +607,66 @@ const PersonalLife = {
       // Re-attach the (fresh) gradient to the mask rect
       const maskRect = mask.querySelector("rect");
       if (maskRect) maskRect.setAttribute("fill", "url(#dllFadeGrad)");
+
+      // Vertical stroke gradients for the portion of the DLL that extends above
+      // the top of the screw. The fade starts exactly at y=0 and is practically
+      // invisible by the time it would reach the viewport top.
+      for (const old of [defs.querySelector("#dllTopFadeLine"), defs.querySelector("#dllTopFadeGlow")]) {
+        if (old) old.remove();
+      }
+      function makeTopFadeGradient(id, color, startOpacity, endOpacity) {
+        const grad = document.createElementNS(ns, "linearGradient");
+        grad.setAttribute("id", id);
+        grad.setAttribute("gradientUnits", "userSpaceOnUse");
+        grad.setAttribute("x1", "0"); grad.setAttribute("x2", "0");
+        grad.setAttribute("y1", String(yScrewTop));
+        grad.setAttribute("y2", String(-Math.max(timelineY, 1)));
+        const s0 = document.createElementNS(ns, "stop");
+        s0.setAttribute("offset", "0");
+        s0.setAttribute("stop-color", color);
+        s0.setAttribute("stop-opacity", String(startOpacity));
+        const s1 = document.createElementNS(ns, "stop");
+        s1.setAttribute("offset", "1");
+        s1.setAttribute("stop-color", color);
+        s1.setAttribute("stop-opacity", String(endOpacity));
+        grad.appendChild(s0); grad.appendChild(s1);
+        defs.appendChild(grad);
+      }
+      makeTopFadeGradient("dllTopFadeLine", "#ffffff", 0.8, 0.035);
+      makeTopFadeGradient("dllTopFadeGlow", glowColor, 0.30, 0.015);
       }
     // === Render: shadow first, then white line (z-order matters) ===
     // Both are appended directly to #personalDiagonal — no wrapper group, no clip-path
-    const shadow = document.createElementNS(ns, "line");
-    shadow.setAttribute("x1", xBirth); shadow.setAttribute("y1", yBirth);
-    shadow.setAttribute("x2", xEnd);   shadow.setAttribute("y2", yEnd);
-    shadow.setAttribute("stroke", glowColor);
-    shadow.setAttribute("stroke-width", "12");
-    shadow.setAttribute("opacity", "0.30");
-    shadow.setAttribute("filter", "url(#dllBlur)");
-    g.appendChild(shadow);
+    function appendDllSegment(x1, y1, x2, y2, stroke, strokeWidth, opacity, filter) {
+      const seg = document.createElementNS(ns, "line");
+      seg.setAttribute("x1", x1); seg.setAttribute("y1", y1);
+      seg.setAttribute("x2", x2); seg.setAttribute("y2", y2);
+      seg.setAttribute("stroke", stroke);
+      seg.setAttribute("stroke-width", strokeWidth);
+      if (opacity != null) seg.setAttribute("opacity", opacity);
+      if (filter) seg.setAttribute("filter", filter);
+      g.appendChild(seg);
+      return seg;
+    }
 
-    const line = document.createElementNS(ns, "line");
-    line.setAttribute("x1", xBirth); line.setAttribute("y1", yBirth);
-    line.setAttribute("x2", xEnd);   line.setAttribute("y2", yEnd);
-    line.setAttribute("stroke", "rgba(255,255,255,0.8)");
-    line.setAttribute("stroke-width", "3");
-    g.appendChild(line);
+    const baseEndX = extendsPastScrewTop ? xScrewTop : xEnd;
+    const baseEndY = extendsPastScrewTop ? yScrewTop : yEnd;
+    appendDllSegment(xBirth, yBirth, baseEndX, baseEndY, glowColor, "12", "0.30", "url(#dllBlur)");
+    if (extendsPastScrewTop) {
+      appendDllSegment(xScrewTop, yScrewTop, xEnd, yEnd, "url(#dllTopFadeGlow)", "12", null, "url(#dllBlur)");
+    }
+
+    appendDllSegment(xBirth, yBirth, baseEndX, baseEndY, "rgba(255,255,255,0.8)", "3");
+    if (extendsPastScrewTop) {
+      appendDllSegment(xScrewTop, yScrewTop, xEnd, yEnd, "url(#dllTopFadeLine)", "3");
+    }
 
     // Apply fade mask to the group element itself (per session 7 final design)
     g.setAttribute("mask", "url(#dllFade)");
 
-    // === NOW marker: independent of line length, placed at current age along the slope ===
-    const xNow = yearToScrewX(now.getFullYear());
-    const fracNow = Math.min((xNow - xBirth) / (4 * ppj), 1);
-    const yNow = timelineY - fracNow * screwH;
+    // === NOW marker: uncapped, placed at current age along the same diagonal slope ===
+    const xNow = xEnd;
+    const yNow = yEnd;
 
     const nowDot = document.createElementNS(ns, "circle");
     nowDot.setAttribute("cx", xNow); nowDot.setAttribute("cy", yNow);
@@ -642,7 +677,9 @@ const PersonalLife = {
     g.appendChild(nowDot);
 
     const nowLbl = document.createElementNS(ns, "text");
-    nowLbl.setAttribute("x", xNow + 10); nowLbl.setAttribute("y", yNow + 4);
+    // Label sits on the left side of the DLL so it does not crowd the line/right rail.
+    nowLbl.setAttribute("x", xNow - 10); nowLbl.setAttribute("y", yNow + 4);
+    nowLbl.setAttribute("text-anchor", "end");
     nowLbl.setAttribute("fill", "#ffffff");
     nowLbl.setAttribute("font-size", "10");
     nowLbl.setAttribute("font-weight", "700");
