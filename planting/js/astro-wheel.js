@@ -259,7 +259,7 @@ let cardStartLeft = 0, cardStartTop = 0;
   let HEAVEN_DATA_URL = "";
   let constellationReady = false;
 
-  fetch("heaven_constellations.svg")
+  fetch("/heaven_constellations.svg")
     .then(r => {
       return r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`));
     })

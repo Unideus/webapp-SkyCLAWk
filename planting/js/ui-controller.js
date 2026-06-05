@@ -74,6 +74,7 @@
 	};
 
 	let speedUnit = localStorage.getItem("zy_speed_unit") || "yrs";
+	let lastTime = 0;
 	// Planting fork: keep Personal shell behavior, but highlight the isolated route.
 	let timelineScale = "planting";
 

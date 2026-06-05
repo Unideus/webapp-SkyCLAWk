@@ -300,3 +300,30 @@ const _scale = "planting";
 	  aquarius:    "♒\uFE0E",
 	  pisces:      "♓\uFE0E"
 	};
+
+
+/* =========================================================
+   PLANTING TIME AUTHORITY (standalone fork)
+   ---------------------------------------------------------
+   The planting page does not load generational/js/time-engine.js,
+   but ui-controller.js and astronomy-adapter.js expect global
+   timeState and AstroEngine symbols. Define the minimal shared
+   clock here before those scripts load.
+   ========================================================= */
+window.timeState = window.timeState || {
+  dateUTC: new Date(),
+  scrollX: 0,
+  navTargetDateUTC: null
+};
+
+window.AstroEngine = window.AstroEngine || {
+  get dateUTC() {
+    return window.timeState.dateUTC;
+  },
+  setDateUTC(d) {
+    const next = (d instanceof Date) ? d : new Date(d);
+    if (Number.isFinite(next.getTime())) {
+      window.timeState.dateUTC = next;
+    }
+  }
+};
