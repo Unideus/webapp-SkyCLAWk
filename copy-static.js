@@ -78,12 +78,13 @@ if (existsSync(epheSrc)) {
     console.log('Copied: ephe/')
 }
 
-// Copy skyclock CSS
-const scSrc = resolve(root, 'skyclock/skyclock.css')
-const scDst = resolve(dist, 'skyclock/skyclock.css')
-if (existsSync(scSrc)) {
-    cpSync(scSrc, scDst)
-    console.log('Copied: skyclock/skyclock.css')
+// Copy skyclock static dependencies (plain scripts + image assets)
+const scDirSrc = resolve(root, 'skyclock')
+const scDirDst = resolve(dist, 'skyclock')
+if (existsSync(scDirSrc)) {
+    mkdirSync(scDirDst, { recursive: true })
+    cpSync(scDirSrc, scDirDst, { recursive: true })
+    console.log('Copied: skyclock/')
 }
 
 // Copy planting CSS
