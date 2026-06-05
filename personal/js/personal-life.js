@@ -11,7 +11,11 @@ const PersonalLife = {
   SPAN_YEARS: 100,
 
   isPersonal() {
-    return new URLSearchParams(window.location.search).get("variant") === "personal";
+    // Split SkyCLAWk app: /personal/ no longer carries ?variant=personal.
+    // Keep the query-param path for old links, but treat the standalone route
+    // as personal too so Natal profile Save/Load handlers actually persist.
+    const params = new URLSearchParams(window.location.search);
+    return params.get("variant") === "personal" || window.location.pathname.includes("/personal/");
   },
 
   fmtDate(dateStr) {
