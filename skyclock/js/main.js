@@ -1238,10 +1238,47 @@
     const introButton = $("intro-button");
     const introModal = $("intro-modal");
     const closeIntro = $("close-intro");
-    if (!introButton || !introModal || !closeIntro) return;
+    const modalContent = introModal?.querySelector(".modal-content");
+    if (!introButton || !introModal || !closeIntro || !modalContent) return;
 
-    const openModal = () => (introModal.style.display = "flex");
-    const closeModal = () => (introModal.style.display = "none");
+    let closeTimer = null;
+
+    const resetModalState = () => {
+      window.clearTimeout(closeTimer);
+      introModal.classList.remove("is-closing");
+      introModal.style.removeProperty("--vacuum-x");
+      introModal.style.removeProperty("--vacuum-y");
+      introModal.style.removeProperty("--vacuum-x-mid");
+      introModal.style.removeProperty("--vacuum-y-mid");
+      modalContent.style.animation = "";
+    };
+
+    const openModal = () => {
+      resetModalState();
+      introModal.style.display = "flex";
+    };
+
+    const closeModal = () => {
+      if (introModal.style.display !== "flex" || introModal.classList.contains("is-closing")) return;
+
+      const contentRect = modalContent.getBoundingClientRect();
+      const buttonRect = introButton.getBoundingClientRect();
+      const contentCenterX = contentRect.left + contentRect.width / 2;
+      const contentCenterY = contentRect.top + contentRect.height / 2;
+      const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+      const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+
+      introModal.style.setProperty("--vacuum-x", `${buttonCenterX - contentCenterX}px`);
+      introModal.style.setProperty("--vacuum-y", `${buttonCenterY - contentCenterY}px`);
+      introModal.style.setProperty("--vacuum-x-mid", `${(buttonCenterX - contentCenterX) * 0.72}px`);
+      introModal.style.setProperty("--vacuum-y-mid", `${(buttonCenterY - contentCenterY) * 0.72}px`);
+      introModal.classList.add("is-closing");
+
+      closeTimer = window.setTimeout(() => {
+        introModal.style.display = "none";
+        resetModalState();
+      }, 580);
+    };
 
     safeOn(introButton, "click", (e) => {
       e.stopPropagation();

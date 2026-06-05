@@ -259,8 +259,8 @@
 	   ========================= */
 	.intro-button {
 	  position: fixed;
-	  top: 12px;
-	  right: 70px; /* places it left of the debug box */
+	  bottom: 24px;
+	  right: 24px;
 	  width: 44px;
 	  height: 44px;
 	  background: rgba(0,0,0,0.7);
@@ -311,6 +311,40 @@
 	  color: #eee;
 	  position: relative;
 	  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+	  transform-origin: center center;
+	  will-change: transform, opacity, filter;
+	}
+
+	.modal.is-closing {
+	  pointer-events: none;
+	  animation: introBackdropVacuum 0.55s cubic-bezier(0.72, 0, 0.92, 0.36) forwards;
+	}
+
+	.modal.is-closing .modal-content {
+	  animation: introContentVacuum 0.55s cubic-bezier(0.72, 0, 0.92, 0.36) forwards;
+	}
+
+	@keyframes introContentVacuum {
+	  0% {
+		transform: translate(0, 0) scale(1);
+		opacity: 1;
+		filter: blur(0);
+	  }
+	  70% {
+		transform: translate(var(--vacuum-x-mid, var(--vacuum-x, 0px)), var(--vacuum-y-mid, var(--vacuum-y, 0px))) scale(0.28);
+		opacity: 0.72;
+		filter: blur(1px);
+	  }
+	  100% {
+		transform: translate(var(--vacuum-x, 0px), var(--vacuum-y, 0px)) scale(0.02);
+		opacity: 0;
+		filter: blur(6px);
+	  }
+	}
+
+	@keyframes introBackdropVacuum {
+	  0% { background: rgba(0,0,0,0.92); }
+	  100% { background: rgba(0,0,0,0); }
 	}
 
 	.modal-content h3 {

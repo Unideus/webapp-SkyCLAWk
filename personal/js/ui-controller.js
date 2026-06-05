@@ -2228,6 +2228,7 @@
 	    const topicColor = {"poker":"#e94560","business_launch":"#4ade80","marriage":"#f472b6","travel":"#60a5fa","real_estate":"#fbbf24","legal_matter":"#a78bfa"}[topic] || "var(--accent)";
 	    // Build linked URL back to auspicious page
 	        const aParams = new URLSearchParams();
+	        aParams.set("variant", "personal");
 	        aParams.set("name", name || "");
 	        if (bd) { aParams.set("bd", bd); aParams.set("bt", bt || "12:00"); aParams.set("bc", bc || ""); }
 	        if (blat) { aParams.set("blat", blat); aParams.set("blon", blon); }
@@ -2237,8 +2238,7 @@
 	        aParams.set("topic", topic || "poker");
 	        if (dt) aParams.set("dt", dt.toISOString());
 	        if (locLabel) aParams.set("loc", locLabel);
-	        const auspiciousBase = window.location.port === "5173" ? "http://localhost:5177/auspicious/" : "/auspicious/";
-	        const auspiciousUrl = auspiciousBase + "?" + aParams.toString();
+	        const auspiciousUrl = getAuspiciousBase() + "?" + aParams.toString();
 
 	    overlay.classList.add("has-data");
 	            // Update the anchor link instead of overriding onclick
@@ -2311,7 +2311,12 @@
     // Location label
     const locInput = document.getElementById('locationBoxInput');
     if (locInput && locInput.value) params.set('loc', locInput.value);
-    
+
+    // Preserve event topic when returning from an Auspicious jump
+    const currentParams = new URLSearchParams(window.location.search);
+    const topic = currentParams.get('topic');
+    if (topic) params.set('topic', topic);
+
     location.href = getAuspiciousBase() + '?' + params.toString();
   } catch(e) {
     location.href = getAuspiciousBase();
@@ -2320,7 +2325,7 @@
 window.navigateToAuspicious = navigateToAuspicious;
 
 function getAuspiciousBase() {
-  return window.location.port === "5173" ? "http://localhost:5177/auspicious/" : "/auspicious/";
+  return "/auspicious/";
 }
 window.getAuspiciousBase = getAuspiciousBase;
 

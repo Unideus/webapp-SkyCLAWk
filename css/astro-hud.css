@@ -1079,7 +1079,7 @@
   max-height: none;
   overflow: visible;
   width: fit-content;
-  min-width: 200px;
+  min-width: 220px; /* +20px so the header + T/N pills are not crowded */
 }
 
 /* Lunar Phases grid - v2 */
@@ -1100,6 +1100,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   margin-bottom: 4px;
 }
 
@@ -1120,7 +1121,7 @@
 }
 
 .lots-hdr-sign {
-  width: 62px;
+  width: 78px;
   text-align: left;
 }
 
@@ -1132,6 +1133,7 @@
 .lots-mode-buttons {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .lots-mode-btn {
@@ -1164,7 +1166,7 @@
 .lots-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   min-height: 18px;
   line-height: 1.05;
 }
@@ -1176,7 +1178,7 @@
 }
 
 .lots-sign {
-  width: 24px;
+  width: 30px;
   text-align: center;
   font-size: 16px;
   font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
@@ -1190,7 +1192,7 @@
 .lots-degree {
   color: rgba(255,255,255,.7);
   font-size: 11px;
-  min-width: 38px;
+  min-width: 46px;
 }
 
 .lots-house {
@@ -1482,7 +1484,8 @@
   position: absolute !important;
   top: auto !important;
   bottom: 0 !important;
-  right: calc(100% + 8px) !important;
+  right: calc(100% + 10px) !important; /* open to the left of the Lots box */
+  left: auto !important;
   z-index: 10000 !important;
   display: none !important;
   pointer-events: none !important;
@@ -1493,8 +1496,8 @@
 }
 #lotsModal .lotsModalCard {
   position: static !important;
-  min-width: 210px;
-  max-width: 260px;
+  min-width: 230px; /* +20px selector width */
+  max-width: 280px;
   padding: 12px;
   border-radius: 8px;
   background: rgba(0,0,0,.96);

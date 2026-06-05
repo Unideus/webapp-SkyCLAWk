@@ -148,6 +148,21 @@ input[type=time]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 .search-item .spct { color: var(--good); font-weight: 700; font-size: .85rem; }
 .search-item .spct.okay { color: var(--warn); }
 .search-item .spct.bad { color: var(--bad); }
+.search-thumb-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.18);
+  transition: border-color .2s, transform .2s;
+}
+.search-thumb-link:hover { border-color: var(--accent); transform: translateY(-1px); }
+.search-thumb-link .wheel-thumb-sm { width: 40px; height: 40px; display: block; }
 
 .loading { text-align: center; padding: 30px; color: var(--dim); font-size: .85rem; }
 .loading::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 2px solid var(--dim); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-left: 8px; vertical-align: middle; }
@@ -188,11 +203,38 @@ input[type=time]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 .range-btns { display: flex; gap: 6px; margin-bottom: 10px; }
 .range-btns .btn-sm { flex: 1; text-align: center; }
 
-/* ── Tab-style divider ── */
-.mode-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
-.mode-tab { padding: 8px 16px; font-size: .85rem; font-weight: 600; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
-.mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.mode-tab:hover { color: var(--text); }
+/* ── Proper mode tabs ── */
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.mode-tab {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--dim);
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  transition: background .2s, border-color .2s, color .2s, box-shadow .2s;
+  user-select: none;
+}
+.mode-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(233,69,96,0.34), rgba(15,52,96,0.46));
+  border-color: rgba(233,69,96,0.55);
+  box-shadow: 0 0 0 1px rgba(233,69,96,0.12) inset, 0 8px 20px rgba(0,0,0,0.18);
+}
+.mode-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.mode-tab.active:hover { color: #fff; }
 
 .mode-content { display: none; }
 .mode-content.active { display: block; }
@@ -650,11 +692,10 @@ function switchMode(mode) {
   document.querySelectorAll('.mode-content').forEach(c => c.classList.remove('active'));
   document.querySelector(`.mode-tab[onclick*="'${mode}'"]`).classList.add('active');
   document.getElementById(`mode-${mode}`).classList.add('active');
-  // Hide best-windows section only when going to check mode; preserve cached
-  // search results when going back to find mode.
-  if (mode === 'check') {
-    document.getElementById('search-section').style.display = 'none';
-  } else if (mode === 'find' && LAST_SEARCH_RESULTS) {
+  // Best-window results are a page-level result list, not part of either form tab.
+  // Keep them visible after choosing a best time so the user can compare other windows
+  // while the selected moment opens in the main Results panel.
+  if (LAST_SEARCH_RESULTS) {
     document.getElementById('search-section').style.display = 'block';
   }
 }
@@ -1094,7 +1135,7 @@ function buildTimelineUrl(isoDt, coords, userName, locLabel) {
   const prefix = mode === 'mode-find' ? 'find' : 'check';
   const topic = document.getElementById('topic-' + prefix)?.value || '';
   if (topic) params.set('topic', topic);
-  return '/?' + params.toString();
+  return '/personal/?' + params.toString();
 }
 
 // ── SCORE A SPECIFIC MOMENT ──
@@ -1201,7 +1242,7 @@ function renderSearchResults(results) {
     const localTime = fmtInTz(r.datetime, LAST_SEARCH_TZ);
     return `<div class="search-item" onclick='useBestTime(&quot;${r.datetime}&quot;, ${coordStr}, &quot;${topic}&quot;)' title="Click to see details">
       <div><div class="dt">${localTime}</div><div style="font-size:.7rem;color:var(--dim)">${r.topic_label||''} · ${r.warnings?.length||0} warnings</div></div>
-      <div style="display:flex;align-items:center;gap:6px"><div class="spct ${cls}">${pct}%</div><a href="${buildTimelineUrlFromParts(r.datetime, r.coords)}" target="_blank" onclick="event.stopPropagation()" title="Open in Timeline" style="color:var(--accent2);text-decoration:none;flex-shrink:0">${ZODIAC_RING_SVG}</a></div>
+      <div style="display:flex;align-items:center;gap:6px"><div class="spct ${cls}">${pct}%</div><a class="search-thumb-link" href="${buildTimelineUrlFromParts(r.datetime, r.coords)}" target="_blank" onclick="event.stopPropagation()" title="Open in Timeline"><img class="wheel-thumb-sm" src="${renderThumbnailWheel(r.chart || {})}" alt="Astro chart" /></a></div>
     </div>`;
   }).join('')}</div>`;
 }
@@ -1273,7 +1314,7 @@ function buildTimelineUrlFromParts(isoDt, coords) {
   // Topic from find mode
   const topic = document.getElementById('topic-find')?.value || '';
   if (topic) params.set('topic', topic);
-  return '/?' + params.toString();
+  return '/personal/?' + params.toString();
 }
 
 // ── AUTO-FILL FROM URL PARAMS (when navigated from Timeline) ──

@@ -20,7 +20,7 @@
 		 ========================================================= -->
 
 	<link href="../css/timeline.css?v=158" rel="stylesheet"/>
-	<link href="../css/astro-hud.css?v=43" rel="stylesheet"/>
+	<link href="../css/astro-hud.css?v=45" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	</head>
@@ -223,7 +223,7 @@
 					</div>
 
 					<!-- Event Info overlay (left side, above Lots) -->
-					<div id="wheelEventInfoOverlay" onclick="navigateToAuspicious();return false;" style="cursor:pointer;">
+					<div id="wheelEventInfoOverlay" onclick="var a=document.getElementById('auspiciousNavLink');if(this.classList.contains('has-data')&&a&&a.href){window.location.href=a.href;}else{navigateToAuspicious();}return false;" style="cursor:pointer;">
 						<a id="auspiciousNavLink" href="#" style="text-decoration:none;color:inherit;display:block;">
 							<div class="lots-header">
 								<span class="grid-label">Auspicious Event</span>
