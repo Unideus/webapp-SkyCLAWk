@@ -419,10 +419,10 @@ const PersonalLife = {
 
       if (quarters.length === 0) return;
 
-      const panelX = x0 - 420;
-      const rowH = 56;
-      const panelY = y - 60;
-      const panelW = 400;
+      const panelX = x0 - 240;
+      const rowH = 50;
+      const panelY = y - 36;
+      const panelW = 220;
 
       // Panel background
       const bg = document.createElementNS(ns, "rect");
@@ -439,7 +439,7 @@ const PersonalLife = {
       // Title
       const title = document.createElementNS(ns, "text");
       title.setAttribute("x", String(panelX + 16));
-      title.setAttribute("y", String(panelY + 24));
+      title.setAttribute("y", String(panelY + 18));
       title.setAttribute("fill", "rgba(255,255,255,0.55)");
       title.setAttribute("font-size", "14");
       title.setAttribute("font-weight", "700");
@@ -451,19 +451,19 @@ const PersonalLife = {
       const sep = document.createElementNS(ns, "line");
       sep.setAttribute("x1", String(panelX + 16));
       sep.setAttribute("x2", String(panelX + panelW - 16));
-      sep.setAttribute("y1", String(panelY + 32));
-      sep.setAttribute("y2", String(panelY + 32));
+      sep.setAttribute("y1", String(panelY + 24));
+      sep.setAttribute("y2", String(panelY + 24));
       sep.setAttribute("stroke", "rgba(255,255,255,0.08)");
       sep.setAttribute("stroke-width", "1");
       g.appendChild(sep);
 
       quarters.forEach((q, i) => {
-        const rowY = panelY + 42 + i * rowH;
+        const rowY = panelY + 32 + i * rowH;
 
         // Glyph
         const gly = document.createElementNS(ns, "text");
-        gly.setAttribute("x", String(panelX + 16));
-        gly.setAttribute("y", String(rowY + 30));
+        gly.setAttribute("x", String(panelX + 12));
+        gly.setAttribute("y", String(rowY + 26));
         gly.setAttribute("text-anchor", "start");
         gly.setAttribute("fill", "rgba(255,255,255,0.9)");
         gly.setAttribute("font-size", "24");
@@ -472,11 +472,11 @@ const PersonalLife = {
 
         // Phase name
         const qlbl = document.createElementNS(ns, "text");
-        qlbl.setAttribute("x", String(panelX + 48));
+        qlbl.setAttribute("x", String(panelX + 44));
         qlbl.setAttribute("y", String(rowY + 22));
         qlbl.setAttribute("text-anchor", "start");
         qlbl.setAttribute("fill", "rgba(255,255,255,0.75)");
-        qlbl.setAttribute("font-size", "20");
+        qlbl.setAttribute("font-size", "16");
         qlbl.setAttribute("font-weight", "700");
         qlbl.textContent = moonQuarterName[q.quarter] || "—";
         g.appendChild(qlbl);
@@ -487,8 +487,8 @@ const PersonalLife = {
           ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()] + " " +
           d.getUTCFullYear();
         const dt = document.createElementNS(ns, "text");
-        dt.setAttribute("x", String(panelX + 48));
-        dt.setAttribute("y", String(rowY + 40));
+        dt.setAttribute("x", String(panelX + 44));
+        dt.setAttribute("y", String(rowY + 38));
         dt.setAttribute("text-anchor", "start");
         dt.setAttribute("fill", "rgba(255,200,100,0.7)");
         dt.setAttribute("font-size", "14");

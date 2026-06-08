@@ -77,14 +77,44 @@
 		  animation: glowPulse 0.8s ease-in-out forwards;
 		  transform: scale(1.08);
 		}
-	</style>
+		</style>
 
 
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+		  /* Cycles modal */
+		  .subModal { display:block; position:fixed; inset:0; z-index:4999; pointer-events:none; }
+		  .subModal[aria-hidden="true"] { display:none; }
+		  .subModal[aria-hidden="false"] { display:block; }
+		  .subModalCard { pointer-events:auto; position:fixed; }
+		  .cycle-mode-btn.active[data-mode="retrograde"] { background:rgba(200,100,160,.25) !important; border-color:rgba(200,100,160,.4) !important; color:#e0a0d0 !important; }
+		  .cycle-mode-btn.active[data-mode="synodic"] { background:rgba(200,200,100,.15) !important; border-color:rgba(200,200,100,.3) !important; color:#e8d888 !important; }
+		  .cycle-mode-btn.active[data-mode="both"] { background:rgba(255,255,255,.08) !important; border-color:rgba(255,255,255,.2) !important; color:rgba(255,255,255,.7) !important; }
+		  #cycle-selected-badge {
+			position: absolute;
+			top: 20px;
+			left: 20px;
+			z-index: 4200;
+			display: none;
+			align-items: center;
+			gap: 8px;
+			padding: 7px 11px;
+			border-radius: 10px;
+			background: rgba(0,0,0,0.72);
+			border: 1px solid rgba(255,255,255,0.26);
+			box-shadow: 0 0 18px rgba(0,0,0,0.55);
+			color: rgba(255,255,255,0.9);
+			font-family: Georgia, 'Times New Roman', serif;
+			pointer-events: none;
+		  }
+		  #cycle-selected-badge .cycle-selected-glyphs { font-size: 32px; line-height: 1; color: #e8d888; }
+		  #cycle-selected-badge .cycle-selected-label { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,0.78); }
+		</style>
+
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	</head>
 <body>
-
 	<div class="sidebar">
 	<div class="menu-title">
 	  <div class="menu-main-title">Zodi-Yuga Skyclock</div>
@@ -121,8 +151,9 @@
 	  </label>
 	  <input type="range" id="speed-planets" min="0" max="100" value="25">
 
-	  <button id="toggle-btn" style="width:100%; margin-top:8px;">▶️ Play</button>
-	</div>
+	  	  <button id="toggle-btn" style="width:100%; margin-top:8px;">▶️ Play</button>
+	  	    <button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;width:100%;justify-content:center;margin-top:6px;box-sizing:border-box;" type="button">⟳ Cycles</button>
+	  	  </div>
 
 	<hr style="margin: 8px 0; border-color: #333;">
 
@@ -385,6 +416,10 @@
 	<!-- ================= MAIN CANVAS ================= -->
 
 	<div class="main">
+	  <div id="cycle-selected-badge" aria-live="polite">
+		<span class="cycle-selected-glyphs"></span>
+		<span class="cycle-selected-label"></span>
+	  </div>
 	  <div id="scale-wrapper">
 		<div class="container">
 
@@ -877,7 +912,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="20" fill="#fbbf24">☉</text>
+				  font-size="40" fill="#fbbf24">☉</text>
 		  </g>
 		</g>
 
@@ -888,7 +923,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="18" fill="#e5e7eb">☽</text>
+				  font-size="36" fill="#e5e7eb">☽</text>
 		  </g>
 		</g>
 
@@ -899,7 +934,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="16" fill="#a855f7">☿</text>
+				  font-size="32" fill="#a855f7">☿</text>
 		  </g>
 		</g>
 
@@ -910,7 +945,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="16" fill="#22c55e">♀</text>
+				  font-size="49.4" fill="#22c55e">♀</text>
 		  </g>
 		</g>
 
@@ -921,7 +956,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="18" fill="#ef4444">♂</text>
+				  font-size="49.4" fill="#ef4444">♂</text>
 		  </g>
 		</g>
 
@@ -932,7 +967,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="18" fill="#fde68a">♃</text>
+				  font-size="36" fill="#fde68a">♃</text>
 		  </g>
 		</g>
 
@@ -943,7 +978,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="18" fill="#eab308">♄</text>
+				  font-size="36" fill="#eab308">♄</text>
 		  </g>
 		</g>
 		  
@@ -954,7 +989,7 @@
 			  </g>
 			  <g class="planet-label">
 				<text text-anchor="middle" dominant-baseline="middle"
-					  font-size="18" fill="#06b6d4">♅</text>
+					  font-size="36" fill="#06b6d4">♅</text>
 			  </g>
 			</g>
 
@@ -965,7 +1000,7 @@
 			  </g>
 			  <g class="planet-label">
 				<text text-anchor="middle" dominant-baseline="middle"
-					  font-size="18" fill="#3b82f6">♆</text>
+					  font-size="36" fill="#3b82f6">♆</text>
 			  </g>
 			</g>
 
@@ -976,13 +1011,17 @@
 			  </g>
 			  <g class="planet-label">
 				<text text-anchor="middle" dominant-baseline="middle"
-					  font-size="18" fill="#94a3b8">♇</text>
+					  font-size="36" fill="#94a3b8">♇</text>
 			  </g>
 			</g>
 
 		  
 		<!-- closes the last planet group (Saturn) -->
-	   </g> 
+	   </g>
+
+			  <!-- 🌀 CYCLES OVERLAY -->
+			  <g id="cycle-pins-group"></g>
+
       </g>
      </g>
     </g>
@@ -1123,15 +1162,83 @@
 			alt="Enter The Grand Conjunction Timeline"
 			class="timeline-button"
 		  />
-		</a>
+				</a>
 
 
+
+				<!-- ================= CYCLES MODAL ================= -->
+			<div id="cyclesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+			<div class="subModalCard cyclesModalCard" style="top:60px;left:10px;min-width:300px;background:rgba(10,10,12,0.97);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 16px;z-index:5000;">
+				<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+					<span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600;letter-spacing:.05em;">PLANETARY CYCLES</span>
+					<button id="cyclesClose" class="subModalClose" style="position:static;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+				</div>
+				<div class="cyclesAspectBlock" style="border:1px solid rgba(160,135,90,.22);border-radius:10px;padding:10px;margin-bottom:10px;background:rgba(255,255,255,.035);">
+					<div style="font-size:10px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;">Aspect Pattern</div>
+					<select id="cyclesAspectSelect" style="width:100%;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:7px 9px;font-size:12px;cursor:pointer;outline:none;margin-bottom:7px;">
+						<option value="">Off — use single planet cycle</option>
+						<option value="0">☌ Conjunction</option>
+						<option value="60">✶ Sextile</option>
+						<option value="90">□ Square</option>
+						<option value="120">△ Trine</option>
+						<option value="180">☍ Opposition</option>
+					</select>
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+						<select id="cyclesAspectPlanetA" style="min-width:0;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:7px 8px;font-size:12px;cursor:pointer;outline:none;">
+							<option value="sun">☉ Sun</option>
+							<option value="moon">☽ Moon</option>
+							<option value="mercury">☿ Mercury</option>
+							<option value="venus" selected>♀ Venus</option>
+							<option value="mars">♂ Mars</option>
+							<option value="jupiter">♃ Jupiter</option>
+							<option value="saturn">♄ Saturn</option>
+							<option value="uranus">♅ Uranus</option>
+							<option value="neptune">♆ Neptune</option>
+							<option value="pluto">♇ Pluto</option>
+						</select>
+						<select id="cyclesAspectPlanetB" style="min-width:0;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:7px 8px;font-size:12px;cursor:pointer;outline:none;">
+							<option value="sun" selected>☉ Sun</option>
+							<option value="moon">☽ Moon</option>
+							<option value="mercury">☿ Mercury</option>
+							<option value="venus">♀ Venus</option>
+							<option value="mars">♂ Mars</option>
+							<option value="jupiter">♃ Jupiter</option>
+							<option value="saturn">♄ Saturn</option>
+							<option value="uranus">♅ Uranus</option>
+							<option value="neptune">♆ Neptune</option>
+							<option value="pluto">♇ Pluto</option>
+						</select>
+					</div>
+				</div>
+				<div style="font-size:10px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0 0 7px;">Single Planet Cycle</div>
+				<select id="cyclesPlanetSelect" style="width:100%;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;outline:none;margin-bottom:10px;">
+					<option value="mercury">☿ Mercury</option>
+					<option value="venus" selected>♀ Venus</option>
+					<option value="mars">♂ Mars</option>
+					<option value="jupiter">♃ Jupiter</option>
+					<option value="saturn">♄ Saturn</option>
+					<option value="uranus">♅ Uranus</option>
+					<option value="neptune">♆ Neptune</option>
+					<option value="pluto">♇ Pluto</option>
+				</select>
+				<div style="display:flex;gap:6px;margin-bottom:10px;">
+					<button class="cycle-mode-btn" data-mode="retrograde" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">⟲ Retro</button>
+					<button class="cycle-mode-btn" data-mode="synodic" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">☌ Synodic</button>
+					<button class="cycle-mode-btn" data-mode="both" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">Both</button>
+				</div>
+				<div style="display:flex;gap:8px;justify-content:flex-end;">
+					<button id="cyclesApplyBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(180,140,80,.25);color:#e8c898;">Apply</button>
+					<button id="cyclesClearBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(30,25,18,.9);color:#ccc0a8;">Clear</button>
+				</div>
+			</div>
+		</div>
 
 		
-		<script src="js/vendor/astronomy.browser.min.js" defer></script>
-		<script src="js/heaven-data.js"></script>
-		<script src="js/skyclock-engine.js" defer></script>
-		<script src="js/main.js" defer></script>
+				<script src="js/vendor/astronomy.browser.min.js" defer></script>
+				<script src="js/heaven-data.js"></script>
+				<script src="js/skyclock-engine.js" defer></script>
+				<script src="js/main.js" defer></script>
+				<script src="../generational/js/planetary-cycles.js"></script>
 
 		<script>
 		  // Remove preload-hide after main.js has had time to set initial visibility

@@ -8,6 +8,7 @@ import { resolve } from 'path'
 // Shared modules live in shared/ and are compiled per-page by Vite
 export default defineConfig({
   plugins: [wasm(), topLevelAwait()],
+  appType: 'mpa',
   build: {
     rollupOptions: {
       input: {

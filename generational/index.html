@@ -20,7 +20,7 @@
 		 ========================================================= -->
 
 	<link href="../css/timeline.css?v=154" rel="stylesheet"/>
-	<link href="../css/astro-hud.css?v=48" rel="stylesheet"/>
+	<link href="../css/astro-hud.css?v=50" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	</head>
@@ -141,7 +141,7 @@
 					<div class="scaleLabel">Time Scale</div>
 					<div class="scaleBtns">
 						<button class="scaleOpt" type="button" data-scale="skyclock" onclick="window.location.href='/skyclock/'">Skyclock</button>
-						<button class="scaleOpt" type="button" data-scale="generational" onclick="window.location.href='?'">Generational</button>
+						<button class="scaleOpt" type="button" data-scale="generational" onclick="window.location.href='/'">Generational</button>
 						<button class="scaleOpt" type="button" data-scale="personal" onclick="window.location.href='/personal/'">Personal</button>
 						<button class="scaleOpt" type="button" data-scale="planting" onclick="window.location.href='/planting/'">Planting</button>
 					</div>
@@ -197,6 +197,9 @@
   <button id="skyModeTransit" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;" type="button">▶ Transit</button>
   <button id="skyModeNatal" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;" type="button">✦ Natal</button>
 </div>
+						</div>
+						<div style="display:flex;gap:8px;align-items:center;justify-content:flex-start;width:100%;">
+						<button id="shadowBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.82);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">◐ Shadow</button>
 						<button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">⟳ Cycles</button>
 						</div>
 					</div>
@@ -309,6 +312,33 @@
 						</div>
 					</div>
 
+
+					<!-- Shadow selector (inside wheel modal, anchored under Shadow button) -->
+					<div id="shadowModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+						<div class="subModalCard shadowModalCard" role="document" style="min-width:230px;background:rgba(8,8,10,0.97);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 16px;">
+							<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+								<span style="font-size:11px;color:rgba(255,255,255,.65);font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Planet Shadow</span>
+								<button id="shadowClose" class="subModalClose" style="position:static;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;" type="button" aria-label="Close shadow selector">×</button>
+							</div>
+							<select id="shadowPlanetSelect" style="width:100%;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;outline:none;margin-bottom:10px;">
+								<option value="sun">☉ Sun</option>
+								<option value="moon">☽ Moon</option>
+								<option value="mercury">☿ Mercury</option>
+								<option value="venus">♀ Venus</option>
+								<option value="mars">♂ Mars</option>
+								<option value="jupiter" selected>♃ Jupiter</option>
+								<option value="saturn">♄ Saturn</option>
+								<option value="uranus">♅ Uranus</option>
+								<option value="neptune">♆ Neptune</option>
+								<option value="pluto">♇ Pluto</option>
+							</select>
+							<div style="font-size:10px;color:rgba(255,255,255,.48);line-height:1.35;margin-bottom:10px;">Apply finds that planet’s nearest Rx shadow arc. The shadow starts drawing when the planet first reaches the shadow degree, then each Rx/direct/pass redraws the same arc darker.</div>
+							<div style="display:flex;gap:8px;justify-content:flex-end;">
+								<button id="shadowApplyBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(180,140,80,.25);color:#e8c898;" type="button">Apply</button>
+								<button id="shadowClearBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(30,25,18,.9);color:#ccc0a8;" type="button">Clear</button>
+							</div>
+						</div>
+					</div>
 				</div> <!-- END zyModalCard -->
 
 					<div id="cyclesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
@@ -615,14 +645,14 @@
 		<script src="js/time-engine.js"></script>
 		<script src="js/generation-model.js"></script>
 		<script src="../shared/astronomy-adapter.js?v=151"></script>
-		<script src="js/planetary-cycles.js?v=145"></script>
+		<script src="js/planetary-cycles.js?v=150"></script>
 
 		<!-- Era markers must load BEFORE screw-renderer builds the SVG -->
 		<script src="js/_era_markers.js"></script>
 		<script src="../shared/heaven-data.js"></script>
 
 		<script src="js/screw-renderer.js?v=162"></script>
-		<script src="../shared/astro-wheel.js?v=159"></script>
+		<script src="../shared/astro-wheel.js?v=182"></script>
 		<script src="js/conjunction-selector.js?v=2"></script>
 
 		<!-- 3D (Phase 1) — Three.js global build + simple renderer wrapper -->

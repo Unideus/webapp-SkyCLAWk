@@ -64,6 +64,22 @@
   window.cyclePlanet = ''; // '' | 'mercury' | 'venus' | 'mars' | ...
   window.cycleAspect = window.cycleAspect || null; // { a, b, deg, label, color } for selected major-aspect patterns
 
+  // Planet shadow overlay state. Apply arms live tracking; station arc lookup is
+  // deferred so the modal closes immediately. Rendering is frame-by-frame.
+  window.planetShadow = window.planetShadow || null; // { planet, armed, ready, visible, phase, prevLon, prevSign, retroLon, directLon, passes, createdAt }
+
+  function normalizeLon(deg) {
+    const n = Number(deg);
+    return Number.isFinite(n) ? ((n % 360) + 360) % 360 : NaN;
+  }
+
+  function signedLonDelta(a, b) {
+    let d = Number(a) - Number(b);
+    while (d > 180) d -= 360;
+    while (d < -180) d += 360;
+    return d;
+  }
+
   // Function to update which planets are shown
   window.setPlanetEnabled = function(planetId, enabled) {
     if (window.enabledPlanets.hasOwnProperty(planetId)) {
@@ -310,6 +326,7 @@ let cardStartLeft = 0, cardStartTop = 0;
     lot_victory: "Vi", lot_nemesis: "Nm",
   };
 
+
   // Smooth glyph angle offsets (degrees), keyed by body key (persist across frames)
   const __glyphAngOffset = new Map();
 
@@ -456,6 +473,119 @@ let cardStartLeft = 0, cardStartTop = 0;
 
     // preserve the order of showKeys (no sorting here)
     const show = showKeys.filter(k => Number.isFinite(Number(bodyLons?.[k])));
+
+    // ---- Planet shadow: accurate retrograde-shadow bands.
+    // Completed arcs accumulate; the active arc keeps growing frame-by-frame.
+    let planetShadowLayer = "";
+    {
+      const sh = window.planetShadow || null;
+      if (sh && sh.planet) {
+        function positiveLonDelta(to, from) {
+          return normalizeLon(Number(to) - Number(from));
+        }
+        function lonOnShadowArc(lon, startLon, endLon) {
+          const sweep = positiveLonDelta(endLon, startLon);
+          const dist = positiveLonDelta(lon, startLon);
+          return Number.isFinite(sweep) && sweep > 0 && dist <= sweep + 0.35;
+        }
+        function annularSectorPath(startLon, endLon, rInner, rOuter) {
+          const a = normalizeLon(startLon);
+          const b = normalizeLon(endLon);
+          if (!Number.isFinite(a) || !Number.isFinite(b)) return "";
+          const sweep = positiveLonDelta(b, a);
+          if (!Number.isFinite(sweep) || sweep < 0.01 || sweep > 75) return "";
+          const a0 = ang(a);
+          const a1 = ang(a + sweep);
+          const [o0x, o0y] = pt(rOuter, a0);
+          const [o1x, o1y] = pt(rOuter, a1);
+          const [i1x, i1y] = pt(rInner, a1);
+          const [i0x, i0y] = pt(rInner, a0);
+          return `M ${o0x.toFixed(2)} ${o0y.toFixed(2)} A ${rOuter} ${rOuter} 0 0 0 ${o1x.toFixed(2)} ${o1y.toFixed(2)} L ${i1x.toFixed(2)} ${i1y.toFixed(2)} A ${rInner} ${rInner} 0 0 1 ${i0x.toFixed(2)} ${i0y.toFixed(2)} Z`;
+        }
+        const shadowInner = rEcliptic + 5;
+        const shadowOuter = rEcliptic + 25;
+        const arcs = [];
+        if (Array.isArray(sh.completedArcs)) {
+          sh.completedArcs.forEach((arc, idx) => {
+            if (Number.isFinite(Number(arc?.startLon)) && Number.isFinite(Number(arc?.endLon))) {
+              arcs.push({
+                startLon: normalizeLon(arc.startLon),
+                endLon: normalizeLon(arc.endLon),
+                phase: "complete",
+                idx,
+                postDateUTC: arc.postDateUTC || null
+              });
+            }
+          });
+        }
+        const pass = Array.isArray(sh?.passes) ? sh.passes[0] : null;
+        if (sh.visible && pass) {
+          const startLon = normalizeLon(pass.startLon);
+          let endLon = normalizeLon(pass.endLon);
+          const retroLon = normalizeLon(sh.retroLon);
+          if (Number.isFinite(retroLon) && !lonOnShadowArc(endLon, startLon, retroLon)) endLon = retroLon;
+          arcs.push({ startLon, endLon, phase: sh.phase || "active", idx: arcs.length });
+        }
+        function shadowRange(arc) {
+          const start = normalizeLon(arc.startLon);
+          const sweep = positiveLonDelta(arc.endLon, arc.startLon);
+          return { start, end: start + sweep, sweep };
+        }
+        function shadowOverlapRatio(a, b) {
+          const ar = shadowRange(a);
+          const br = shadowRange(b);
+          if (!Number.isFinite(ar.sweep) || !Number.isFinite(br.sweep) || ar.sweep <= 0 || br.sweep <= 0) return 0;
+          let best = 0;
+          [-360, 0, 360].forEach(shift => {
+            const left = Math.max(ar.start, br.start + shift);
+            const right = Math.min(ar.end, br.end + shift);
+            if (right > left) best = Math.max(best, (right - left) / Math.min(ar.sweep, br.sweep));
+          });
+          return best;
+        }
+        const currentShadowMs = opts.dateUTC instanceof Date && Number.isFinite(opts.dateUTC.getTime())
+          ? opts.dateUTC.getTime()
+          : Date.now();
+        const MS_PER_YEAR = 365.2425 * 86400000;
+        function completedArcAgeYears(arc) {
+          if (arc.phase !== "complete" || !arc.postDateUTC) return 0;
+          const doneMs = new Date(arc.postDateUTC).getTime();
+          if (!Number.isFinite(doneMs) || currentShadowMs <= doneMs) return 0;
+          return (currentShadowMs - doneMs) / MS_PER_YEAR;
+        }
+        const paths = arcs.map((arc, idx) => {
+          const path = annularSectorPath(arc.startLon, arc.endLon, shadowInner, shadowOuter);
+          if (!path) return "";
+          let newerOverlapDepth = 0;
+          let strongestNewerOverlap = 0;
+          for (let j = idx + 1; j < arcs.length; j++) {
+            const overlap = shadowOverlapRatio(arc, arcs[j]);
+            if (overlap > 0.12) {
+              newerOverlapDepth += 1;
+              strongestNewerOverlap = Math.max(strongestNewerOverlap, overlap);
+            }
+          }
+          const ageYears = completedArcAgeYears(arc);
+          const yearDecay = Math.pow(0.92, ageYears); // slight fade every simulated year
+          const overlapDecay = newerOverlapDepth > 0
+            ? Math.pow(0.42, newerOverlapDepth) * (1 - Math.min(0.45, strongestNewerOverlap * 0.28))
+            : 1;
+          const decay = yearDecay * overlapDecay;
+          const isCoveredByNewer = newerOverlapDepth > 0;
+          const fillAlpha = Math.max(isCoveredByNewer ? 0.06 : 0.12, 0.42 * decay);
+          const strokeAlpha = Math.max(isCoveredByNewer ? 0.05 : 0.10, 0.50 * decay);
+          const fillColor = isCoveredByNewer ? `rgba(128,128,128,${fillAlpha.toFixed(2)})` : `rgba(210,34,34,${fillAlpha.toFixed(2)})`;
+          const strokeColor = isCoveredByNewer ? `rgba(215,215,215,${strokeAlpha.toFixed(2)})` : `rgba(255,75,75,${strokeAlpha.toFixed(2)})`;
+          return `<path class="planet-shadow-pass" data-phase="${arc.phase}" data-index="${idx}" data-age-years="${ageYears.toFixed(2)}" data-year-decay="${yearDecay.toFixed(3)}" data-newer-overlap-depth="${newerOverlapDepth}" data-overlap-depth="${newerOverlapDepth}" d="${path}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1"/>`;
+        }).filter(Boolean).join("\n            ");
+        if (paths) {
+          planetShadowLayer = `
+          <g id="planet-shadow-layer" data-planet="${sh.planet}" data-phase="${sh.phase || ''}" data-passes="${arcs.length}" opacity="0.98">
+            ${paths}
+          </g>`;
+        }
+      }
+    }
 
     const __aspectKey = __layoutKey + '|' +
       show.map(k => k + ':' + ((bodyLons[k]||0) % 15).toFixed(2)).join(',') + '|natal:' + natalActive;
@@ -815,6 +945,7 @@ const EPS = 1e-4;
 let planetDots = "";
 let planetLeaders = "";
 let planetLabels = "";
+let planetGlow = "";
 let houseCuspLines = "";
 let houseCuspLabels = "";
 let eclipticTicks = "";
@@ -869,6 +1000,9 @@ function computeWholeSignCusps(asc) {
 }
 
 const DOT_R = 3.6;
+const shadowSelectedPlanet = (window.planetShadow && window.planetShadow.armed && window.planetShadow.planet)
+  ? String(window.planetShadow.planet)
+  : "";
 
 // leader tuning (shorten here)
 const LEADER_GAP_DOT   = 4;   // start offset from dot
@@ -913,6 +1047,15 @@ for (const k of show) {
   // Glyph center point
   const [gx, gy] = pt(rGlyph, aGlyph);
 
+  const isShadowSelected = !!shadowSelectedPlanet && k === shadowSelectedPlanet;
+  if (isShadowSelected) {
+    planetGlow += `<g class="shadow-selected-planet-glow" data-planet="${k}">
+      <circle cx="${dx}" cy="${dy}" r="8" fill="rgba(255,55,55,0.20)" filter="url(#shadowPlanetRedGlow)"/>
+      <circle cx="${gx}" cy="${gy + 8}" r="18" fill="rgba(255,45,45,0.16)" filter="url(#shadowPlanetRedGlow)"/>
+      <circle cx="${gx}" cy="${gy + 8}" r="10" fill="rgba(255,0,0,0.07)"/>
+    </g>`;
+  }
+
   // Leader aims at glyph center
   const vx = gx - dx;
   const vy = gy - dy;
@@ -940,6 +1083,7 @@ for (const k of show) {
     font-size="${lotFontSize}" text-anchor="middle" dominant-baseline="middle"
     font-family="Segoe UI Symbol, Noto Sans Symbols2, DejaVu Sans, Arial Unicode MS, sans-serif"
     font-weight="${isLot ? 600 : 400}"
+    ${isShadowSelected ? 'filter="url(#shadowPlanetRedGlow)"' : ''}
     fill="${lotColor}" opacity="0.95">${planetGlyph[k] || "•"}${rxSuffix ? `<tspan font-size="14" dy="5">${rxSuffix}</tspan>` : ''}</text>`;
 
   // Star name label below glyph
@@ -1160,6 +1304,10 @@ for (const k of show) {
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
         <defs>
+          <filter id="shadowPlanetRedGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgb(255,0,0)" flood-opacity="0.38"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="rgb(255,40,40)" flood-opacity="0.20"/>
+          </filter>
           ${natalShadowDefs}
         </defs>
         <rect width="100%" height="100%" fill="rgba(0,0,0,0)"/>
@@ -1168,12 +1316,14 @@ for (const k of show) {
         <circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="3"/>
         <circle cx="${cx}" cy="${cy}" r="${rSignInner}" fill="rgba(0,0,0,.35)" stroke="rgba(255,255,255,.20)" stroke-width="2"/>
         ${signText}
+        ${planetShadowLayer}
         ${natalShadows}
         ${natalLeaders}
         ${natalLabels}
         ${natalDots}
         ${aspectLines}
         ${aspectTicks}
+        ${planetGlow}
         ${planetDots}
         ${planetLeaders}
         ${planetLabels}
@@ -1316,6 +1466,92 @@ for (const k of show) {
         const id = 'lot_' + k;
         if (Number.isFinite(Number(lons[id]))) keys.push(id);
       });
+    }
+
+    // Live planet shadow tracking. Use the precomputed accurate shadow window
+    // only as the target map; visibility and growth update frame-by-frame.
+    if (window.planetShadow && window.planetShadow.planet && lons) {
+      const sh = window.planetShadow;
+      const curLon = normalizeLon(lons[sh.planet]);
+      const nowMs = t.getTime();
+      function positiveLonDelta(to, from) {
+        return normalizeLon(Number(to) - Number(from));
+      }
+      function onArc(lon, startLon, endLon) {
+        const sweep = positiveLonDelta(endLon, startLon);
+        const dist = positiveLonDelta(lon, startLon);
+        return Number.isFinite(sweep) && sweep > 0 && sweep <= 75 && dist <= sweep + 0.4;
+      }
+      function setNextShadowWindow(baseDate) {
+        const baseMs = baseDate.getTime();
+        const cached = Array.isArray(sh.shadowWindows) ? sh.shadowWindows : [];
+        const pick = cached.find(w => new Date(w.postShadowDateUTC).getTime() >= baseMs - 3600000);
+        if (pick) {
+          Object.assign(sh, pick, { ready: true, resolving: false, visible: false, phase: "armed", passes: [] });
+          return true;
+        }
+        // Do not run the expensive station search during animation. Re-arm now and
+        // resolve the next window during idle time so the wheel doesn't freeze at post-shadow end.
+        if (!sh.resolving && typeof resolveShadowArcSoon === "function") {
+          sh.ready = false;
+          sh.resolving = true;
+          sh.visible = false;
+          sh.phase = "armed";
+          sh.passes = [];
+          resolveShadowArcSoon(sh.planet, baseDate);
+        }
+        return false;
+      }
+      function rememberCompletedArc(startLon, endLon, postDateUTC) {
+        if (!Array.isArray(sh.completedArcs)) sh.completedArcs = [];
+        const key = `${Math.round(normalizeLon(startLon) * 1000)}:${Math.round(normalizeLon(endLon) * 1000)}:${postDateUTC || ''}`;
+        if (!sh.completedArcs.some(a => a && a.key === key)) {
+          sh.completedArcs.push({ key, startLon: normalizeLon(startLon), endLon: normalizeLon(endLon), postDateUTC: postDateUTC || null });
+        }
+      }
+      if (Number.isFinite(curLon)) {
+        if (!Array.isArray(sh.completedArcs)) sh.completedArcs = [];
+        if (!sh.ready && !sh.resolving) setNextShadowWindow(t);
+        let guard = 0;
+        while (sh.ready && guard++ < 20) {
+          const directLon = normalizeLon(sh.directLon);
+          const retroLon = normalizeLon(sh.retroLon);
+          const preMs = new Date(sh.preShadowDateUTC || 0).getTime();
+          const rxMs = new Date(sh.rxDateUTC || 0).getTime();
+          const directMs = new Date(sh.directDateUTC || 0).getTime();
+          const postMs = new Date(sh.postShadowDateUTC || 0).getTime();
+          if (!Number.isFinite(directLon) || !Number.isFinite(retroLon) || !Number.isFinite(preMs) || !Number.isFinite(rxMs) || !Number.isFinite(postMs)) break;
+
+          if (nowMs > postMs + 12 * 3600000) {
+            rememberCompletedArc(directLon, retroLon, sh.postShadowDateUTC);
+            const advanced = setNextShadowWindow(new Date(postMs + 86400000));
+            if (!advanced) {
+              sh.visible = false;
+              sh.phase = "complete";
+              sh.passes = [];
+              break;
+            }
+            continue;
+          }
+
+          if (nowMs < preMs) {
+            sh.visible = false;
+            sh.phase = "armed";
+            sh.passes = [];
+          } else if (nowMs < rxMs) {
+            sh.visible = onArc(curLon, directLon, retroLon);
+            sh.phase = "pre";
+            sh.passes = sh.visible ? [{ pass: 1, startLon: directLon, endLon: curLon }] : [];
+          } else if (nowMs <= postMs) {
+            sh.visible = true;
+            sh.phase = nowMs < directMs ? "retrograde" : "post";
+            sh.passes = [{ pass: 1, startLon: directLon, endLon: retroLon }];
+          }
+          break;
+        }
+        sh.prevLon = curLon;
+        window.planetShadow = sh;
+      }
     }
 
     const natalLons = (window.NatalChart && window.NatalChart.longitudes) ? window.NatalChart.longitudes : null;
@@ -3076,6 +3312,166 @@ for (const k of show) {
   }
 
   // =========================================================
+  // SHADOW MODAL — retrograde shadow arc
+  // =========================================================
+  const shadowBtn = document.getElementById("shadowBtn");
+  const shadowModal = document.getElementById("shadowModal");
+  const shadowPlanetSelect = document.getElementById("shadowPlanetSelect");
+  const shadowApplyBtn = document.getElementById("shadowApplyBtn");
+  const shadowClearBtn = document.getElementById("shadowClearBtn");
+  const shadowClose = document.getElementById("shadowClose");
+
+  function refreshShadowButton() {
+    if (!shadowBtn) return;
+    const active = !!(window.planetShadow && window.planetShadow.armed);
+    shadowBtn.classList.toggle("shadow-active", active);
+    shadowBtn.setAttribute("aria-pressed", active ? "true" : "false");
+    shadowBtn.style.setProperty("border-color", active ? "rgba(255,75,75,.78)" : "rgba(255,255,255,.3)", "important");
+    shadowBtn.style.setProperty("background", active ? "rgba(210,34,34,.42)" : "rgba(0,0,0,.32)", "important");
+    shadowBtn.style.setProperty("color", active ? "rgba(255,245,245,.96)" : "rgba(255,255,255,.82)", "important");
+    shadowBtn.style.setProperty("box-shadow", active ? "0 0 10px rgba(255,75,75,.42)" : "none", "important");
+    shadowBtn.style.gap = "7px";
+    shadowBtn.style.minWidth = active ? "104px" : "auto";
+    shadowBtn.style.justifyContent = "center";
+
+    let label = document.getElementById("shadowBtnLabel");
+    if (!label || label.parentElement !== shadowBtn) {
+      const existing = shadowBtn.textContent.trim() || "◐ Shadow";
+      shadowBtn.textContent = "";
+      label = document.createElement("span");
+      label.id = "shadowBtnLabel";
+      label.textContent = existing.replace(/\s*[☉☽☿♀♂♃♄♅♆♇]\s*$/, "") || "◐ Shadow";
+      label.style.cssText = "display:inline-flex;align-items:center;line-height:1;";
+      shadowBtn.appendChild(label);
+    }
+
+    let glyph = document.getElementById("shadowPlanetGlyph");
+    if (!glyph) {
+      glyph = document.createElement("span");
+      glyph.id = "shadowPlanetGlyph";
+      glyph.setAttribute("aria-live", "polite");
+    }
+    if (glyph.parentElement !== shadowBtn) shadowBtn.appendChild(glyph);
+    glyph.style.cssText = "display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1;color:rgba(255,245,245,.98);text-shadow:0 1px 2px rgba(0,0,0,.75),0 0 7px rgba(255,75,75,.5);pointer-events:none;min-width:16px;";
+
+    const planet = window.planetShadow?.planet || "";
+    const symbol = active && planet ? (planetGlyph[planet] || "") : "";
+    glyph.textContent = symbol;
+    glyph.style.display = symbol ? "inline-flex" : "none";
+    glyph.title = active && planet ? `${planet.charAt(0).toUpperCase()}${planet.slice(1)} shadow` : "";
+  }
+
+
+
+
+  function findRetrogradeShadowArc(planet, t) {
+    const valid = ["mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"];
+    if (!valid.includes(planet)) return null;
+    if (!window.PlanetaryCycles || typeof window.PlanetaryCycles.getRetrogradeShadowWindows !== "function") return null;
+    const center = (t instanceof Date && Number.isFinite(t.getTime())) ? t : new Date();
+    const fromDateUTC = new Date(center.getTime() - 5 * 86400000);
+    const shadowSpanDays = ({ mercury: 180, venus: 620, mars: 1100, jupiter: 900, saturn: 900, uranus: 900, neptune: 900, pluto: 900 })[planet] || 900;
+    const toDateUTC = new Date(center.getTime() + shadowSpanDays * 86400000);
+    const windows = window.PlanetaryCycles.getRetrogradeShadowWindows({ planet, fromDateUTC, toDateUTC }) || [];
+    const now = center.getTime();
+    const arc = windows.find(w => new Date(w.postShadowDateUTC).getTime() >= now - 3600000) || windows[0] || null;
+    return arc ? { arc, windows } : null;
+  }
+
+  function resolveShadowArcSoon(planet, t) {
+    const run = () => {
+      const current = window.planetShadow;
+      if (!current || current.planet !== planet || !current.armed) return;
+      const bundle = findRetrogradeShadowArc(planet, t);
+      if (!bundle || !bundle.arc) {
+        current.ready = false;
+        current.resolving = false;
+        current.error = "No retrograde shadow found";
+        window.planetShadow = current;
+        return;
+      }
+      Object.assign(current, bundle.arc, { ready: true, resolving: false, shadowWindows: bundle.windows || [] });
+      window.planetShadow = current;
+      if (typeof drawAstroWheel === "function") drawAstroWheel();
+    };
+    if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 250 });
+    else window.setTimeout(run, 0);
+  }
+
+  function openShadowModal() {
+    if (!shadowModal) return;
+    shadowModal.setAttribute("aria-hidden", "false");
+    if (shadowBtn) {
+      const rect = shadowBtn.getBoundingClientRect();
+      const modalCard = shadowModal.querySelector(".shadowModalCard");
+      if (modalCard) {
+        modalCard.style.position = "fixed";
+        const cardW = Math.min(280, window.innerWidth - 24);
+        const desiredTop = Math.max(12, Math.min(rect.bottom + 4, window.innerHeight - 220));
+        const desiredLeft = Math.max(12, Math.min(rect.left, window.innerWidth - cardW - 12));
+        const containerRect = shadowModal.getBoundingClientRect();
+        modalCard.style.top = (desiredTop - containerRect.top) + "px";
+        modalCard.style.left = (desiredLeft - containerRect.left) + "px";
+      }
+    }
+    if (shadowPlanetSelect && window.planetShadow?.planet) shadowPlanetSelect.value = window.planetShadow.planet;
+  }
+
+  function closeShadowModal() {
+    if (shadowModal) shadowModal.setAttribute("aria-hidden", "true");
+  }
+
+  if (shadowBtn) {
+    shadowBtn.addEventListener("click", openShadowModal);
+  }
+  if (shadowClose) shadowClose.addEventListener("click", closeShadowModal);
+  if (shadowModal) {
+    shadowModal.addEventListener("click", (ev) => { if (ev.target === shadowModal) closeShadowModal(); });
+  }
+  if (shadowApplyBtn) {
+    shadowApplyBtn.addEventListener("click", () => {
+      const planet = shadowPlanetSelect ? shadowPlanetSelect.value : "jupiter";
+      const t = (typeof timeState !== "undefined" && timeState && timeState.navTargetDateUTC instanceof Date) ? timeState.navTargetDateUTC :
+        (typeof timeState !== "undefined" && timeState && timeState.dateUTC instanceof Date) ? timeState.dateUTC :
+        (window.AstroEngine && window.AstroEngine.dateUTC instanceof Date) ? window.AstroEngine.dateUTC :
+        new Date();
+      const lonsNow = (typeof window.getPlanetLongitudes === "function") ? window.getPlanetLongitudes(t) : null;
+      const currentLon = normalizeLon(lonsNow?.[planet]);
+      window.planetShadow = {
+        planet,
+        armed: true,
+        ready: false,
+        resolving: true,
+        visible: false,
+        phase: "armed",
+        prevLon: Number.isFinite(currentLon) ? currentLon : null,
+        prevSign: null,
+        retroLon: null,
+        directLon: null,
+        passes: [],
+        completedArcs: [],
+        createdAt: t.getTime()
+      };
+      if (window.enabledPlanets && Object.prototype.hasOwnProperty.call(window.enabledPlanets, planet)) {
+        window.enabledPlanets[planet] = true;
+      }
+      closeShadowModal();
+      refreshShadowButton();
+      if (typeof drawAstroWheel === "function") drawAstroWheel();
+      resolveShadowArcSoon(planet, t);
+    });
+  }
+  if (shadowClearBtn) {
+    shadowClearBtn.addEventListener("click", () => {
+      window.planetShadow = null;
+      closeShadowModal();
+      refreshShadowButton();
+      if (typeof drawAstroWheel === "function") drawAstroWheel();
+    });
+  }
+  refreshShadowButton();
+
+  // =========================================================
   // CYCLES MODAL — planetary cycle overlay
   // =========================================================
   const cyclesBtn = document.getElementById("cyclesBtn");
@@ -3139,22 +3535,9 @@ for (const k of show) {
 
   if (cyclesBtn) {
     cyclesBtn.addEventListener("click", () => {
-      // If a cycle is already active, clicking the button turns it off
-      if ((window.cycleMode && window.cyclePlanet) || (window.cycleAspect && window.cycleAspect.a && window.cycleAspect.b)) {
-        window.cycleMode = "";
-        window.cyclePlanet = "";
-        window.cycleAspect = null;
-        window.cycleTrackState = null;
-        cyclesBtn.style.borderColor = "";
-        // Restore saved planet visibility
-        if (window.__savedCyclePlanets) {
-          Object.assign(window.enabledPlanets, window.__savedCyclePlanets);
-          window.__savedCyclePlanets = null;
-        }
-        if (typeof drawAstroWheel === "function") drawAstroWheel();
-      } else {
-        openCyclesModal();
-      }
+      // Match Skyclock behavior: clicking Cycles only opens the modal.
+      // The active cycle stays alive until the user explicitly hits Clear.
+      openCyclesModal();
     });
   }
 

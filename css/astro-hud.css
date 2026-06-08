@@ -842,6 +842,35 @@
   z-index: 9999999 !important;
 }
 
+/* Shadow Modal positioning - below Shadow button, same fixed-layer pattern */
+#shadowModal {
+  z-index: 9999999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+#shadowModal[aria-hidden="true"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#shadowModal[aria-hidden="false"] {
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+#shadowModal .shadowModalCard {
+  position: fixed !important;
+  z-index: 9999999 !important;
+  width: auto !important;
+  max-width: 280px !important;
+  pointer-events: auto !important;
+}
+
 #housesModal[aria-hidden="true"] {
   display: none !important;
   pointer-events: none !important;
@@ -1538,3 +1567,136 @@
 .lot-toggle-btn.off:hover { background: rgba(244,67,54,.28); }
 .lot-name-gold { color: #C8A050; font-weight: 700; }
 #hudNatalBtn { height: 28px; padding: 0 10px; white-space: nowrap; }
+
+/* Unified astrowheel modal controls */
+#controlButtonsRow,
+#controlButtonsRow button,
+#controlButtonsRow span,
+.subModalCard,
+.subModalCard button,
+.subModalCard select,
+.zyModalCard,
+.zyModalCard button,
+.zyModalCard select {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+#controlButtonsRow button,
+#cyclesBtn,
+#shadowBtn,
+#bodiesBtn,
+#housesBtn,
+#importToNatalBtn,
+.skyModeOption,
+#natalSetBtn,
+#natalCancelBtn,
+#hudNatalBtn {
+  all: unset !important;
+  box-sizing: border-box !important;
+  min-height: 28px !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255,255,255,.30) !important;
+  background: rgba(255,255,255,.12) !important;
+  color: rgba(255,255,255,.82) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .12s ease !important;
+  pointer-events: auto !important;
+}
+
+#controlButtonsRow button:hover,
+#cyclesBtn:hover,
+#shadowBtn:hover,
+#bodiesBtn:hover,
+#housesBtn:hover,
+#importToNatalBtn:hover,
+.skyModeOption:hover,
+#natalSetBtn:hover,
+#natalCancelBtn:hover,
+#hudNatalBtn:hover {
+  background: rgba(255,255,255,.20) !important;
+  border-color: rgba(255,255,255,.45) !important;
+  color: rgba(255,255,255,.96) !important;
+}
+
+#controlButtonsRow button:active,
+#cyclesBtn:active,
+#shadowBtn:active,
+#bodiesBtn:active,
+#housesBtn:active,
+#importToNatalBtn:active,
+.skyModeOption:active {
+  transform: scale(.97) !important;
+}
+
+#skyModeToggle,
+#housesBtnWrap {
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255,255,255,.30) !important;
+  overflow: hidden !important;
+  background: rgba(255,255,255,.06) !important;
+}
+
+#skyModeToggle .skyModeOption,
+#housesBtnWrap #housesBtn {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+#skyModeToggle .skyModeOption.skyModeActive,
+#skyModeToggle .skyModeOption.active,
+.skyModeOption.skyModeActive,
+.skyModeOption.active {
+  background: rgba(255,200,50,.34) !important;
+  border-color: rgba(255,200,50,.55) !important;
+  color: rgba(255,255,255,.95) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,200,50,.16) !important;
+}
+
+#shadowBtn.shadow-active,
+#shadowBtn[aria-pressed="true"] {
+  background: rgba(210,34,34,.42) !important;
+  border-color: rgba(255,75,75,.78) !important;
+  color: rgba(255,245,245,.96) !important;
+  box-shadow: 0 0 10px rgba(255,75,75,.42) !important;
+}
+
+.subModalCard button:not(.subModalClose),
+.cycleActions .uiPill,
+#cyclesApplyBtn,
+#cyclesClearBtn,
+#shadowApplyBtn,
+#shadowClearBtn,
+.cycle-mode-btn,
+.house-option,
+.body-toggle-btn {
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(160,135,90,.35) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.subModalCard select,
+.cycleSelect {
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(160,135,90,.35) !important;
+  background: rgba(30,30,35,.95) !important;
+  color: #dcc8a0 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
