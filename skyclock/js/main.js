@@ -478,6 +478,8 @@
 
     if (mode === "precession" && group.id === "planet-sun") {
       group.setAttribute("transform", `rotate(${-state.eclAngle}) translate(${px}, ${py})`);
+    } else if (mode === "yuga" && group.id === "planet-sun") {
+      group.setAttribute("transform", `rotate(${state.yugaOrbitAngle + 60}) translate(${px}, ${py})`);
     } else {
       group.setAttribute("transform", `translate(${px}, ${py})`);
     }
@@ -889,10 +891,9 @@
       return;
     }
 
-    // yuga orbit derived only from simDays
+    // yuga orbit tracks Sun's movement — NCP rotates with Sun
     if (mode === "yuga") {
-      const { sun } = getGeocentricLongitudes(state.simDays);
-      computeYugaOrbitAngleFromSun(sun);
+      state.yugaOrbitAngle = norm360(300 - state.simDays);
     } else {
       state.yugaOrbitAngle = 0;
     }
@@ -1009,8 +1010,7 @@
 
 		if (mode === "yuga") {
 		  const l = getGeocentricLongitudes(state.simDays);
-		  const SUN_YUGA_VISUAL_OFFSET_DEG = 286.5;
-		  return { ...l, sun: norm360(l.sun - SUN_YUGA_VISUAL_OFFSET_DEG) };
+		  return { ...l, sun: SPECIAL_MODE_SUN_L0 };
 		}
 
 		return getGeocentricLongitudes(state.simDays);
@@ -1706,39 +1706,6 @@
     mars: '♂', jupiter: '♃', saturn: '♄',
     uranus: '♅', neptune: '♆', pluto: '♇'
   };
-  const CYCLE_MODE_LABEL = {
-    retrograde: 'Retrograde',
-    synodic: 'Synodic',
-    both: 'Retro + Synodic'
-  };
-
-  function updateCycleSelectedBadge() {
-    const badge = document.getElementById('cycle-selected-badge');
-    if (!badge) return;
-    const glyphEl = badge.querySelector('.cycle-selected-glyphs');
-    const labelEl = badge.querySelector('.cycle-selected-label');
-    const ca = window.cycleAspect;
-    const cm = window.cycleMode;
-    const cp = window.cyclePlanet;
-    let glyphs = '';
-    let label = '';
-
-    if (ca && ca.a && ca.b && Number.isFinite(Number(ca.deg))) {
-      glyphs = `${PLANET_GLYPH[ca.a] || '•'} ${ca.label || ''} ${PLANET_GLYPH[ca.b] || '•'}`;
-      label = ca.name || CYCLE_ASPECT_META[Number(ca.deg)]?.name || 'Aspect';
-    } else if (cm && cp) {
-      glyphs = PLANET_GLYPH[cp] || '•';
-      label = CYCLE_MODE_LABEL[cm] || cm;
-    }
-
-    if (!glyphs || !label) {
-      badge.style.display = 'none';
-      return;
-    }
-    if (glyphEl) glyphEl.textContent = glyphs;
-    if (labelEl) labelEl.textContent = label;
-    badge.style.display = 'inline-flex';
-  }
   const R_ECL = 340;
 
   function lonToXY(lambdaDeg) {
@@ -1759,40 +1726,6 @@
     return d;
   }
 
-  function aspectDist(aLon, bLon, targetDeg) {
-    const target = Number(targetDeg);
-    const sep = signedDelta(Number(aLon), Number(bLon));
-    if (target === 0) return sep;
-    if (target === 180) {
-      const absSep = Math.abs(sep);
-      return 180 - absSep;
-    }
-    let dist = angularSep(Number(aLon), Number(bLon)) - target;
-    while (dist > 180) dist -= 360;
-    while (dist < -180) dist += 360;
-    return dist;
-  }
-
-  function shouldDropAspectPin(ts, dist, distSign, nowMs, aspectKey, aspectDeg) {
-    const target = Number(aspectDeg);
-    const prevDist = Number(ts.prevAspectDist);
-    const prevSign = Number(ts.prevAspectDistSign);
-    const crossed = Number.isFinite(prevSign) && prevSign !== 0 && distSign !== 0 && prevSign !== distSign;
-    const enteredOrb = Number.isFinite(prevDist) && Math.abs(prevDist) > 2 && Math.abs(dist) <= 2;
-    let validHit = false;
-    if (target === 0) {
-      validHit = crossed && (Math.abs(dist) <= 45 || (Number.isFinite(prevDist) && Math.abs(prevDist) <= 45));
-    } else if (target === 180) {
-      validHit = enteredOrb;
-    } else {
-      validHit = crossed || enteredOrb;
-    }
-    const last = ts.pins && ts.pins.length ? ts.pins[ts.pins.length - 1] : null;
-    const minGapMs = 1000 * 60 * 60 * 24 * 5;
-    const duplicate = last && last.aspectKey === aspectKey && Math.abs(nowMs - Number(last.time || 0)) < minGapMs;
-    return validHit && !duplicate;
-  }
-
   function updateCycleTracking(lambdas) {
     const cm = window.cycleMode;
     const cp = window.cyclePlanet;
@@ -1806,51 +1739,56 @@
     const cyclePinGroup = document.getElementById("cycle-pins-group");
     if (!cyclePinGroup) return;
 
-    if (aspectActive && Number.isFinite(Number(lambdas[ca.a])) && Number.isFinite(Number(lambdas[ca.b]))) {
-      const aspectKey = ca.a + '|' + ca.b + '|' + ca.deg;
-      const target = Number(ca.deg);
-      if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'aspect' || window.cycleTrackState.aspectKey !== aspectKey) {
-        const initialDist = aspectDist(lambdas[ca.a], lambdas[ca.b], target);
-        const motionPlanet = [ca.a, ca.b].find(p => p !== 'sun') || ca.a;
-        const initialMotionLon = Number.isFinite(Number(lambdas[motionPlanet])) ? Number(lambdas[motionPlanet]) : null;
+    if (aspectActive && lambdas[ca.a] != null && lambdas[ca.b] != null) {
+      var aspectKey = ca.a + '|' + ca.b + '|' + ca.deg;
+      var target = Number(ca.deg);
+      if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'aspect'
+          || window.cycleTrackState.aspectKey !== aspectKey) {
         window.cycleTrackState = {
-          pins: [], active: true, cycleKind: 'aspect', aspectKey,
-          prevAspectDist: initialDist,
-          prevAspectDistSign: initialDist > 0.001 ? 1 : (initialDist < -0.001 ? -1 : 0),
-          motionPlanet,
-          prevMotionLon: initialMotionLon,
-          prevMotionSign: null,
+          pins: [], active: true, cycleKind: 'aspect',
+          aspectKey: aspectKey,
+          prevSep: target === 0 || target === 180 ? signedDelta(lambdas[ca.a], lambdas[ca.b]) : angularSep(lambdas[ca.a], lambdas[ca.b]),
           startTime: t.getTime()
         };
       }
-      const ts = window.cycleTrackState;
-      const dist = aspectDist(lambdas[ca.a], lambdas[ca.b], target);
-      const distSign = dist > 0.001 ? 1 : (dist < -0.001 ? -1 : 0);
-      if (shouldDropAspectPin(ts, dist, distSign, t.getTime(), aspectKey, target)) {
-        const lonA = Number(lambdas[ca.a]);
-        const lonB = Number(lambdas[ca.b]);
-        let eventLon = lonA;
-        if (target !== 0 && target !== 180) {
-          eventLon = lonB + signedDelta(lonA, lonB) / 2;
-          while (eventLon < 0) eventLon += 360;
-          while (eventLon >= 360) eventLon -= 360;
+      var ts = window.cycleTrackState;
+      var target = Number(ca.deg);
+      var cur, prev = ts.prevSep;
+      if (target === 0) {
+        cur = signedDelta(lambdas[ca.a], lambdas[ca.b]);
+      } else if (target === 180) {
+        // For opposition use signed; crossing ±180 wraps the sign
+        cur = signedDelta(lambdas[ca.a], lambdas[ca.b]);
+      } else {
+        cur = angularSep(lambdas[ca.a], lambdas[ca.b]);
+      }
+      var crossed = false;
+      if (target === 0) {
+        // Sign flip from positive to negative (or vice versa) = crossing 0
+        var curSign = cur > 0 ? 1 : (cur < 0 ? -1 : 0);
+        var prevSign = prev > 0 ? 1 : (prev < 0 ? -1 : 0);
+        if (curSign !== 0 && prevSign !== 0 && prevSign !== curSign) crossed = true;
+      } else if (target === 180) {
+        // For opposition: track when abs separation crosses 180
+        var absCur = Math.abs(cur);
+        var absPrev = Math.abs(prev);
+        crossed = absPrev < target && absCur >= target;
+      } else {
+        // For 60/90/120: absolute separation passes through target
+        crossed = (prev < target && cur >= target) || (prev >= target && cur < target);
+      }
+      if (crossed) {
+        var eventLon = (Number(lambdas[ca.a]) + Number(lambdas[ca.b])) / 2;
+        // Universal cooldown: skip if ANY pin within 5 deg
+        var _ac = false;
+        for (var _j = ts.pins.length - 1; _j >= 0; _j--) {
+          if (Math.abs(angularSep(eventLon, ts.pins[_j].lon)) < 5) { _ac = true; break; }
         }
-        const involvesSun = (ca.a === 'sun' || ca.b === 'sun');
-        const isSunConj = involvesSun && target === 0;
-        const motionOk = !isSunConj || (ts.prevMotionSign !== null && ts.prevMotionSign > 0);
-        if (motionOk) {
-          ts.pins.push({ lon: eventLon, type: 'major_aspect', aspect: target, aspectKey, label: ca.label, color: ca.color, time: t.getTime(), a: ca.a, b: ca.b });
+        if (!_ac) {
+          ts.pins.push({ lon: eventLon % 360, type: 'major_aspect', aspect: target, label: ca.label, color: ca.color, time: t.getTime() });
         }
       }
-      const motionLon = ts.motionPlanet && Number.isFinite(Number(lambdas[ts.motionPlanet])) ? Number(lambdas[ts.motionPlanet]) : null;
-      if (motionLon !== null && ts.prevMotionLon !== null) {
-        const motionDLon = signedDelta(motionLon, ts.prevMotionLon);
-        const motionSign = motionDLon > 0.001 ? 1 : (motionDLon < -0.001 ? -1 : 0);
-        if (motionSign !== 0) ts.prevMotionSign = motionSign;
-      }
-      ts.prevMotionLon = motionLon;
-      ts.prevAspectDist = dist;
-      if (distSign !== 0) ts.prevAspectDistSign = distSign;
+      ts.prevSep = cur;
       window.cycleTrackState = ts;
       return;
     }
@@ -1867,25 +1805,30 @@
       const curLon = Number(lambdas[cp]);
       const sunLon = lambdas.sun != null ? Number(lambdas.sun) : NaN;
 
-      if (cm === 'retrograde' || cm === 'both') {
-        if (ts.prevLon != null) {
-          const dLon = signedDelta(curLon, ts.prevLon);
-          const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
-          if (ts.prevSign !== null && sign !== 0 && ts.prevSign !== sign) {
-            const type = sign === -1 ? 'retrograde_station' : 'direct_station';
-            ts.pins.push({ lon: curLon, type, time: t.getTime() });
+      if ((cm === 'retrograde' || cm === 'both') && ts.prevLon != null) {
+        const dLon = signedDelta(curLon, ts.prevLon);
+        const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
+        if (ts.prevSign !== null && sign !== 0 && ts.prevSign !== sign) {
+          // Only retrograde stations (entry into retrograde, not exit)
+          if (sign === -1) {
+            var _anyClose = false;
+            for (var _k = ts.pins.length - 1; _k >= 0; _k--) {
+              if (Math.abs(signedDelta(curLon, ts.pins[_k].lon)) < 10) { _anyClose = true; break; }
+            }
+            if (!_anyClose) {
+              ts.pins.push({ lon: curLon, type: 'retrograde_station', time: t.getTime() });
+            }
           }
-          if (sign !== 0) ts.prevSign = sign;
         }
-        ts.prevLon = curLon;
+        if (sign !== 0) ts.prevSign = sign;
       } else {
         if (ts.prevLon != null) {
           const dLon = signedDelta(curLon, ts.prevLon);
           const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
           if (sign !== 0) ts.prevSign = sign;
         }
-        ts.prevLon = curLon;
       }
+      ts.prevLon = curLon;
 
       if ((cm === 'synodic' || cm === 'both') && Number.isFinite(sunLon)) {
         const diff = signedDelta(curLon, sunLon);
@@ -1896,7 +1839,16 @@
         const distSign = dist > 0.001 ? 1 : (dist < -0.001 ? -1 : 0);
         if (ts.prevSunDiffSign !== null && distSign !== 0 && ts.prevSunDiffSign !== distSign) {
           const isPrograde = ts.prevSign !== null && ts.prevSign > 0;
-          if (!isInner || isPrograde) ts.pins.push({ lon: curLon, type: isInner ? 'conjunction' : 'opposition', time: t.getTime() });
+          if (!isInner || isPrograde) {
+            // Universal cooldown: skip if ANY pin within 5 deg
+            var _sc = false;
+            for (var _m = ts.pins.length - 1; _m >= 0; _m--) {
+              if (Math.abs(signedDelta(curLon, ts.pins[_m].lon)) < 10) { _sc = true; break; }
+            }
+            if (!_sc) {
+              ts.pins.push({ lon: curLon, type: isInner ? 'conjunction' : 'opposition', time: t.getTime() });
+            }
+          }
         }
         if (distSign !== 0) ts.prevSunDiffSign = distSign;
       }
@@ -1913,7 +1865,6 @@
     const cp = window.cyclePlanet;
     const ca = window.cycleAspect;
     const cycleActive = (cm && cp) || (ca && ca.a && ca.b && Number.isFinite(Number(ca.deg)));
-    updateCycleSelectedBadge();
 
     if (!cycleActive) { cyclePinGroup.style.display = 'none'; return; }
     cyclePinGroup.style.display = '';
@@ -1999,9 +1950,11 @@
       }
     }
 
-    // Match the generational wheel: show retrograde station pins only.
-    // Direct stations are tracked internally for motion state, but not drawn.
-    if (retroPins.length >= 1) drawPins(retroPins, 'rgba(200,100,160,0.85)', 5, true);
+    // For single-planet cycles: connect all station pins chronologically as one path
+    if (retroPins.length + directPins.length > 0) {
+      var allStations = retroPins.concat(directPins);
+      drawPins(allStations, 'rgba(200,100,160,0.85)', 5, true);
+    }
     if (synPins.length >= 1) drawPins(synPins, 'rgba(200,200,100,0.85)', 5, false);
     if (aspectPins.length >= 1) drawPins(aspectPins, (ca && ca.color) || 'rgba(232,216,136,0.9)', 5.5, false);
   }
@@ -2120,7 +2073,6 @@
           };
         }
         if (cyclesBtn) cyclesBtn.style.borderColor = aspectValid ? meta.color : "rgba(200,100,160,.6)";
-        updateCycleSelectedBadge();
         closeCyclesModal();
         updatePlanets();
       });
@@ -2133,7 +2085,6 @@
         window.cycleAspect = null;
         window.cycleTrackState = null;
         if (cyclesBtn) cyclesBtn.style.borderColor = "";
-        updateCycleSelectedBadge();
         closeCyclesModal();
         renderCycleOverlay();
       });

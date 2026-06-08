@@ -1279,11 +1279,11 @@
 
 .lunar-phase-row {
   display: grid;
-  grid-template-columns: 44px 80px 50px 20px 38px;
-  gap: 2px;
+  grid-template-columns: 36px 64px 40px 16px 30px;
+  gap: 1px;
   align-items: center;
   padding: 0;
-  min-height: 22px;
+  min-height: 18px;
   line-height: 1;
 }
 
@@ -1301,26 +1301,26 @@
 
 .lunar-phase-name {
   color: rgba(255,255,255,.7);
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 500;
 }
 
 .lunar-phase-date {
   color: rgba(255,255,255,.7);
-  font-size: 11px;
+  font-size: 9px;
 }
 
 .lunar-phase-time {
   color: rgba(255,255,255,.7);
-  font-size: 11px;
+  font-size: 9px;
 }
 
 .lunar-phase-position {
-  font-size: 12px !important;
+  font-size: 10px !important;
   font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif !important;
   font-weight: 400;
   text-align: center;
-  width: 20px;
+  width: 16px;
   justify-content: center;
 }
 
@@ -1331,7 +1331,7 @@
 }
 
 .lunar-phase-position .sign-glyph {
-  font-size: 14px !important;
+  font-size: 11px !important;
 }
 
 .lunar-phase-position.lunar-fire .sign-glyph { color: #d32f2f !important; }
@@ -1342,7 +1342,7 @@
 /* Degree text always white, separate column */
 .lunar-phase-degree {
   color: rgba(255,255,255,.7) !important;
-  font-size: 11px !important;
+  font-size: 9px !important;
   font-weight: 400 !important;
   text-align: right;
 }

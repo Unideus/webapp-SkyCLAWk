@@ -89,25 +89,6 @@
 		  .cycle-mode-btn.active[data-mode="retrograde"] { background:rgba(200,100,160,.25) !important; border-color:rgba(200,100,160,.4) !important; color:#e0a0d0 !important; }
 		  .cycle-mode-btn.active[data-mode="synodic"] { background:rgba(200,200,100,.15) !important; border-color:rgba(200,200,100,.3) !important; color:#e8d888 !important; }
 		  .cycle-mode-btn.active[data-mode="both"] { background:rgba(255,255,255,.08) !important; border-color:rgba(255,255,255,.2) !important; color:rgba(255,255,255,.7) !important; }
-		  #cycle-selected-badge {
-			position: absolute;
-			top: 20px;
-			left: 20px;
-			z-index: 4200;
-			display: none;
-			align-items: center;
-			gap: 8px;
-			padding: 7px 11px;
-			border-radius: 10px;
-			background: rgba(0,0,0,0.72);
-			border: 1px solid rgba(255,255,255,0.26);
-			box-shadow: 0 0 18px rgba(0,0,0,0.55);
-			color: rgba(255,255,255,0.9);
-			font-family: Georgia, 'Times New Roman', serif;
-			pointer-events: none;
-		  }
-		  #cycle-selected-badge .cycle-selected-glyphs { font-size: 32px; line-height: 1; color: #e8d888; }
-		  #cycle-selected-badge .cycle-selected-label { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,0.78); }
 		</style>
 
 
@@ -115,6 +96,7 @@
 
 	</head>
 <body>
+
 	<div class="sidebar">
 	<div class="menu-title">
 	  <div class="menu-main-title">Zodi-Yuga Skyclock</div>
@@ -416,10 +398,6 @@
 	<!-- ================= MAIN CANVAS ================= -->
 
 	<div class="main">
-	  <div id="cycle-selected-badge" aria-live="polite">
-		<span class="cycle-selected-glyphs"></span>
-		<span class="cycle-selected-label"></span>
-	  </div>
 	  <div id="scale-wrapper">
 		<div class="container">
 
@@ -945,7 +923,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="49.4" fill="#22c55e">♀</text>
+				  font-size="38" fill="#22c55e">♀</text>
 		  </g>
 		</g>
 
@@ -956,7 +934,7 @@
 		  </g>
 		  <g class="planet-label">
 			<text text-anchor="middle" dominant-baseline="middle"
-				  font-size="49.4" fill="#ef4444">♂</text>
+				  font-size="38" fill="#ef4444">♂</text>
 		  </g>
 		</g>
 
