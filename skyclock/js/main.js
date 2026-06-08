@@ -465,7 +465,7 @@
   // -----------------------------
   // Planets placement + labels
   // -----------------------------
-  const PLANET_LABEL_OFFSET = 22;
+  const PLANET_LABEL_OFFSET = 36;
 
   function placePlanetWithLabel(group, lambdaDeg) {
     if (!group) return;
@@ -478,6 +478,8 @@
 
     if (mode === "precession" && group.id === "planet-sun") {
       group.setAttribute("transform", `rotate(${-state.eclAngle}) translate(${px}, ${py})`);
+    } else if (mode === "yuga" && group.id === "planet-sun") {
+      group.setAttribute("transform", `rotate(${state.yugaOrbitAngle + 60}) translate(${px}, ${py})`);
     } else {
       group.setAttribute("transform", `translate(${px}, ${py})`);
     }
@@ -889,10 +891,9 @@
       return;
     }
 
-    // yuga orbit derived only from simDays
+    // yuga orbit tracks Sun's movement — NCP rotates with Sun
     if (mode === "yuga") {
-      const { sun } = getGeocentricLongitudes(state.simDays);
-      computeYugaOrbitAngleFromSun(sun);
+      state.yugaOrbitAngle = norm360(300 - state.simDays);
     } else {
       state.yugaOrbitAngle = 0;
     }
@@ -1009,8 +1010,7 @@
 
 		if (mode === "yuga") {
 		  const l = getGeocentricLongitudes(state.simDays);
-		  const SUN_YUGA_VISUAL_OFFSET_DEG = 286.5;
-		  return { ...l, sun: norm360(l.sun - SUN_YUGA_VISUAL_OFFSET_DEG) };
+		  return { ...l, sun: SPECIAL_MODE_SUN_L0 };
 		}
 
 		return getGeocentricLongitudes(state.simDays);
@@ -1112,6 +1112,10 @@
 		signIdx: sunSignIdx,
 		bandId: bandId || "—",
 	  });
+
+	  // Cycle overlay tracking + rendering
+	  updateCycleTracking(lambdas);
+	  renderCycleOverlay();
 	}
 
   // -----------------------------
@@ -1659,6 +1663,7 @@
     // mode circle + mode inputs
     wireModeCircle();
     wireModeInputs();
+    wireCyclesModal();
 
     // popups + intro
     wireTropicalPopup();
@@ -1674,6 +1679,442 @@
 
     state.lastTime = performance.now();
     requestAnimationFrame(animationLoop);
+  }
+
+
+  // =========================================================
+  // CYCLE OVERLAY STATE
+  // =========================================================
+  window.enabledPlanets = window.enabledPlanets || {
+    sun: true, moon: true, mercury: true, venus: true, mars: true,
+    jupiter: true, saturn: true, uranus: true, neptune: true, pluto: true
+  };
+  window.cycleMode = '';
+  window.cyclePlanet = '';
+  window.cycleAspect = window.cycleAspect || null;
+  window.cycleTrackState = null;
+
+  const CYCLE_ASPECT_META = {
+    0:   { label: '☌', name: 'Conjunction', color: 'rgba(232,216,136,0.92)' },
+    60:  { label: '✶', name: 'Sextile',     color: 'rgba(80,170,255,0.88)' },
+    90:  { label: '□', name: 'Square',      color: 'rgba(255,80,80,0.90)' },
+    120: { label: '△', name: 'Trine',       color: 'rgba(80,210,130,0.88)' },
+    180: { label: '☍', name: 'Opposition',  color: 'rgba(255,145,70,0.90)' }
+  };
+  const PLANET_GLYPH = {
+    sun: '☉', moon: '☽', mercury: '☿', venus: '♀',
+    mars: '♂', jupiter: '♃', saturn: '♄',
+    uranus: '♅', neptune: '♆', pluto: '♇'
+  };
+  const R_ECL = 340;
+
+  function lonToXY(lambdaDeg) {
+    const rad = Math.PI - (lambdaDeg * Math.PI / 180);
+    return { x: R_ECL * Math.cos(rad), y: R_ECL * Math.sin(rad) };
+  }
+
+  function signedDelta(a, b) {
+    let d = Number(a) - Number(b);
+    while (d > 180) d -= 360;
+    while (d < -180) d += 360;
+    return d;
+  }
+
+  function angularSep(aLon, bLon) {
+    var d = Math.abs(Number(aLon) - Number(bLon)) % 360;
+    if (d > 180) d = 360 - d;
+    return d;
+  }
+
+  function updateCycleTracking(lambdas) {
+    const cm = window.cycleMode;
+    const cp = window.cyclePlanet;
+    const ca = window.cycleAspect;
+    const aspectActive = ca && ca.a && ca.b && Number.isFinite(Number(ca.deg));
+    if (!cm && !cp && !aspectActive) { window.cycleTrackState = null; return; }
+
+    if (!lambdas) return;
+    // Use the actual sim date so Venus stations align with planet position
+    const t = new Date(state.epochMs + state.simDays * 86400000);
+    const cyclePinGroup = document.getElementById("cycle-pins-group");
+    if (!cyclePinGroup) return;
+
+    if (aspectActive && lambdas[ca.a] != null && lambdas[ca.b] != null) {
+      var aspectKey = ca.a + '|' + ca.b + '|' + ca.deg;
+      var target = Number(ca.deg);
+      if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'aspect'
+          || window.cycleTrackState.aspectKey !== aspectKey) {
+        window.cycleTrackState = {
+          pins: [], active: true, cycleKind: 'aspect',
+          aspectKey: aspectKey,
+          prevSep: target === 0 || target === 180 ? signedDelta(lambdas[ca.a], lambdas[ca.b]) : angularSep(lambdas[ca.a], lambdas[ca.b]),
+          startTime: t.getTime()
+        };
+      }
+      var ts = window.cycleTrackState;
+      var target = Number(ca.deg);
+      var cur, prev = ts.prevSep;
+      if (target === 0) {
+        cur = signedDelta(lambdas[ca.a], lambdas[ca.b]);
+      } else if (target === 180) {
+        // For opposition use signed; crossing ±180 wraps the sign
+        cur = signedDelta(lambdas[ca.a], lambdas[ca.b]);
+      } else {
+        cur = angularSep(lambdas[ca.a], lambdas[ca.b]);
+      }
+      var crossed = false;
+      if (target === 0) {
+        // Sign flip from positive to negative (or vice versa) = crossing 0
+        var curSign = cur > 0 ? 1 : (cur < 0 ? -1 : 0);
+        var prevSign = prev > 0 ? 1 : (prev < 0 ? -1 : 0);
+        if (curSign !== 0 && prevSign !== 0 && prevSign !== curSign) crossed = true;
+      } else if (target === 180) {
+        // For opposition: track when abs separation crosses 180
+        var absCur = Math.abs(cur);
+        var absPrev = Math.abs(prev);
+        crossed = absPrev < target && absCur >= target;
+      } else {
+        // For 60/90/120: absolute separation passes through target
+        crossed = (prev < target && cur >= target) || (prev >= target && cur < target);
+      }
+      if (crossed) {
+        var eventLon = (Number(lambdas[ca.a]) + Number(lambdas[ca.b])) / 2;
+        // Universal cooldown: skip if ANY pin within 5 deg
+        var _ac = false;
+        for (var _j = ts.pins.length - 1; _j >= 0; _j--) {
+          if (Math.abs(angularSep(eventLon, ts.pins[_j].lon)) < 5) { _ac = true; break; }
+        }
+        if (!_ac) {
+          ts.pins.push({ lon: eventLon % 360, type: 'major_aspect', aspect: target, label: ca.label, color: ca.color, time: t.getTime() });
+        }
+      }
+      ts.prevSep = cur;
+      window.cycleTrackState = ts;
+      return;
+    }
+
+    if (cm && cp && lambdas[cp] != null) {
+      if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'single') {
+        window.cycleTrackState = {
+          pins: [], prevLon: Number(lambdas[cp]), prevSign: null,
+          prevSunDiffSign: null, active: true, cycleKind: 'single',
+          cycleMode: cm, cyclePlanet: cp, startTime: t.getTime()
+        };
+      }
+      const ts = window.cycleTrackState;
+      const curLon = Number(lambdas[cp]);
+      const sunLon = lambdas.sun != null ? Number(lambdas.sun) : NaN;
+
+      if ((cm === 'retrograde' || cm === 'both') && ts.prevLon != null) {
+        const dLon = signedDelta(curLon, ts.prevLon);
+        const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
+        if (ts.prevSign !== null && sign !== 0 && ts.prevSign !== sign) {
+          // Only retrograde stations (entry into retrograde, not exit)
+          if (sign === -1) {
+            var _anyClose = false;
+            for (var _k = ts.pins.length - 1; _k >= 0; _k--) {
+              if (Math.abs(signedDelta(curLon, ts.pins[_k].lon)) < 10) { _anyClose = true; break; }
+            }
+            if (!_anyClose) {
+              ts.pins.push({ lon: curLon, type: 'retrograde_station', time: t.getTime() });
+            }
+          }
+        }
+        if (sign !== 0) ts.prevSign = sign;
+      } else {
+        if (ts.prevLon != null) {
+          const dLon = signedDelta(curLon, ts.prevLon);
+          const sign = dLon > 0.001 ? 1 : (dLon < -0.001 ? -1 : 0);
+          if (sign !== 0) ts.prevSign = sign;
+        }
+      }
+      ts.prevLon = curLon;
+
+      if ((cm === 'synodic' || cm === 'both') && Number.isFinite(sunLon)) {
+        const diff = signedDelta(curLon, sunLon);
+        const isInner = ['mercury','venus'].includes(cp);
+        const target = isInner ? 0 : 180;
+        let dist = diff - target;
+        while (dist > 180) dist -= 360; while (dist < -180) dist += 360;
+        const distSign = dist > 0.001 ? 1 : (dist < -0.001 ? -1 : 0);
+        if (ts.prevSunDiffSign !== null && distSign !== 0 && ts.prevSunDiffSign !== distSign) {
+          const isPrograde = ts.prevSign !== null && ts.prevSign > 0;
+          if (!isInner || isPrograde) {
+            // Universal cooldown: skip if ANY pin within 5 deg
+            var _sc = false;
+            for (var _m = ts.pins.length - 1; _m >= 0; _m--) {
+              if (Math.abs(signedDelta(curLon, ts.pins[_m].lon)) < 10) { _sc = true; break; }
+            }
+            if (!_sc) {
+              ts.pins.push({ lon: curLon, type: isInner ? 'conjunction' : 'opposition', time: t.getTime() });
+            }
+          }
+        }
+        if (distSign !== 0) ts.prevSunDiffSign = distSign;
+      }
+      window.cycleTrackState = ts;
+    }
+  }
+
+  function renderCycleOverlay() {
+    const cyclePinGroup = document.getElementById("cycle-pins-group");
+    if (!cyclePinGroup) return;
+    while (cyclePinGroup.firstChild) cyclePinGroup.removeChild(cyclePinGroup.firstChild);
+
+    const cm = window.cycleMode;
+    const cp = window.cyclePlanet;
+    const ca = window.cycleAspect;
+    const cycleActive = (cm && cp) || (ca && ca.a && ca.b && Number.isFinite(Number(ca.deg)));
+
+    if (!cycleActive) { cyclePinGroup.style.display = 'none'; return; }
+    cyclePinGroup.style.display = '';
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const ts = window.cycleTrackState;
+    if (!ts || !ts.pins || ts.pins.length === 0) return;
+
+    const retroPins = ts.pins.filter(p => p.type === 'retrograde_station');
+    const directPins = ts.pins.filter(p => p.type === 'direct_station');
+    const synPins = ts.pins.filter(p => p.type === 'conjunction' || p.type === 'opposition');
+    const aspectPins = ts.pins.filter(p => p.type === 'major_aspect');
+
+    // Draw retrograde arcs: connect chronologically, keeping each R-D-R-D segment separate
+    // so the chord traces the actual retrograde loop on the ecliptic
+    function makeUnwrapped(arr) {
+      var out = arr.map(function(p){ return {lon: p.lon, color: p.color || null}; });
+      if (out.length < 2) return out;
+      out.sort(function(a,b) { return a.lon - b.lon; });
+      var maxGap = 0, gapAt = 0;
+      for (var i = 1; i < out.length; i++) {
+        var g = out[i].lon - out[i-1].lon;
+        if (g > maxGap) { maxGap = g; gapAt = i; }
+      }
+      var wrapGap = 360 - out[out.length-1].lon + out[0].lon;
+      if (wrapGap > maxGap) { maxGap = wrapGap; gapAt = 0; }
+      if (gapAt > 0) { out = out.slice(gapAt).concat(out.slice(0, gapAt)); }
+      for (var i = 1; i < out.length; i++) {
+        while (out[i].lon < out[i-1].lon - 180) out[i].lon += 360;
+        while (out[i].lon > out[i-1].lon + 180) out[i].lon -= 360;
+      }
+      return out;
+    }
+
+    function drawPins(pins, color, r, connectChronologically) {
+      if (pins.length === 0) return;
+      if (connectChronologically) {
+        // Sort by time and connect in order
+        var ordered = pins.slice().sort(function(a,b) { return a.time - b.time; });
+        for (var i = 1; i < ordered.length; i++) {
+          var p0 = lonToXY(ordered[i-1].lon);
+          var p1 = lonToXY(ordered[i].lon);
+          var line = document.createElementNS(ns, 'line');
+          line.setAttribute('x1', p0.x.toFixed(1));
+          line.setAttribute('y1', p0.y.toFixed(1));
+          line.setAttribute('x2', p1.x.toFixed(1));
+          line.setAttribute('y2', p1.y.toFixed(1));
+          line.setAttribute('stroke', ordered[i].color || color);
+          line.setAttribute('stroke-width', '2.5');
+          line.setAttribute('stroke-linecap', 'round');
+          line.setAttribute('opacity', '0.7');
+          cyclePinGroup.appendChild(line);
+        }
+      } else {
+        // Group by longitude (for synodic/aspect: unwrap 0/360 and connect)
+        var ordered = makeUnwrapped(pins);
+        for (var i = 1; i < ordered.length; i++) {
+          var p0 = lonToXY(ordered[i-1].lon);
+          var p1 = lonToXY(ordered[i].lon);
+          var line = document.createElementNS(ns, 'line');
+          line.setAttribute('x1', p0.x.toFixed(1));
+          line.setAttribute('y1', p0.y.toFixed(1));
+          line.setAttribute('x2', p1.x.toFixed(1));
+          line.setAttribute('y2', p1.y.toFixed(1));
+          line.setAttribute('stroke', ordered[i].color || color);
+          line.setAttribute('stroke-width', '2.5');
+          line.setAttribute('stroke-linecap', 'round');
+          line.setAttribute('opacity', '0.7');
+          cyclePinGroup.appendChild(line);
+        }
+      }
+      for (var i = 0; i < pins.length; i++) {
+        var pt = lonToXY(pins[i].lon);
+        var circle = document.createElementNS(ns, 'circle');
+        circle.setAttribute('cx', pt.x.toFixed(1));
+        circle.setAttribute('cy', pt.y.toFixed(1));
+        circle.setAttribute('r', String(r));
+        circle.setAttribute('fill', pins[i].color || color);
+        circle.setAttribute('stroke', 'rgba(255,255,255,0.35)');
+        circle.setAttribute('stroke-width', '1');
+        circle.setAttribute('opacity', '0.85');
+        cyclePinGroup.appendChild(circle);
+      }
+    }
+
+    // For single-planet cycles: connect all station pins chronologically as one path
+    if (retroPins.length + directPins.length > 0) {
+      var allStations = retroPins.concat(directPins);
+      drawPins(allStations, 'rgba(200,100,160,0.85)', 5, true);
+    }
+    if (synPins.length >= 1) drawPins(synPins, 'rgba(200,200,100,0.85)', 5, false);
+    if (aspectPins.length >= 1) drawPins(aspectPins, (ca && ca.color) || 'rgba(232,216,136,0.9)', 5.5, false);
+  }
+
+  // =========================================================
+  // CYCLES MODAL WIRING
+  // =========================================================
+  function wireCyclesModal() {
+    const cyclesBtn = document.getElementById("cyclesBtn");
+    const cyclesModal = document.getElementById("cyclesModal");
+    const cyclesPlanetSelect = document.getElementById("cyclesPlanetSelect");
+    const cyclesAspectSelect = document.getElementById("cyclesAspectSelect");
+    const cyclesAspectPlanetA = document.getElementById("cyclesAspectPlanetA");
+    const cyclesAspectPlanetB = document.getElementById("cyclesAspectPlanetB");
+    const cyclesApplyBtn = document.getElementById("cyclesApplyBtn");
+    const cyclesClearBtn = document.getElementById("cyclesClearBtn");
+
+    if (!cyclesBtn || !cyclesModal) return;
+
+    function updateCyclesSectionState() {
+      const aspectOn = !!(cyclesAspectSelect && cyclesAspectSelect.value !== "");
+      const aspectBlock = cyclesAspectSelect ? cyclesAspectSelect.closest(".cyclesAspectBlock") : null;
+      const singleSelect = cyclesPlanetSelect;
+      const singleLabel = singleSelect ? singleSelect.previousElementSibling : null;
+      const singleModes = singleSelect ? singleSelect.nextElementSibling : null;
+      [singleLabel, singleSelect, singleModes].forEach(function(el) {
+        if (!el) return;
+        el.style.opacity = aspectOn ? "0.35" : "1";
+        el.style.filter = aspectOn ? "grayscale(0.85)" : "";
+      });
+      if (aspectBlock) {
+        aspectBlock.style.opacity = aspectOn ? "1" : "0.42";
+        aspectBlock.style.filter = aspectOn ? "" : "grayscale(0.8)";
+      }
+    }
+
+    if (cyclesAspectSelect) {
+      cyclesAspectSelect.addEventListener("change", updateCyclesSectionState);
+    }
+
+    function openCyclesModal() {
+      if (!cyclesModal) return;
+      cyclesModal.setAttribute("aria-hidden", "false");
+      if (cyclesBtn) {
+        const rect = cyclesBtn.getBoundingClientRect();
+        const modalCard = cyclesModal.querySelector(".cyclesModalCard");
+        if (modalCard) {
+          modalCard.style.position = "fixed";
+          const cardW = modalCard.offsetWidth || 334;
+          const cardH = modalCard.offsetHeight || 313;
+          const pad = 10;
+          const top = Math.max(pad, Math.min(rect.bottom + 4, window.innerHeight - cardH - pad));
+          const left = Math.max(pad, Math.min(rect.left, window.innerWidth - cardW - pad));
+          modalCard.style.top = top + "px";
+          modalCard.style.left = left + "px";
+        }
+      }
+      updateCyclesSectionState();
+    }
+
+    function closeCyclesModal() {
+      if (!cyclesModal) return;
+      cyclesModal.setAttribute("aria-hidden", "true");
+    }
+
+    cyclesBtn.addEventListener("click", function() {
+      openCyclesModal();
+    });
+
+    var cyclesClose = document.getElementById("cyclesClose");
+    if (cyclesClose) cyclesClose.addEventListener("click", closeCyclesModal);
+
+    cyclesModal.addEventListener("click", function(ev) {
+      if (ev.target === cyclesModal) closeCyclesModal();
+    });
+
+    if (cyclesApplyBtn) {
+      cyclesApplyBtn.addEventListener("click", function() {
+        var mode = "";
+        var active = document.querySelector(".cycle-mode-btn.active");
+        if (active && active.dataset.mode) mode = active.dataset.mode;
+        if (!mode) {
+          var first = document.querySelector(".cycle-mode-btn");
+          if (first) { first.classList.add("active"); mode = first.dataset.mode; }
+        }
+
+        var aspectDegRaw = cyclesAspectSelect ? cyclesAspectSelect.value : "";
+        var aspectDeg = aspectDegRaw === "" ? null : Number(aspectDegRaw);
+        var aspectA = cyclesAspectPlanetA ? cyclesAspectPlanetA.value : "";
+        var aspectB = cyclesAspectPlanetB ? cyclesAspectPlanetB.value : "";
+        var aspectValid = Number.isFinite(aspectDeg) && aspectA && aspectB && aspectA !== aspectB;
+        var selectedPlanet = cyclesPlanetSelect ? cyclesPlanetSelect.value : "";
+
+        var meta = CYCLE_ASPECT_META[aspectDeg] || CYCLE_ASPECT_META[0];
+        if (aspectValid) {
+          window.cycleMode = "";
+          window.cyclePlanet = "";
+          window.cycleAspect = { a: aspectA, b: aspectB, deg: aspectDeg, label: meta.label, name: meta.name, color: meta.color };
+          window.cycleTrackState = null;
+        } else {
+          window.cycleMode = mode;
+          window.cyclePlanet = selectedPlanet;
+          window.cycleAspect = null;
+          var curLon = 0;
+          try { var l = getGeocentricLongitudes(state.simDays); curLon = Number(l[selectedPlanet]); } catch(e) {}
+          window.cycleTrackState = {
+            pins: [],
+            prevLon: curLon,
+            prevSign: null,
+            prevSunDiffSign: null,
+            active: true,
+            cycleKind: 'single',
+            cycleMode: mode,
+            cyclePlanet: selectedPlanet,
+            startTime: Date.now()
+          };
+        }
+        if (cyclesBtn) cyclesBtn.style.borderColor = aspectValid ? meta.color : "rgba(200,100,160,.6)";
+        closeCyclesModal();
+        updatePlanets();
+      });
+    }
+
+    if (cyclesClearBtn) {
+      cyclesClearBtn.addEventListener("click", function() {
+        window.cycleMode = "";
+        window.cyclePlanet = "";
+        window.cycleAspect = null;
+        window.cycleTrackState = null;
+        if (cyclesBtn) cyclesBtn.style.borderColor = "";
+        closeCyclesModal();
+        renderCycleOverlay();
+      });
+    }
+
+    document.querySelectorAll(".cycle-mode-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        document.querySelectorAll(".cycle-mode-btn").forEach(function(b) {
+          b.classList.remove("active");
+          b.style.background = "rgba(100,100,100,.15)";
+          b.style.borderColor = "rgba(100,100,100,.3)";
+          b.style.color = "rgba(180,180,180,.5)";
+        });
+        btn.classList.add("active");
+        var mode = btn.dataset.mode;
+        if (mode === "retrograde") {
+          btn.style.background = "rgba(200,100,160,.25)";
+          btn.style.borderColor = "rgba(200,100,160,.4)";
+          btn.style.color = "#e0a0d0";
+        } else if (mode === "synodic") {
+          btn.style.background = "rgba(200,200,100,.15)";
+          btn.style.borderColor = "rgba(200,200,100,.3)";
+          btn.style.color = "#e8d888";
+        } else {
+          btn.style.background = "rgba(255,255,255,.08)";
+          btn.style.borderColor = "rgba(255,255,255,.2)";
+          btn.style.color = "rgba(255,255,255,.7)";
+        }
+      });
+    });
   }
 
   document.addEventListener("DOMContentLoaded", init, { once: true });
