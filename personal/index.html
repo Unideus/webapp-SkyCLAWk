@@ -23,6 +23,7 @@
 	<link href="../css/astro-hud.css?v=46" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
+	<link rel="stylesheet" href="../shared/subscribe-modal.css">
 	</head>
 
 		<body class="personal-page">
@@ -104,13 +105,18 @@
 					<!-- NEW: Dedicated Saturn/Jupiter Conjunction nav (always Sat–Jup) -->
 					<button class="controlBtn uiPill" id="prevSatJupConjBtn">← <span style="font-size:1.28em">♄</span> ☌ <span style="font-size:1.28em">♃</span></button>
 
-					<button class="controlBtn uiPill bumpBtn" id="bumpRevBtn" type="button" title="Bump back (paused only)" disabled>◀</button>
+										<button class="controlBtn uiPill bumpBtn" id="bumpRevBtn" type="button" title="Bump back (paused only)" disabled>◀</button>
 
 					<!-- Pause wrapper: keeps main row intact; positions cycle conj buttons under Pause -->
 					<span class="pauseWrap">
 						<button class="controlBtn uiPill" id="pauseBtn">Pause</button>
 
 						<span class="cycleConjBelow">
+							<button id="wheelFab-small" class="controlBtn uiPill" type="button"
+								aria-haspopup="dialog"
+								aria-controls="wheelModal"
+								aria-expanded="false"
+								aria-label="Open astro wheel">♾ Zodiac Wheel</button>
 							<button class="controlBtn uiPill" id="prevConjBtn">← Conj</button>
 							<button id="cycleFab" class="controlBtn uiPill" type="button"
 								aria-haspopup="dialog"
@@ -1116,6 +1122,7 @@
 	</script>
 
 		<!-- ARCHETYPE LABELS — Div wrapper for reliable position:fixed stacking -->
+<script src="../shared/subscribe-modal.js" defer></script>
 </body>
 	
 </html>

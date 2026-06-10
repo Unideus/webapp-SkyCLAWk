@@ -4,6 +4,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 		<meta http-equiv="Pragma" content="no-cache"/>
 		<meta http-equiv="Expires" content="0"/>
@@ -24,7 +25,8 @@
 	<link href="/planting/planting.css?v=1019" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
-	</head>
+	<link rel="stylesheet" href="../shared/subscribe-modal.css">
+		</head>
 
 		<body>
 
@@ -312,7 +314,7 @@
 					<div class="scaleLabel">Time Scale</div>
 					<div class="scaleBtns">
 						<button class="scaleOpt" type="button" data-scale="skyclock" onclick="window.location.href='/skyclock/'">Skyclock</button>
-						<button class="scaleOpt" type="button" data-scale="generational" onclick="window.location.href='/'">Generational</button>
+						<button class="scaleOpt" type="button" data-scale="generational" onclick="window.location.href='/generational/'">Generational</button>
 						<button class="scaleOpt" type="button" data-scale="personal" onclick="window.location.href='/personal/'">Personal</button>
 						<button class="scaleOpt" type="button" data-scale="planting" onclick="window.location.href='/planting/'">Planting</button>
 					</div>
@@ -485,7 +487,7 @@
 				if (scale === 'skyclock') {
 					window.location.href = '/skyclock/';
 				} else if (scale === 'generational') {
-					window.location.href = '/';
+					window.location.href = '/generational/';
 				} else if (scale === 'personal') {
 					window.location.href = '/personal/';
 				} else if (scale === 'planting') {
@@ -495,6 +497,6 @@
 		});
 	</script>
 
+<script src="../shared/subscribe-modal.js" defer></script>
 </body>
-	
-</html>
+	</html>
