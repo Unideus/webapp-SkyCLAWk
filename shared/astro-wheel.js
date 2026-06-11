@@ -1361,31 +1361,69 @@ for (const k of show) {
     if (!wheelDateValue) return;
     const locTz = window.locationData?.tz;
     const tz = locTz || undefined;
-    const parts = new Intl.DateTimeFormat("en-US", {
+
+    // Date — use historical date for correct day/month/year
+    const dateParts = new Intl.DateTimeFormat("en-US", {
       timeZone: tz,
       weekday: "short", year: "numeric", month: "short", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", hour12: false
     }).formatToParts(t);
-    const g = (t) => parts.find(p => p.type === t)?.value ?? "";
+    const g = (tp) => dateParts.find(p => p.type === tp)?.value ?? "";
     const weekday = g("weekday").toUpperCase();
     const day = g("day");
     const month = g("month").toUpperCase();
     const year = g("year");
-    let hours = parseInt(g("hour"), 10);
-    const minutes = g("minute");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const displayHour = String(hours).padStart(2, "0");
-    let shortTz;
-    if (locTz) {
-      // Use current date for timezone abbreviation to avoid historical anomalies (LMT, weird offsets)
-      const tzParts = new Intl.DateTimeFormat("en-US", { timeZone: locTz, timeZoneName: "short" }).formatToParts(new Date());
-      shortTz = tzParts.find(p => p.type === "timeZoneName")?.value ?? locTz.split("/").pop().replace("_", " ");
-    } else {
-      const parts2 = new Intl.DateTimeFormat(undefined, { timeZoneName: "short" }).formatToParts(new Date());
-      shortTz = parts2.find(p => p.type === "timeZoneName")?.value ?? "";
-    }
+
+    // Timezone offset — compute from a MODERN date so we never get LMT/historical weirdness
+    let offsetMinutes = 0;
+    try {
+      const modernDate = new Date();
+      const utcMs = Date.UTC(
+        modernDate.getUTCFullYear(), modernDate.getUTCMonth(), modernDate.getUTCDate(),
+        t.getUTCHours(), t.getUTCMinutes()
+      );
+      const localMs = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false
+      }).format(new Date(utcMs));
+      // Parse local time from formatted string
+      const [hStr, mStr] = localMs.split(":");
+      const localMinutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
+      const utcMinutes = t.getUTCHours() * 60 + t.getUTCMinutes();
+      offsetMinutes = localMinutes - utcMinutes;
+    } catch(_) {}
+
+    const totalMinutes = t.getUTCHours() * 60 + t.getUTCMinutes() + offsetMinutes;
+    const localHours24 = ((totalMinutes % 1440) + 1440) % 1440;
+    const hours24 = Math.floor(localHours24 / 60);
+    const minutes = String(Math.round(localHours24 % 60)).padStart(2, "0");
+    const ampm = hours24 >= 12 ? "PM" : "AM";
+    let hours12 = hours24 % 12;
+    hours12 = hours12 ? hours12 : 12;
+    const displayHour = String(hours12).padStart(2, "0");
+
+    // Timezone abbreviation — always from a MODERN date
+    let shortTz = "";
+    try {
+      const tzNow = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz, timeZoneName: "short"
+      }).formatToParts(new Date());
+      shortTz = tzNow.find(p => p.type === "timeZoneName")?.value ?? "";
+      // If we got GMT±N or a numeric offset, abbreviate the long name
+      if (!shortTz || /[+-]/.test(shortTz) || /^GMT/.test(shortTz)) {
+        const longTz = new Intl.DateTimeFormat("en-US", {
+          timeZone: tz, timeZoneName: "long"
+        }).formatToParts(new Date());
+        const longName = longTz.find(p => p.type === "timeZoneName")?.value || "";
+        if (longName) {
+          shortTz = longName.split(" ").filter(w => /^[A-Z]/.test(w)).map(w => w[0]).join("");
+        }
+        if (!shortTz) {
+          const iana = new Intl.DateTimeFormat("en-US", { timeZone: tz }).resolvedOptions().timeZone;
+          const p = iana.split("/");
+          shortTz = p[p.length - 1].replace(/_/g, " ");
+        }
+      }
+    } catch(_) { shortTz = ""; }
+
     wheelDateValue.textContent = `${weekday}, ${day} ${month} ${year}, ${displayHour}:${minutes} ${ampm} ${shortTz}`;
   }
 
