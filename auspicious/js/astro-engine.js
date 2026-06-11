@@ -201,18 +201,21 @@ function getMoonPhase(jd, planets) {
 
 function isVoidOfCourse(jd, planets) {
   const moonLon = planets[1].longitude;
+  // Classical orbs for Moon applying: 8° for conj/opp/sqr, 6° for trine/sextile
+  const ORBS = { 0: 8, 60: 6, 90: 8, 120: 6, 180: 8 };
+  const aspectNames = ["conjunction","sextile","square","trine","opposition"];
   for (const pid of [0,2,3,4,5,6]) {
     const plon = planets[pid].longitude;
     for (const aspDeg of [0, 60, 90, 120, 180]) {
       const targetLon = norm(plon + aspDeg);
       const sep = norm(targetLon - moonLon);
-      if (sep > 0 && sep <= 33) {
-        const aspectNames = ["conjunction","sextile","square","trine","opposition"];
-        return { voc: false, note: `Moon applying to ${planets[pid].name} by ${aspectNames[aspDeg/60] || 'aspect'}` };
+      const orb = ORBS[aspDeg];
+      if (sep > 0 && sep <= orb) {
+        return { voc: false, note: `Moon applying to ${planets[pid].name} by ${aspectNames[aspDeg/60] || 'aspect'} (sep ${sep.toFixed(1)}°)` };
       }
     }
   }
-  return { voc: true, note: "Moon is void of course (no applying aspect within 30\u00b0)" };
+  return { voc: true, note: "Moon is void of course (no applying aspect within classical orb)" };
 }
 
 function computeAspects(planets) {
@@ -276,6 +279,47 @@ function checkFixedStarConjunctions(ascDeg, planets, orb = 2.0) {
   return conjunctions;
 }
 
+function computeSunDeclination(jd) {
+  // Compute solar ecliptic longitude and declination for a given JD
+  const T = (jd - 2451545.0) / 36525;            // Julian centuries from J2000
+  const M = norm(357.5291 + 35999.0503 * T);      // Mean anomaly (deg)
+  const Mrad = M * Math.PI / 180;
+  const C = (1.9146 - 0.0048 * T) * Math.sin(Mrad) + 0.0200 * Math.sin(2 * Mrad);
+  const sunLon = norm(280.4665 + 36000.7698 * T + C); // Ecliptic longitude (deg)
+  const obliquity = 23.4393 - 0.0130 * T;           // Obliquity (deg)
+  const oblR = obliquity * Math.PI / 180;
+  const sunLonR = sunLon * Math.PI / 180;
+  const dec = Math.asin(Math.sin(oblR) * Math.sin(sunLonR)); // Declination (rad)
+  const eot = C - 0.0053 * Math.sin(2 * sunLonR);  // Equation of time (days, ~approx)
+  return { dec: dec, eot: eot * 24 / 360 };         // eot in hours
+}
+
+function getSunriseSet(jd, lat) {
+  // Returns sunrise/sunset as day-fraction for the calendar day of jd
+  const phi = lat * Math.PI / 180;
+  const { dec, eot } = computeSunDeclination(jd);
+  const tanProd = Math.tan(phi) * Math.tan(dec);
+  let ha;
+  if (tanProd >= 1) {        // Polar night — no sunrise
+    ha = Math.PI;            // 12h half-day (still lets planetary hours flow)
+  } else if (tanProd <= -1) { // Midnight sun — no sunset
+    ha = 0;
+  } else {
+    ha = Math.acos(-tanProd); // Sunrise hour angle (rad)
+  }
+  // Half-day length in hours
+  const halfDayHours = ha * 12 / Math.PI;
+  const noonOffset = eot;    // Equation of time already in hours
+  // Sunrise/sunset as hours past midnight UTC
+  const sunriseHour = 12 - halfDayHours - noonOffset;
+  const sunsetHour = 12 + halfDayHours - noonOffset;
+  return {
+    sunrise: sunriseHour / 24,
+    sunset: sunsetHour / 24,
+    dayLength: halfDayHours * 2 / 24
+  };
+}
+
 function getPlanetaryHour(jd, lat, lon) {
   const chaldeanOrder = [6, 5, 4, 0, 3, 2, 1];
   const chaldeanNames = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"];
@@ -283,15 +327,17 @@ function getPlanetaryHour(jd, lat, lon) {
   const dt = new Date((jd - 2451545.0) * 86400000 + Date.UTC(2000, 0, 1));
   const dayOfWeek = dt.getUTCDay();
   const dow = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const sunriseJd = Math.floor(jd) + 0.25;
-  const sunsetJd = Math.floor(jd) + 0.75;
-  const dayLength = (sunsetJd - sunriseJd) * 24;
-  const nightLength = 24 - dayLength;
-  const dayHourDur = dayLength / 12;
-  const nightHourDur = nightLength / 12;
+  // Compute sunrise/sunset from solar position for given latitude
+  const { sunrise, sunset, dayLength } = getSunriseSet(jd, lat);
+  const sunriseJd = Math.floor(jd) + sunrise;
+  const sunsetJd = Math.floor(jd) + sunset;
+  const dayLenHours = dayLength * 24;
+  const nightLenHours = 24 - dayLenHours;
+  const dayHourDur = dayLenHours / 12;
+  const nightHourDur = nightLenHours / 12;
   const hoursSinceSunrise = (jd - sunriseJd) * 24;
   let rulerIdx;
-  if (hoursSinceSunrise >= 0 && hoursSinceSunrise < dayLength) {
+  if (hoursSinceSunrise >= 0 && hoursSinceSunrise < dayLenHours) {
     const hourIdx = Math.floor(hoursSinceSunrise / dayHourDur);
     rulerIdx = ((weekdayRulers[dow] || 0) + hourIdx) % 7;
   } else {

@@ -1,42 +1,41 @@
 // js/main.js — Vite entry point
-// Boots Swiss Ephemeris using the full WASI class API (same approach as Timeline app)
-// The @fusionstrings/swiss-eph/wasi-loader provides instantiate() which returns
-// a SwissEph class instance with swe_julday, swe_calc_ut, swe_houses_ex2, etc.
-import { Constants } from "@fusionstrings/swiss-eph/wasi";
-import { instantiate } from "@fusionstrings/swiss-eph/wasi-loader";
-import { initSWE, computeChart, formatChart, PLANET_NAMES, PLANET_SYMBOLS, SIGN_NAMES } from './astro-engine.js';
-import { TOPICS, scoreMoment, findBestTime } from './rules-engine.js';
+// Boots Swiss Ephemeris from local WASM copy
+
+import { Constants, SwissEph, load } from "../../node_modules/@fusionstrings/swiss-eph/src/main.js";
+import { initSWE, computeChart, formatChart, PLANET_NAMES, PLANET_SYMBOLS, SIGN_NAMES } from "./astro-engine.js";
+import { TOPICS, scoreMoment, findBestTime } from "./rules-engine.js";
 
 async function boot() {
   try {
-    // Load the WASM binary and instantiate SwissEph
-    const eph = await instantiate();
+    // WASM is copied to /wasm/swiss_eph.wasm (via public/ directory, served by Vite)
+    const wasmUrl = new URL("/auspicious/wasm/swiss_eph.wasm", window.location.origin);
+    const resp = await fetch(wasmUrl);
+    if (!resp.ok) throw new Error("WASM fetch failed: " + resp.status);
+    const wasmModule = await WebAssembly.compile(await resp.arrayBuffer());
+    const eph = new SwissEph(wasmModule);
 
-    // Build the swe wrapper object that astro-engine's initSWE expects.
-    // The astro-engine checks for swe_calc_ut / swe_julday / swe_houses_ex2
-    // so we wrap the SwissEph class methods.
     const swe = {
       swe_calc_ut: (jd_ut, ipl, iflag) => {
-        try {
-          return eph.swe_calc_ut(jd_ut, ipl, iflag);
-        } catch(e) {
-          return null;
-        }
+        try { return eph.swe_calc_ut(jd_ut, ipl, iflag); }
+        catch(e) { return null; }
       },
       swe_julday: (y, m, d, hr, greg) => eph.swe_julday(y, m, d, hr, greg),
       swe_houses: (jd_ut, lat, lon, hsys) => eph.swe_houses_ex2(jd_ut, lat, lon, hsys),
       swe_set_ephe_path: (p) => {
-        if (typeof eph.swe_set_ephe_path === 'function') eph.swe_set_ephe_path(p);
+        if (typeof eph.set_ephe_path === "function") eph.set_ephe_path(p);
       },
     };
 
     initSWE(swe, Constants);
     console.log("[SWE] ready");
+    const st = document.getElementById("sweStatus");
+    if (st) { st.style.display = "block"; st.style.background = "rgba(74,222,128,0.12)"; st.style.border = "1px solid #4ade80"; st.style.color = "#4ade80"; st.textContent = "\u2713 Swiss Ephemeris loaded"; }
   } catch(err) {
     console.warn("[SWE] init failed, using fallback ephemeris:", err);
+    const st = document.getElementById("sweStatus");
+    if (st) { st.style.display = "block"; st.style.background = "rgba(249,113,113,0.12)"; st.style.border = "1px solid #f87171"; st.style.color = "#f87171"; st.textContent = "\u26a0 Swiss Ephemeris failed to load. Calculations use approximate positions and may be unreliable."; }
   }
 
-  // Expose globals that index.html inline scripts reference
   window.TOPICS = TOPICS;
   window.scoreMoment = scoreMoment;
   window.findBestTime = findBestTime;
@@ -45,7 +44,6 @@ async function boot() {
   window.SIGN_NAMES = SIGN_NAMES;
   window.formatChart = formatChart;
 
-  // Populate topic dropdowns
   ['topic-find','topic-check'].forEach(id => {
     const sel = document.getElementById(id);
     if (sel) {
@@ -53,7 +51,7 @@ async function boot() {
     }
   });
 
-  window.dispatchEvent(new Event('auspicious-ready'));
+  window.dispatchEvent(new Event("auspicious-ready"));
 }
 
 boot().catch(err => console.error("[Auspicious] boot failed:", err));
