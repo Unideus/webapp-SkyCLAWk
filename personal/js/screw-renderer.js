@@ -673,6 +673,52 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			}
 		}
 
+
+		// =========================================================
+		//   TIMELINE GRID — vertical conjunction lines + horizontal
+		//   Y-axis lines, behind the screw (seen through opacity)
+		//   =========================================================
+		(function buildTimelineGrid() {
+			const gridGroup = document.getElementById("timelineGrid");
+			if (!gridGroup) return;
+			gridGroup.innerHTML = "";
+
+			const ns = "http://www.w3.org/2000/svg";
+			const X_MIN = MINX, X_MAX = MAXX;
+			const SCREW_TOP = 0;
+			const SCREW_BOTTOM = CANON.TIMELINE_Y;
+
+			// ---- 1) Vertical dashed lines at each conjunction position ----
+			for (let x = X_MIN; x <= X_MAX; x += PX_PER_MAJOR) {
+				const vLine = document.createElementNS(ns, "line");
+				vLine.setAttribute("x1", x);
+				vLine.setAttribute("x2", x);
+				vLine.setAttribute("y1", SCREW_TOP);
+				vLine.setAttribute("y2", SCREW_BOTTOM);
+				vLine.setAttribute("stroke", "rgba(255,255,255,0.35)");
+				vLine.setAttribute("stroke-width", "2");
+				vLine.setAttribute("stroke-dasharray", "6,4");
+				vLine.setAttribute("pointer-events", "none");
+				gridGroup.appendChild(vLine);
+			}
+
+			// ---- 2) Horizontal lines at 20-y Y-axis increments ----
+			const Y_COUNT = 4;  // 4 bands per conjunction cycle (prophet/nomad/hero/artist)
+			const Y_STEP = SCREW_BOTTOM / Y_COUNT;
+			for (let i = 1; i < Y_COUNT; i++) {  // skip y=0 (top) and y=SCREW_BOTTOM (axis)
+				const y = i * Y_STEP;
+				const hLine = document.createElementNS(ns, "line");
+				hLine.setAttribute("x1", X_MIN);
+				hLine.setAttribute("x2", X_MAX);
+				hLine.setAttribute("y1", y);
+				hLine.setAttribute("y2", y);
+				hLine.setAttribute("stroke", "rgba(255,255,255,0.25)");
+				hLine.setAttribute("stroke-width", "1");
+				hLine.setAttribute("pointer-events", "none");
+				gridGroup.appendChild(hLine);
+			}
+		})();
+
 	/* =========================================================
 		   SECTION 09.5 — SAECULUM WAVE (STRUCTURAL TIME PHASE)
 		   ---------------------------------------------------------
@@ -945,8 +991,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				const GAP = 6;
 
 				// Bands live ABOVE the screw
-				const Y_BASE = -H;
-				const Y_OVER = -(H * 2 + GAP);
+				const Y_BASE = -(H * 2 + GAP);
+				const Y_OVER = -H;
 
 				const OP_BASE = 0.18;
 				const OP_OVER = 0.26;
@@ -1370,7 +1416,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				if (oldShadow) oldShadow.remove();
 
 				if (typeof bands !== "undefined" && bands && Number.isFinite(MINX) && Number.isFinite(MAXX) && Number.isFinite(PX_PER_MAJOR)) {
-					const shadeTop = Y_BASE + H;
+					const shadeTop = Y_OVER + H;
 					const shadeBottom = shadeTop + 14;
 					grad.setAttribute("y1", String(shadeTop));
 					grad.setAttribute("y2", String(shadeBottom));
@@ -1378,7 +1424,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const shadow = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 					shadow.setAttribute("id", "elementBandShadowRect");
 					shadow.setAttribute("x", MINX - PX_PER_MAJOR);
-					shadow.setAttribute("y", String(Y_BASE + H));
+					shadow.setAttribute("y", String(Y_OVER + H));
 					shadow.setAttribute("width", String((MAXX - MINX) + PX_PER_MAJOR * 2));
 					shadow.setAttribute("height", "14");
 					shadow.setAttribute("fill", "url(#elementBandShade)");
