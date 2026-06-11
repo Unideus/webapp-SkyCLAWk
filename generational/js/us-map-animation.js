@@ -494,7 +494,7 @@
   function buildContainer() {
     setDefaultSize();
     container = document.getElementById("usMapContainer");
-    if (!container) return false;
+    if (!container) { container = document.createElement("div"); container.id = "usMapContainer"; document.body.appendChild(container); }
     container.innerHTML = "";
     container.style.cssText = "position:fixed;left:"+Math.round((window.innerWidth-CANVAS_W)/2)+"px;top:"+Math.round((window.innerHeight-CANVAS_H)/2)+"px;z-index:9999998;"+
       "border:1px solid rgba(255,255,255,.15);border-radius:10px;overflow:hidden;"+

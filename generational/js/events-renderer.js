@@ -89,6 +89,19 @@ const EventsRenderer = {
     if (!bar) return;
     bar.innerHTML = "";
 
+    // Ephemeris button (always on top)
+    {
+      const ephBtn = document.createElement("button");
+      ephBtn.id = "ephemerisBtn";
+      ephBtn.className = "cat-btn ephemeris-btn";
+      ephBtn.title = "Ephemeris";
+      ephBtn.innerHTML = '<span class="cat-btn-dot" style="background:#b26cff;font-size:9px;">&#9791;</span><span class="cat-btn-label">Ephemeris</span>';
+      ephBtn.addEventListener("click", () => {
+        window.dispatchEvent(new CustomEvent("zy:ephemerisRequested"));
+      });
+      bar.appendChild(ephBtn);
+    }
+
     // On personal scale, add Life Events button first
     const isPersonal = new URLSearchParams(window.location.search).get("variant") === "personal";
     if (isPersonal) {
