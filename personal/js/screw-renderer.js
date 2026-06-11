@@ -1,5 +1,5 @@
 /* Personal page fallback for generation-only globals removed during split. */
-const showSaeculumLabels = false;
+const showSaeculumLabels = true;
 const CUSTOM_GENERATION_LABELS = [];
 	/* screw-renderer.js — builds the timeline SVG screw */
 	/* =========================================================

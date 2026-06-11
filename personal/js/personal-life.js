@@ -9,6 +9,12 @@ const PersonalLife = {
   PROFILES_KEY: "zy_profiles",
   LIFELINE_Y: 500,
   SPAN_YEARS: 100,
+  PROFILE_COLORS: [
+    "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
+    "#DDA0DD", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E9"
+  ],
+  PERSON_SPACING: 120,  // px between stacked lifelines
+  CHILD_SPACING: 100,   // px between parent and child lifeline
 
   isPersonal() {
     // Split SkyCLAWk app: /personal/ no longer carries ?variant=personal.
@@ -38,6 +44,11 @@ const PersonalLife = {
         this.activeProfile = data.activeProfile || null;
       }
     } catch(e) { console.warn("PersonalLife: load error", e); }
+    // Assign colors to profiles that don't have one yet
+    let ci = 0;
+    this.profiles.forEach(p => {
+      if (!p.color) { p.color = this.PROFILE_COLORS[ci % this.PROFILE_COLORS.length]; ci++; }
+    });
     // Per the skill's "load() Must NOT Parse birthDateUTC on Init" pitfall:
     // explicitly leave birthDateUTC null so the zy:screwBuilt listener does NOT
     // auto-render the lifeline on hard refresh. The user must open the Natal
@@ -81,7 +92,10 @@ const PersonalLife = {
       existing.birthData = birthData;
       existing.lifeEvents = lifeEvents || existing.lifeEvents || [];
     } else {
-      this.profiles.push({ name, birthData: birthData || null, lifeEvents: lifeEvents || [] });
+      // Count existing profiles with colors to pick next
+      const usedColors = this.profiles.map(p => p.color).filter(Boolean);
+      let color = this.PROFILE_COLORS[usedColors.length % this.PROFILE_COLORS.length];
+      this.profiles.push({ name, color, birthData: birthData || null, lifeEvents: lifeEvents || [] });
     }
     this.activeProfile = name;
     if (birthData) this.parseBirthDateUTC(birthData);
@@ -197,11 +211,11 @@ const PersonalLife = {
   },
 
   // ───────────── Life Events CRUD (scoped to active profile) ─────────────
-  addEvent(title, dateVal) {
+  addEvent(title, dateVal, isChild, childName, childBirthDate) {
     if (!title) return;
     // Auto-create a default profile if none exists
     if (!this.activeProfile) {
-      this.profiles.push({ name: "User", birthData: null, lifeEvents: [] });
+      this.profiles.push({ name: "User", birthData: null, lifeEvents: [], color: this.PROFILE_COLORS[0] });
       this.activeProfile = "User";
       this.save();
     }
@@ -209,11 +223,18 @@ const PersonalLife = {
     if (!p) return;
     let year = 0;
     if (dateVal) { const parts = dateVal.split("-"); year = parseInt(parts[0]) || 0; }
-    p.lifeEvents.push({ id: "ple_" + Date.now(), title, year, date: dateVal });
+    const event = { id: "ple_" + Date.now(), title, year, date: dateVal };
+    if (isChild) {
+      event.isChild = true;
+      event.childName = (childName || "").trim() || title;
+      event.childYear = childBirthDate ? parseInt(childBirthDate.split("-")[0]) : year;
+      event.childColor = this.PROFILE_COLORS[(this.profiles.length + 1) % this.PROFILE_COLORS.length];
+    }
+    p.lifeEvents.push(event);
     this.save();
-    this.renderPersonalEvents();
+    this.renderAll();
     this.populateEventList();
-    this.showHideElements(); // reveal lifeline elements if birth data also set
+    this.showHideElements();
   },
 
   deleteEvent(id) {
@@ -228,25 +249,101 @@ const PersonalLife = {
 
   // ───────────── Render all ─────────────
   renderAll() {
-    this.renderLifeline();
-    this.renderDiagonal();
-    this.renderLocalHistoryEvents();
+    // Clear all personal SVG groups
+    ['personalLifeline', 'personalDiagonal', 'personalEventsGroup', 'localHistoryEvents',
+     'personalBranches', 'childLifelines'].forEach(id => {
+      const g = document.getElementById(id);
+      if (g) g.innerHTML = '';
+    });
+
+    // Collect all persons: profiles with birth data + child events
+    const persons = this.collectAllPersons();
+    if (persons.length === 0) { this.showHideElements(); return; }
+
+    // Compute Y positions — sort by birth year, stack around active
+    persons.sort((a, b) => a.birthYear - b.birthYear);
+    const activeIdx = persons.findIndex(p => p.isActive);
+    const anchorY = this.LIFELINE_Y;
+    
+    persons.forEach((p, i) => {
+      const diff = i - activeIdx;
+      p.y = anchorY + diff * this.PERSON_SPACING;
+    });
+
+    // Render lifelines + DLLs for all
+    const ns = "http://www.w3.org/2000/svg";
+    persons.forEach(p => {
+      this.renderLifelineForProfile(p, ns);
+      this.renderDiagonalForProfile(p, ns);
+    });
+
+    // Render child branch connection lines
+    this.renderChildBranches(persons, ns);
+
+    // Render life events + local history for active profile only
     this.renderPersonalEvents();
+    this.renderLocalHistoryEvents();
     this.showHideElements();
   },
 
+  collectAllPersons() {
+    const persons = [];
+    // Add all profiles with birth data
+    this.profiles.forEach(p => {
+      if (!p.birthData || !p.birthData.date) return;
+      const parts = p.birthData.date.split('-');
+      const birthYear = parseInt(parts[0]);
+      if (!birthYear) return;
+      persons.push({
+        type: 'profile',
+        profile: p,
+        name: p.name,
+        birthYear: birthYear,
+        color: p.color || this.PROFILE_COLORS[0],
+        isActive: p.name === this.activeProfile,
+        y: this.LIFELINE_Y,
+        childEvents: [],
+        parentName: null
+      });
+    });
+    // Add child events from all profiles
+    this.profiles.forEach(p => {
+      if (!p.lifeEvents) return;
+      p.lifeEvents.forEach(ev => {
+        if (!ev.isChild || !ev.childName || !ev.childYear) return;
+        persons.push({
+          type: 'child',
+          profile: null,
+          name: ev.childName,
+          birthYear: ev.childYear,
+          color: ev.childColor || '#88ccff',
+          isActive: false,
+          y: 0,
+          childEvents: [],
+          parentName: p.name,
+          parentLifeEvent: ev
+        });
+      });
+    });
+    return persons;
+  },
+
   showHideElements() {
-    const hasBirth = !!this.getActiveProfile() && !!this.getActiveProfile().birthData && !!this.getActiveProfile().birthData.date;
+    const hasAnyProfile = this.profiles.some(p => p.birthData && p.birthData.date);
     const hasLocalHist = !!this.getActiveProfile() && !!this.getActiveProfile().localHistory && this.getActiveProfile().localHistory.length > 0;
     const hasLifeEv = !!this.getActiveProfile() && !!this.getActiveProfile().lifeEvents && this.getActiveProfile().lifeEvents.length > 0;
     const ll = document.getElementById("personalLifeline");
     const diag = document.getElementById("personalDiagonal");
     const peg = document.getElementById("personalEventsGroup");
     const lhe = document.getElementById("localHistoryEvents");
-    if (ll) ll.style.display = hasBirth ? "block" : "none";
-    if (diag) diag.style.display = hasBirth ? "block" : "none";
-    if (peg) peg.style.display = (hasBirth || hasLifeEv) ? "block" : "none";
-    if (lhe) lhe.style.display = (hasBirth || hasLocalHist) ? "block" : "none";
+    const branches = document.getElementById("personalBranches");
+    const childLL = document.getElementById("childLifelines");
+    if (ll) ll.style.display = hasAnyProfile ? "block" : "none";
+    if (diag) diag.style.display = hasAnyProfile ? "block" : "none";
+    if (branches) branches.style.display = hasAnyProfile ? "block" : "none";
+    if (childLL) childLL.style.display = hasAnyProfile ? "block" : "none";
+    if (peg) peg.style.display = (hasAnyProfile || hasLifeEv) ? "block" : "none";
+    if (lhe) lhe.style.display = (hasAnyProfile || hasLocalHist) ? "block" : "none";
   },
 
   // ───────────── Local History Events ─────────────
@@ -312,92 +409,112 @@ const PersonalLife = {
   },
 
   // ───────────── Horizontal Lifeline ─────────────
-  renderLifeline() {
+  renderLifelineForProfile(person, ns) {
     const g = document.getElementById("personalLifeline");
     if (!g) return;
-    const p = this.getActiveProfile();
-    if (!p || !p.birthData || !this.birthDateUTC) return;
-    g.innerHTML = "";
-
-    const birthYear = this.birthDateUTC.getFullYear();
-    const ns = "http://www.w3.org/2000/svg";
+    if (person.type !== 'profile' && person.type !== 'child') return;
+    const birthYear = person.birthYear;
     const x0 = yearToScrewX(birthYear);
     const x1 = yearToScrewX(birthYear + this.SPAN_YEARS);
-    const y = this.LIFELINE_Y;
+    const y = person.y;
+    const color = person.color || "rgba(255,255,255,0.4)";
 
+    // Lifeline horizontal
     const line = document.createElementNS(ns, "line");
     line.setAttribute("x1", x0); line.setAttribute("y1", y);
     line.setAttribute("x2", x1); line.setAttribute("y2", y);
-    line.setAttribute("stroke", "rgba(255,255,255,0.4)");
-    line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke", person.isActive ? "rgba(255,255,255,0.5)" : color + "80");
+    line.setAttribute("stroke-width", person.isActive ? "3" : "2");
     g.appendChild(line);
 
+    // Age ticks
     for (let age = 0; age <= this.SPAN_YEARS; age++) {
       const yr = birthYear + age;
       const x = yearToScrewX(yr);
       if (x < x0 - 50 || x > x1 + 50) continue;
       const is10 = age % 10 === 0;
       const is5 = age % 5 === 0;
-      const tickH = is10 ? 16 : (is5 ? 10 : 5);
+      const tickH = is10 ? 14 : (is5 ? 8 : 4);
       const tick = document.createElementNS(ns, "line");
       tick.setAttribute("x1", x); tick.setAttribute("y1", y - tickH);
       tick.setAttribute("x2", x); tick.setAttribute("y2", y + tickH);
-      tick.setAttribute("stroke", is10 ? "rgba(255,255,255,0.5)" : is5 ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.15)");
-      tick.setAttribute("stroke-width", is10 ? "1.5" : "1");
+      tick.setAttribute("stroke", is10 ? "rgba(255,255,255,0.4)" : is5 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)");
+      tick.setAttribute("stroke-width", is10 ? "1.2" : "0.8");
       g.appendChild(tick);
       if (is10) {
         const lbl = document.createElementNS(ns, "text");
-        lbl.setAttribute("x", x); lbl.setAttribute("y", y + 28);
+        lbl.setAttribute("x", x); lbl.setAttribute("y", y + 24);
         lbl.setAttribute("text-anchor", "middle");
-        lbl.setAttribute("fill", "rgba(255,255,255,0.5)"); lbl.setAttribute("font-size", "9");
+        lbl.setAttribute("fill", "rgba(255,255,255,0.4)"); lbl.setAttribute("font-size", "8");
         lbl.textContent = yr.toString(); g.appendChild(lbl);
         const ageLbl = document.createElementNS(ns, "text");
-        ageLbl.setAttribute("x", x); ageLbl.setAttribute("y", y - 22);
-        ageLbl.setAttribute("text-anchor", "middle");
-        ageLbl.setAttribute("fill", "rgba(255,255,255,0.35)"); ageLbl.setAttribute("font-size", "8");
-        ageLbl.textContent = "age " + age; g.appendChild(ageLbl);
-      }
-      if (is5 && !is10) {
-        const ageLbl = document.createElementNS(ns, "text");
-        ageLbl.setAttribute("x", x); ageLbl.setAttribute("y", y - 16);
+        ageLbl.setAttribute("x", x); ageLbl.setAttribute("y", y - 18);
         ageLbl.setAttribute("text-anchor", "middle");
         ageLbl.setAttribute("fill", "rgba(255,255,255,0.25)"); ageLbl.setAttribute("font-size", "7");
-        ageLbl.textContent = age.toString(); g.appendChild(ageLbl);
+        ageLbl.textContent = "age " + age; g.appendChild(ageLbl);
       }
     }
 
-    // Birth info — left-aligned to the start of the lifeline (x0)
-    const nameLbl = document.createElementNS(ns, "text");
-    nameLbl.setAttribute("x", x0); nameLbl.setAttribute("y", y - 50);
-    nameLbl.setAttribute("text-anchor", "start");
-    nameLbl.setAttribute("fill", "rgba(255,255,255,0.8)");
-    nameLbl.setAttribute("font-size", "11"); nameLbl.setAttribute("font-weight", "700");
-    nameLbl.textContent = "✦ " + (p.name || "").trim() || "Birth";
-    g.appendChild(nameLbl);
+    // Name label — left of lifeline
+    if (person.type === 'child') {
+      // Children: name at birth year with a small icon
+      const nameLbl = document.createElementNS(ns, "text");
+      nameLbl.setAttribute("x", x0); nameLbl.setAttribute("y", y - 20);
+      nameLbl.setAttribute("text-anchor", "start");
+      nameLbl.setAttribute("fill", color);
+      nameLbl.setAttribute("font-size", "10"); nameLbl.setAttribute("font-weight", "700");
+      nameLbl.textContent = "♦ " + (person.name || "").trim();
+      g.appendChild(nameLbl);
 
-    const birthLbl = document.createElementNS(ns, "text");
-    birthLbl.setAttribute("x", x0); birthLbl.setAttribute("y", y - 36);
-    birthLbl.setAttribute("text-anchor", "start");
-    birthLbl.setAttribute("fill", "rgba(255,200,100,0.7)");
-    birthLbl.setAttribute("font-size", "10"); birthLbl.setAttribute("font-weight", "700");
-    birthLbl.textContent = this.fmtDate(p.birthData.date) + (p.birthData.city ? " " + p.birthData.city : "");
-    g.appendChild(birthLbl);
+      // Birth year label
+      const birthLbl = document.createElementNS(ns, "text");
+      birthLbl.setAttribute("x", x0); birthLbl.setAttribute("y", y - 8);
+      birthLbl.setAttribute("text-anchor", "start");
+      birthLbl.setAttribute("fill", color + "99");
+      birthLbl.setAttribute("font-size", "8");
+      birthLbl.textContent = "b. " + birthYear;
+      g.appendChild(birthLbl);
+    } else {
+      const nameLbl = document.createElementNS(ns, "text");
+      nameLbl.setAttribute("x", x0); nameLbl.setAttribute("y", y - 40);
+      nameLbl.setAttribute("text-anchor", "start");
+      nameLbl.setAttribute("fill", person.isActive ? "rgba(255,255,255,0.8)" : color);
+      nameLbl.setAttribute("font-size", "11"); nameLbl.setAttribute("font-weight", "700");
+      nameLbl.textContent = (person.isActive ? "✦ " : "◆ ") + (person.name || "").trim();
+      g.appendChild(nameLbl);
 
-    // ───────────── Previous Lunation Cycle Graphic ─────────────
-    this.renderLunarPreface(g, ns, x0, y);
+      const birthLbl = document.createElementNS(ns, "text");
+      birthLbl.setAttribute("x", x0); birthLbl.setAttribute("y", y - 26);
+      birthLbl.setAttribute("text-anchor", "start");
+      birthLbl.setAttribute("fill", color + "99");
+      birthLbl.setAttribute("font-size", "9"); birthLbl.setAttribute("font-weight", "600");
+      birthLbl.textContent = "b. " + birthYear;
+      g.appendChild(birthLbl);
+    }
 
-    const divTop = document.createElementNS(ns, "line");
-    divTop.setAttribute("x1", x0); divTop.setAttribute("y1", y - 40);
-    divTop.setAttribute("x2", x1); divTop.setAttribute("y2", y - 40);
-    divTop.setAttribute("stroke", "rgba(255,255,255,0.08)");
-    divTop.setAttribute("stroke-width", "1"); divTop.setAttribute("stroke-dasharray", "4,4");
-    g.appendChild(divTop);
-    const divBot = document.createElementNS(ns, "line");
-    divBot.setAttribute("x1", x0); divBot.setAttribute("y1", y + 40);
-    divBot.setAttribute("x2", x1); divBot.setAttribute("y2", y + 40);
-    divBot.setAttribute("stroke", "rgba(255,255,255,0.08)");
-    divBot.setAttribute("stroke-width", "1"); divBot.setAttribute("stroke-dasharray", "4,4");
-    g.appendChild(divBot);
+    // For active profile only: lunar preface + divider lines
+    if (person.isActive && person.type === 'profile' && person.profile && person.profile.birthData) {
+      this.renderLunarPreface(g, ns, x0, y);
+      const divTop = document.createElementNS(ns, "line");
+      divTop.setAttribute("x1", x0); divTop.setAttribute("y1", y - 40);
+      divTop.setAttribute("x2", x1); divTop.setAttribute("y2", y - 40);
+      divTop.setAttribute("stroke", "rgba(255,255,255,0.08)");
+      divTop.setAttribute("stroke-width", "1"); divTop.setAttribute("stroke-dasharray", "4,4");
+      g.appendChild(divTop);
+      const divBot = document.createElementNS(ns, "line");
+      divBot.setAttribute("x1", x0); divBot.setAttribute("y1", y + 40);
+      divBot.setAttribute("x2", x1); divBot.setAttribute("y2", y + 40);
+      divBot.setAttribute("stroke", "rgba(255,255,255,0.08)");
+      divBot.setAttribute("stroke-width", "1"); divBot.setAttribute("stroke-dasharray", "4,4");
+      g.appendChild(divBot);
+    }
+  },
+
+  renderLifeline() {
+    // Legacy wrapper — calls multi-profile render
+    const p = this.getActiveProfile();
+    if (!p || !p.birthData || !this.birthDateUTC) return;
+    this.renderAll();
   },
 
   // ───────────── Previous Lunation Cycle Graphic ─────────────
@@ -508,55 +625,46 @@ const PersonalLife = {
   //   - Shadow color = previous lane cyclically, based on BIRTH YEAR phase
   //   - Horizontal fade-out mask anchored to viewport (not xBirth) so the line disappears behind labels
   //   - Direct appendChild to #personalDiagonal (no wrapper group, no clip-path)
-  renderDiagonal() {
+  renderDiagonalForProfile(person, ns) {
     const g = document.getElementById("personalDiagonal");
     if (!g) return;
-    const p = this.getActiveProfile();
-    if (!p || !p.birthData || !this.birthDateUTC) return;
-    g.innerHTML = "";
 
-    const ns = "http://www.w3.org/2000/svg";
-    const birthYear = this.birthDateUTC.getFullYear();
+    const birthYear = person.birthYear;
     const now = new Date();
     const currentAge = now.getFullYear() - birthYear;
     if (currentAge < 0) return;
 
-    // Geometry: SCREW_HEIGHT (not SCREW_BODY) — bands render from y=0 to y=SCREW_HEIGHT
     const screwH = (typeof CANON !== "undefined") ? CANON.SCREW_HEIGHT : 180;
     const ppj = (typeof CANON !== "undefined") ? CANON.PX_PER_MAJOR : 300;
     const timelineY = (typeof CANON !== "undefined") ? CANON.TIMELINE_Y : 180;
-    const bandSlope = screwH / (4 * ppj);   // 0.15 → 8.53° on personal
+    const bandSlope = screwH / (4 * ppj);
 
-    // Band-slope math — no age-fraction cap. The current-age point keeps travelling
-    // up the same diagonal beyond the screw top; the viewport naturally clips it.
     const xBirth = yearToScrewX(birthYear);
     const yBirth = timelineY;
     const xNowForLine = yearToScrewX(now.getFullYear());
     const fracNowForLine = Math.max(0, (xNowForLine - xBirth) / (4 * ppj));
     const xEnd = xBirth + fracNowForLine * 4 * ppj;
-    const yEnd = timelineY - fracNowForLine * screwH;
-    const topFrac = timelineY / screwH; // y=0, exact top pixel of the screw body
+    const yEnd = yBirth - fracNowForLine * screwH;
+    const topFrac = yBirth / screwH;
     const xScrewTop = xBirth + topFrac * 4 * ppj;
     const yScrewTop = 0;
     const extendsPastScrewTop = yEnd < yScrewTop;
 
-    // Shadow color: previous lane cyclically, using BIRTH YEAR phase
-    // (using current year makes everyone in the same era get the same shadow)
+    // Color from generation phase OR profile color for non-active
+    const color = person.color || "rgba(255,255,255,0.8)";
     const genPhase = (typeof findArchetypePhase !== "undefined") ? findArchetypePhase(birthYear) : "nomad";
     const genColors = { prophet: "#cc4444", nomad: "#33bb33", hero: "#ccaa33", artist: "#4477cc" };
-    const genColor = genColors[genPhase] || "#00c800";
+    const genColor = genColors[genPhase] || color;
     const phaseList = ["prophet", "nomad", "hero", "artist"];
     const pi = phaseList.indexOf(genPhase);
-    const prevPhase = phaseList[(pi + 3) % 4];   // 1 behind in cycle
-    const glowColor = genColors[prevPhase] || "#00c800";
+    const prevPhase = phaseList[(pi + 3) % 4];
+    const glowColor = person.isActive ? (genColors[prevPhase] || "#00c800") : (color + "66");
 
-    // === Defs: blur filter + fade mask (created once, mask gradient updated per render) ===
     const svg = document.getElementById("screwSVG");
-    if (svg) {
+    if (svg && person.isActive) {
       let defs = svg.querySelector("defs");
       if (!defs) { defs = document.createElementNS(ns, "defs"); svg.appendChild(defs); }
 
-      // Blur filter (one-time creation)
       if (!defs.querySelector("#dllBlur")) {
         const filt = document.createElementNS(ns, "filter");
         filt.setAttribute("id", "dllBlur");
@@ -566,9 +674,6 @@ const PersonalLife = {
         defs.appendChild(filt);
       }
 
-      // Mask — DELETE and REBUILD gradient every render (per the mask-and-scroll-render
-      // reference: setAttribute on existing gradient elements is not reliably picked up
-      // by mask references during scroll). The mask rect itself is created once.
       let mask = defs.querySelector("#dllFade");
       if (!mask) {
         mask = document.createElementNS(ns, "mask");
@@ -581,11 +686,8 @@ const PersonalLife = {
         mask.appendChild(mr);
         defs.appendChild(mask);
       }
-      // Remove any old gradient (rebuilt fresh below)
       const oldGrad = defs.querySelector("#dllFadeGrad");
       if (oldGrad) oldGrad.remove();
-      // Tight feather at the label panel's left edge (~10-15px outside the label)
-      // getNowScreenX() returns the label's left edge in screw coords
       const labelLeft = (typeof getNowScreenX === "function") ? getNowScreenX() : 1360;
       const fadeLeft = labelLeft - 15;
       const fadeRight = labelLeft + 15;
@@ -604,17 +706,13 @@ const PersonalLife = {
       ms2.setAttribute("stop-color", "black");
       mg.appendChild(ms1); mg.appendChild(ms2);
       defs.appendChild(mg);
-      // Re-attach the (fresh) gradient to the mask rect
       const maskRect = mask.querySelector("rect");
       if (maskRect) maskRect.setAttribute("fill", "url(#dllFadeGrad)");
 
-      // Vertical stroke gradients for the portion of the DLL that extends above
-      // the top of the screw. The fade starts exactly at y=0 and is practically
-      // invisible by the time it would reach the viewport top.
       for (const old of [defs.querySelector("#dllTopFadeLine"), defs.querySelector("#dllTopFadeGlow")]) {
         if (old) old.remove();
       }
-      function makeTopFadeGradient(id, color, startOpacity, endOpacity) {
+      function makeTopFadeGradient(id, clr, startOpacity, endOpacity) {
         const grad = document.createElementNS(ns, "linearGradient");
         grad.setAttribute("id", id);
         grad.setAttribute("gradientUnits", "userSpaceOnUse");
@@ -623,20 +721,19 @@ const PersonalLife = {
         grad.setAttribute("y2", String(-Math.max(timelineY, 1)));
         const s0 = document.createElementNS(ns, "stop");
         s0.setAttribute("offset", "0");
-        s0.setAttribute("stop-color", color);
+        s0.setAttribute("stop-color", clr);
         s0.setAttribute("stop-opacity", String(startOpacity));
         const s1 = document.createElementNS(ns, "stop");
         s1.setAttribute("offset", "1");
-        s1.setAttribute("stop-color", color);
+        s1.setAttribute("stop-color", clr);
         s1.setAttribute("stop-opacity", String(endOpacity));
         grad.appendChild(s0); grad.appendChild(s1);
         defs.appendChild(grad);
       }
       makeTopFadeGradient("dllTopFadeLine", "#ffffff", 0.8, 0.035);
       makeTopFadeGradient("dllTopFadeGlow", glowColor, 0.30, 0.015);
-      }
-    // === Render: shadow first, then white line (z-order matters) ===
-    // Both are appended directly to #personalDiagonal — no wrapper group, no clip-path
+    }
+
     function appendDllSegment(x1, y1, x2, y2, stroke, strokeWidth, opacity, filter) {
       const seg = document.createElementNS(ns, "line");
       seg.setAttribute("x1", x1); seg.setAttribute("y1", y1);
@@ -651,40 +748,117 @@ const PersonalLife = {
 
     const baseEndX = extendsPastScrewTop ? xScrewTop : xEnd;
     const baseEndY = extendsPastScrewTop ? yScrewTop : yEnd;
-    appendDllSegment(xBirth, yBirth, baseEndX, baseEndY, glowColor, "12", "0.30", "url(#dllBlur)");
+    appendDllSegment(xBirth, yBirth, baseEndX, baseEndY, glowColor, "10", "0.25", "url(#dllBlur)");
     if (extendsPastScrewTop) {
-      appendDllSegment(xScrewTop, yScrewTop, xEnd, yEnd, "url(#dllTopFadeGlow)", "12", null, "url(#dllBlur)");
+      appendDllSegment(xScrewTop, yScrewTop, xEnd, yEnd, "url(#dllTopFadeGlow)", "10", null, "url(#dllBlur)");
     }
 
-    appendDllSegment(xBirth, yBirth, baseEndX, baseEndY, "rgba(255,255,255,0.8)", "3");
+    const lineColor = person.isActive ? "rgba(255,255,255,0.8)" : color;
+    appendDllSegment(xBirth, yBirth, baseEndX, baseEndY, lineColor, "2.5");
     if (extendsPastScrewTop) {
-      appendDllSegment(xScrewTop, yScrewTop, xEnd, yEnd, "url(#dllTopFadeLine)", "3");
+      appendDllSegment(xScrewTop, yScrewTop, xEnd, yEnd, "url(#dllTopFadeLine)", "2.5");
     }
 
-    // Apply fade mask to the group element itself (per session 7 final design)
-    g.setAttribute("mask", "url(#dllFade)");
+    if (person.isActive) {
+      g.setAttribute("mask", "url(#dllFade)");
+    }
 
-    // === NOW marker: uncapped, placed at current age along the same diagonal slope ===
+    // Now marker
     const xNow = xEnd;
     const yNow = yEnd;
-
     const nowDot = document.createElementNS(ns, "circle");
     nowDot.setAttribute("cx", xNow); nowDot.setAttribute("cy", yNow);
     nowDot.setAttribute("r", "3");
     nowDot.setAttribute("fill", "#ffffff");
-    nowDot.setAttribute("stroke", genColor);
+    nowDot.setAttribute("stroke", color);
     nowDot.setAttribute("stroke-width", "2");
     g.appendChild(nowDot);
 
     const nowLbl = document.createElementNS(ns, "text");
-    // Label sits on the left side of the DLL so it does not crowd the line/right rail.
     nowLbl.setAttribute("x", xNow - 10); nowLbl.setAttribute("y", yNow + 4);
     nowLbl.setAttribute("text-anchor", "end");
-    nowLbl.setAttribute("fill", "#ffffff");
-    nowLbl.setAttribute("font-size", "10");
+    nowLbl.setAttribute("fill", color);
+    nowLbl.setAttribute("font-size", "9");
     nowLbl.setAttribute("font-weight", "700");
     nowLbl.textContent = currentAge.toString();
     g.appendChild(nowLbl);
+  },
+
+  renderDiagonal() {
+    // Legacy wrapper
+    const p = this.getActiveProfile();
+    if (!p || !p.birthData || !this.birthDateUTC) return;
+    this.renderAll();
+  },
+
+  renderChildBranches(persons, ns) {
+    const g = document.getElementById("personalBranches");
+    if (!g) return;
+    // Filter child persons and find their parent's Y
+    const children = persons.filter(p => p.type === 'child');
+    children.forEach(child => {
+      const parent = persons.find(p => p.name === child.parentName && p.type === 'profile');
+      if (!parent) return;
+
+      const childYear = child.birthYear;
+      const parentX = yearToScrewX(childYear);
+      if (!parentX) return;
+      const parentY = parent.y;
+      const childY = child.y;
+
+      // Branch connection: vertical line from parent lifeline down to child lifeline
+      // at the child's birth year
+      const branch = document.createElementNS(ns, "line");
+      branch.setAttribute("x1", parentX); branch.setAttribute("y1", parentY);
+      branch.setAttribute("x2", parentX); branch.setAttribute("y2", childY);
+      branch.setAttribute("stroke", child.color + "99");
+      branch.setAttribute("stroke-width", "1.5");
+      branch.setAttribute("stroke-dasharray", "4,3");
+      branch.setAttribute("opacity", "0.6");
+      g.appendChild(branch);
+
+      // Small dot at connection point on parent lifeline
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", parentX); dot.setAttribute("cy", parentY);
+      dot.setAttribute("r", "3");
+      dot.setAttribute("fill", child.color);
+      dot.setAttribute("opacity", "0.8");
+      g.appendChild(dot);
+    });
+  },
+
+  refreshDiagonalMasks() {
+    // Minimal mask refresh — rebuilds only the fade mask gradient
+    // called on every scroll frame so mask stays anchored to viewport
+    const svg = document.getElementById("screwSVG");
+    if (!svg) return;
+    let defs = svg.querySelector("defs");
+    if (!defs) return;
+    const mask = defs.querySelector("#dllFade");
+    if (!mask) return;
+    const oldGrad = defs.querySelector("#dllFadeGrad");
+    if (oldGrad) oldGrad.remove();
+    const ns = "http://www.w3.org/2000/svg";
+    const labelLeft = (typeof getNowScreenX === "function") ? getNowScreenX() : 1360;
+    const fadeLeft = labelLeft - 15;
+    const fadeRight = labelLeft + 15;
+    const mg = document.createElementNS(ns, "linearGradient");
+    mg.setAttribute("id", "dllFadeGrad");
+    mg.setAttribute("gradientUnits", "userSpaceOnUse");
+    mg.setAttribute("x1", String(fadeLeft));
+    mg.setAttribute("x2", String(fadeRight));
+    mg.setAttribute("y1", "0");
+    mg.setAttribute("y2", "0");
+    const ms1 = document.createElementNS(ns, "stop");
+    ms1.setAttribute("offset", "0");
+    ms1.setAttribute("stop-color", "white");
+    const ms2 = document.createElementNS(ns, "stop");
+    ms2.setAttribute("offset", "1");
+    ms2.setAttribute("stop-color", "black");
+    mg.appendChild(ms1); mg.appendChild(ms2);
+    defs.appendChild(mg);
+    const maskRect = mask.querySelector("rect");
+    if (maskRect) maskRect.setAttribute("fill", "url(#dllFadeGrad)");
   },
 
   // ───────────── Personal Events ─────────────
@@ -913,6 +1087,7 @@ const PersonalLife = {
     this.addInputCapsStyles();
     // Don't render lifelines on refresh — user must load a profile
     this.showHideElements();
+    bindModalEventListeners();
     window.addEventListener("zy:screwBuilt", () => {
       if (this.birthDateUTC) {
         this.renderLifeline();
@@ -926,15 +1101,15 @@ const PersonalLife = {
     // The lifeline and personal events are inside #scrollGroup and auto-translate,
     // so they don't need this. Only the mask position needs per-frame updates.
     window.addEventListener("zy:scrollChanged", () => {
-      if (this.birthDateUTC) this.renderDiagonal();
+      if (this.birthDateUTC) this.refreshDiagonalMasks();
     });
   }
 };
 window.PersonalLife = PersonalLife;
 
 // ───────────── Event Listeners ─────────────
-// Run immediately (script loads at bottom of body, DOMContentLoaded already fired)
-;(function() {
+// Run on DOMContentLoaded so modal button elements exist
+function bindModalEventListeners() {
   // Natal modal
   const natalSaveBtn = document.getElementById("natalSaveBtn");
   if (natalSaveBtn) {
@@ -981,16 +1156,62 @@ window.PersonalLife = PersonalLife;
   }
 
 
-  // Life Events modal
+  // Child checkbox toggle
+  const isChildCheck = document.getElementById("lifeEventIsChild");
+  if (isChildCheck) {
+    isChildCheck.addEventListener("change", () => {
+      const childFields = document.getElementById("childFields");
+      if (childFields) childFields.style.display = isChildCheck.checked ? "block" : "none";
+    });
+  }
+
+  // Add Person button
+  const addPersonBtn = document.getElementById("addPersonBtn");
+  if (addPersonBtn) {
+    addPersonBtn.addEventListener("click", () => {
+      const name = document.getElementById("natalName");
+      const date = document.getElementById("natalDate");
+      const time = document.getElementById("natalTime");
+      const city = document.getElementById("natalCity");
+      if (!name || !date || !date.value) return;
+      const profileName = (name.value || "").trim() || "Person " + (PersonalLife.profiles.length + 1);
+      PersonalLife.saveProfile(profileName, {
+        date: date.value,
+        time: time ? time.value : "12:00",
+        city: city ? city.value : ""
+      }, []);
+      name.value = "";
+      date.value = "";
+      if (time) time.value = "12:00";
+      if (city) city.value = "";
+    });
+  }
+
+  // Update life event save to handle child data
   const addBtn = document.getElementById("lifeEventAddBtn");
   if (addBtn) {
     addBtn.addEventListener("click", () => {
       const title = document.getElementById("lifeEventTitle");
       const dateInput = document.getElementById("lifeEventDate");
       if (title && title.value) {
-        PersonalLife.addEvent(title.value, dateInput ? dateInput.value : "");
+        const isChildCheck = document.getElementById("lifeEventIsChild");
+        const childNameInput = document.getElementById("lifeEventChildName");
+        const childBirthInput = document.getElementById("lifeEventChildBirthDate");
+        const isChild = isChildCheck ? isChildCheck.checked : false;
+        PersonalLife.addEvent(
+          title.value,
+          dateInput ? dateInput.value : "",
+          isChild,
+          childNameInput ? childNameInput.value : "",
+          childBirthInput ? childBirthInput.value : ""
+        );
         title.value = "";
         if (dateInput) dateInput.value = "";
+        if (isChildCheck) isChildCheck.checked = false;
+        if (childNameInput) childNameInput.value = "";
+        if (childBirthInput) childBirthInput.value = "";
+        const childFields = document.getElementById("childFields");
+        if (childFields) childFields.style.display = "none";
       }
     });
   }
@@ -1005,7 +1226,7 @@ window.PersonalLife = PersonalLife;
   if (closeBtn) closeBtn.addEventListener("click", () => PersonalLife.closeEventModal());
   const closeX = document.getElementById("lifeEventModalClose");
   if (closeX) closeX.addEventListener("click", () => PersonalLife.closeEventModal());
-})();
+}
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => PersonalLife.init());

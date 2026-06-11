@@ -93,13 +93,10 @@
 			btn.classList.toggle("active", btn.dataset.scale === timelineScale);
 		});
 
-		// Default sky mode by scale: personal → transit (real-time), generational → tropical (fixed)
+		// Default: all scales start in Transit (real-time) mode — sky moves on page load
+		// User can click Tropical button to freeze the wheel at any time
 		if (typeof window.setSkyMode === "function") {
-			if (nextScale === "personal") {
-				window.setSkyMode("transit");
-			} else {
-				window.setSkyMode("tropical");
-			}
+			window.setSkyMode("transit");
 		}
 	}
 
@@ -1021,6 +1018,10 @@
 			freezeTime();
 			isPaused = false;
 			timeState.navTargetDateUTC = dateUTC;
+			// User navigation disables live mode so wheel follows the chosen date
+			if (typeof window.setAstroWheelLiveMode === "function") {
+				window.setAstroWheelLiveMode(false);
+			}
 			if (typeof requestWheelRedraw === "function") requestWheelRedraw();
 		}
 
@@ -1745,7 +1746,9 @@
 
 		function updateDate() {
 			// Phase 2A: timeState/AstroEngine defines time
-			renderDateBox(timeState.dateUTC);
+			// When in live mode, __liveDate is the real-time authority
+			const isLive = window.__liveDate instanceof Date && !window._auspiciousJumped;
+			renderDateBox(isLive ? window.__liveDate : timeState.dateUTC);
 		}
 
 		function renderDateBox(date) {

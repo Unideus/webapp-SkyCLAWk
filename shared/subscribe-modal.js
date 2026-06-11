@@ -9,6 +9,11 @@
   const STORED_UNTIL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 
   let shown = false;
+  // Skip email capture modal during local development
+  if (window.location.search.includes('dev') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    shown = true;
+    return;
+  }
   let scrollFired = false;
 
   function isDismissed() {

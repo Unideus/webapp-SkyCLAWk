@@ -14,6 +14,7 @@ const EventsRenderer = {
     { id: "politics",       label: "Political Realignment",      abbr: "Pol",  color: "#9C27B0" },
     { id: "disaster",       label: "Pandemic & Disaster",        abbr: "Nat",  color: "#795548" },
     { id: "culture",        label: "Cultural Milestones",        abbr: "Cul",  color: "#FFD700" },
+    { id: "psyops",         label: "PSYOPS / Asymmetric Warfare", abbr: "Psy",  color: "#6A1B9A" },
   ],
 
   activeCategory: null,
@@ -132,6 +133,18 @@ const EventsRenderer = {
       b.addEventListener("click", () => this.selectCategory(cat.id));
       bar.appendChild(b);
     });
+    // US Map Animation button
+    {
+      const mapBtn = document.createElement("button");
+      mapBtn.id = "statesMapBtn";
+      mapBtn.className = "cat-btn states-map-btn";
+      mapBtn.title = "States Map Animation";
+      mapBtn.innerHTML = '<span class="cat-btn-dot" style="background:#4a9eff;font-size:9px;">🗺</span><span class="cat-btn-label">States Map</span>';
+      mapBtn.addEventListener("click", () => {
+        if (window.USMapAnimation) window.USMapAnimation.toggle();
+      });
+      bar.appendChild(mapBtn);
+    }
     const n = document.createElement("button");
     n.className = "cat-btn";
     n.dataset.category = "";
@@ -281,11 +294,8 @@ const EventsRenderer = {
       rect.appendChild(t);
       rect.style.cursor = "pointer";
       rect.addEventListener("click", () => {
-        const d = new Date(Date.UTC(ev.year, 6, 1));
-        if (typeof timeState !== "undefined") {
-          if (typeof timeState.goToYear === "function") { timeState.goToYear(ev.year); return; }
-          if (typeof dateToScrollX === "function") { timeState.scrollX = dateToScrollX(d); timeState.dateUTC = d; }
-        }
+        const wiki = ev.wiki || ev.title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/ /g, "_");
+        window.open("https://en.wikipedia.org/wiki/" + wiki, "_blank");
       });
       group.appendChild(rect);
       const l = document.createElementNS(ns, "text");

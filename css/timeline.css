@@ -35,16 +35,18 @@
     --zodiac-panel-width: clamp(320px, 28vw, 420px);
 }
 
-html, body {
+html {
+    margin: 0;
+}
+body {
     margin: 0;
     width: 100%;
     height: 100%;
     background: var(--cathedral-black);
     color: #fff;
     font-family: Arial, sans-serif;
-
-    /* CATHEDRAL LAW: NO SCROLLBARS (anything that exceeds viewport must be clipped) */
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     border: none !important;
     border-top: none !important;
     border-bottom: none !important;
@@ -56,7 +58,8 @@ html, body {
 
 #topMenu {
     width: 100%;
-    min-width: 1200px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     background: linear-gradient(#151515, #0f0f0f);
     border-bottom: 2px solid #333;
     border-bottom: none !important;
@@ -1314,7 +1317,7 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
     left: 20px;
     right: 20px;
 
-    height: 765px;
+    height: calc(100vh - 340px); /* ~740px at 1080p, responsive */
     overflow: hidden;
 
     /* 🔒 BLACK SCRIM — prevents bleed under astro wheel */
@@ -1351,7 +1354,7 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
     left: 0;
 
     /* Preserve aspect ratio — NO SQUISH */
-    height: 774px;
+    height: calc(100vh - 340px); /* match reference panel */
     width: auto;
 
     /* Lighter, clearer reference */
@@ -1927,8 +1930,8 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 #categoryBarWrap {
   position: fixed;
   right: 20px;
-  top: 600px;
-  bottom: auto;
+  top: auto;
+  bottom: 55px;
   height: auto;
   max-height: none;
   z-index: 100000;
@@ -2040,6 +2043,14 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 
 .cat-btn.ephemeris-btn .cat-btn-label {
   color: rgba(210,180,255,.92);
+}
+
+.cat-btn.states-map-btn {
+  border-color: rgba(74,158,255,.35);
+}
+
+.cat-btn.states-map-btn .cat-btn-label {
+  color: rgba(130,190,255,.92);
 }
 
 /* =========================================================
@@ -2179,6 +2190,25 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
   background: #1a1a2e;
   color: #eee;
 }
+
+/* Modal buttons — flat native-free rendering, full surface clickable */
+.modal-btn {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  border: 1px solid rgba(255,255,255,.30) !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  line-height: 1;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  min-height: 36px;
+}
+.modal-btn::-moz-focus-inner { border: 0; }
 #lifeEventAddBtn:hover {
   background: rgba(255,200,100,0.25) !important;
 }
@@ -2237,4 +2267,27 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 #labelSVG,
 #labelSVG * {
   pointer-events: none !important;
+}
+
+/* =========================================================
+   RESPONSIVE — narrow screens
+   ========================================================= */
+#wheelFab-small { display: none; }
+
+@media (max-width: 1100px) {
+  #menuTitle .menuLogo { display: none; }
+  #menuTitle #menuRightStack { display: none; }
+  #wheelFab-small { display: inline-flex !important; }
+}
+@media (max-width: 800px) {
+  #menuTitle { --logo-h: 70px; }
+  #menuTitle #menuRightStack { height: 70px; }
+  #menuTitle #menuRightStack #wheelFab.wheelFabMenu {
+    width: calc(var(--logo-h) - 30px);
+    min-width: calc(var(--logo-h) - 30px);
+    height: calc(var(--logo-h) - 6px);
+  }
+  #topMenu { gap: 10px; padding: 6px 12px; }
+  .zodiac-label-top, .zodiac-label-middle { font-size: 10px !important; }
+  #timelineWrap { height: calc(100vh - 140px); }
 }

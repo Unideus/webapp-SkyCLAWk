@@ -96,6 +96,16 @@
     const wheelCardEl = wheelModal.querySelector(".zyModalCard");
     const wheelBackdropEl = wheelModal.querySelector(".zyModalBackdrop");
 
+
+    // Click-to-front: bring wheel above map on interaction
+    let wheelBringToFront = function() {
+      if (!wheelModal) return;
+      wheelModal.style.zIndex = "10000030";
+      const mapContainer = document.getElementById("usMapContainer");
+      if (mapContainer && mapContainer.style.display !== "none") {
+        mapContainer.style.zIndex = "9999998";
+      }
+    };
     function openWheel() {
       wheelModal.setAttribute("aria-hidden", "false");
 
@@ -202,6 +212,9 @@ let cardStartLeft = 0, cardStartTop = 0;
     });
   }
   wheelFab.addEventListener("click", toggleWheel);
+  const wheelFabSmall = document.getElementById("wheelFab-small");
+  if (wheelFabSmall) wheelFabSmall.addEventListener("click", toggleWheel);
+  wheelModal.addEventListener("mousedown", wheelBringToFront);
   
 
   wheelModal.addEventListener("click", (ev) => {
@@ -1366,10 +1379,11 @@ for (const k of show) {
     const displayHour = String(hours).padStart(2, "0");
     let shortTz;
     if (locTz) {
-      const tzParts = new Intl.DateTimeFormat("en-US", { timeZone: locTz, timeZoneName: "short" }).formatToParts(t);
+      // Use current date for timezone abbreviation to avoid historical anomalies (LMT, weird offsets)
+      const tzParts = new Intl.DateTimeFormat("en-US", { timeZone: locTz, timeZoneName: "short" }).formatToParts(new Date());
       shortTz = tzParts.find(p => p.type === "timeZoneName")?.value ?? locTz.split("/").pop().replace("_", " ");
     } else {
-      const parts2 = new Intl.DateTimeFormat(undefined, { timeZoneName: "short" }).formatToParts(t);
+      const parts2 = new Intl.DateTimeFormat(undefined, { timeZoneName: "short" }).formatToParts(new Date());
       shortTz = parts2.find(p => p.type === "timeZoneName")?.value ?? "";
     }
     wheelDateValue.textContent = `${weekday}, ${day} ${month} ${year}, ${displayHour}:${minutes} ${ampm} ${shortTz}`;
@@ -1378,12 +1392,15 @@ for (const k of show) {
   function drawAstroWheel() {
     if (!wheelImg) return;
 
-    // Use timeState/AstroEngine date regardless of Live mode.
-    // aisLiveMode flag only controls ASC rotation, not the date shown.
-    // When auspicous jumps to an event, the date was set by AstroEngine.setDateUTC()
-    // and flows through timeState.navTargetDateUTC. Live interval at 5s will
-    // redraw with same event time (ASC rotation stays correct).
+    // Date chain priority:
+    // 1. navTargetDateUTC (user navigation - button clicks, date box)
+    // 2. __liveDate (real-time clock when in transit/natal live mode)
+    // 3. timeState.dateUTC (normal timeline position)
+    // 4. AstroEngine fallback
+    // 5. new Date() (last resort)
+    const isLive = isLiveMode && window.__liveDate instanceof Date && !window._auspiciousJumped;
     const t = (typeof timeState !== "undefined" && timeState && timeState.navTargetDateUTC instanceof Date) ? timeState.navTargetDateUTC :
+        (isLive) ? window.__liveDate :
         (typeof timeState !== "undefined" && timeState && timeState.dateUTC instanceof Date) ? timeState.dateUTC :
         (window.AstroEngine && window.AstroEngine.dateUTC instanceof Date) ? window.AstroEngine.dateUTC :
         (window.AstroEngine && window.AstroEngine.dateUTC) ? new Date(window.AstroEngine.dateUTC) :
@@ -2975,28 +2992,15 @@ for (const k of show) {
   function startLiveUpdate() {
     if (liveUpdateInterval) return;
     isLiveMode = true;
-    // On first start, jump the engine to current time unless
-    // the user jumped here from an auspicious event
-    if (!window._auspiciousJumped) {
-      // Engages the current-time tick on next draw without
-      // disturbing AstroEngine for the non-live rAF loop.
-      // The 5s timer below keeps it advancing.
-      window.__liveModeArmed = true;
-    }
+    // Set __liveDate immediately so first wheel open shows live time
+    window.__liveDate = new Date();
     liveUpdateInterval = setInterval(() => {
       if (wheelModal.getAttribute("aria-hidden") !== "false") return;
-      // Don't waste CPU/redraw when a natal chart is active — it freezes the clock,
-      // except in Natal anchoring mode where we want transit planets advancing on the fixed frame
+      // Don't waste CPU when a natal chart is active
       if (window.NatalChart && window.NatalChart.enabled && window.astrowheelSkyMode !== 'natal') return;
-      // Advance the engine to current real time (doesn't apply during auspicious view)
-      if (!window._auspiciousJumped && typeof AstroEngine !== "undefined") {
-        const now = new Date();
-        // Only advance if the engine's date has diverged from now by >2s
-        const engineMs = Number(AstroEngine.dateUTC);
-        if (!engineMs || Math.abs(now.getTime() - engineMs) > 2000) {
-          AstroEngine.setDateUTC(now);
-          if (typeof renderDateBox === "function") renderDateBox(now);
-        }
+      // Update __liveDate to current wall clock — does NOT touch AstroEngine/timeState
+      if (!window._auspiciousJumped) {
+        window.__liveDate = new Date();
       }
       drawAstroWheel();
     }, 5000);
@@ -3008,6 +3012,8 @@ for (const k of show) {
       liveUpdateInterval = null;
     }
     isLiveMode = false;
+    // Clear __liveDate so date box properly shows the timeline position
+    window.__liveDate = null;
   }
 
   // Toggle live mode - can be called from ui-controller when "Reset to Now" is clicked
@@ -3026,19 +3032,24 @@ for (const k of show) {
     }
   });
 
-  // Stop live update when wheel closes
+  // Stop live update when wheel closes (keep isLiveMode so reopen restarts)
   const originalCloseWheel = closeWheel;
   closeWheel = function() {
-    stopLiveUpdate();
+    if (liveUpdateInterval) {
+      clearInterval(liveUpdateInterval);
+      liveUpdateInterval = null;
+    }
     originalCloseWheel();
   };
 
-  // Start in Fixed mode (no live update by default — wheel follows timeline)
-  // startLiveUpdate();  // <-- removed: was causing wheel to ignore timeline scrubbing
+  // Start in Transit (live) mode by default — the sky moves in real time on page load.
+  // __liveDate is a separate variable that never touches AstroEngine/timeState,
+  // so the timeline animation loop is not disrupted.
+  startLiveUpdate();
 
   // =========================================================
-  let _skyMode = 'tropical';
-  window.astrowheelSkyMode = 'tropical';
+  let _skyMode = 'transit';
+  window.astrowheelSkyMode = 'transit';
   // Compat: astrowheelFixedSky derived for planting.js references
   // Uses closure var _skyMode to avoid infinite recursion through get/set
   Object.defineProperty(window, 'astrowheelFixedSky', {
@@ -3055,9 +3066,9 @@ for (const k of show) {
     for (const btn of skyBtns) {
       if (!btn) continue;
       const isActive = btn.id.replace('skyMode', '').toLowerCase() === mode;
-      btn.style.background = isActive ? (SKY_COLORS[mode] || "rgba(0,200,80,.35)") : "rgba(255,255,255,.1)";
-      btn.style.color = isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)";
-      btn.style.fontWeight = isActive ? "600" : "400";
+      btn.style.setProperty("background", isActive ? (SKY_COLORS[mode] || "rgba(0,200,80,.35)") : "rgba(255,255,255,.1)", "important");
+      btn.style.setProperty("color", isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)", "important");
+      btn.style.setProperty("font-weight", isActive ? "600" : "400", "important");
     }
   }
   function setSkyMode(mode) {
@@ -3079,10 +3090,10 @@ for (const k of show) {
     const mode = btn.id.replace('skyMode', '').toLowerCase();
     btn.addEventListener("click", () => setSkyMode(mode));
   }
-  // Start in Tropical mode
-  _skyMode = 'tropical';
-  window.astrowheelSkyMode = 'tropical';
-  updateSkyModeUI('tropical');
+  // Start in Transit (live) mode
+  _skyMode = 'transit';
+  window.astrowheelSkyMode = 'transit';
+  updateSkyModeUI('transit');
 
   // BODIES MODAL
   // =========================================================

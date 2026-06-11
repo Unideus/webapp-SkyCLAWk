@@ -14,6 +14,7 @@ const EventsRenderer = {
     { id: "politics",       label: "Political Realignment",      abbr: "Pol",  color: "#9C27B0" },
     { id: "disaster",       label: "Pandemic & Disaster",        abbr: "Nat",  color: "#795548" },
     { id: "culture",        label: "Cultural Milestones",        abbr: "Cul",  color: "#FFD700" },
+    { id: "psyops",         label: "PSYOPS / Asymmetric Warfare", abbr: "Psy",  color: "#6A1B9A" },
   ],
 
   activeCategory: null,
@@ -144,32 +145,7 @@ const EventsRenderer = {
   },
 
   positionCategoryBarOnLifeline() {
-    const wrap = document.getElementById("categoryBarWrap");
-    const scienceBtn = document.querySelector('#categoryBar .cat-btn[data-category="science"]');
-    const svg = document.getElementById("screwSVG");
-    const scrollGroup = document.getElementById("scrollGroup");
-    if (!wrap || !scienceBtn || !svg || !scrollGroup || !svg.createSVGPoint) return;
-
-    // Anchor the category rail on the Personal lifeline: the four personal
-    // action buttons sit above the lifeline, and Science is the first button
-    // below it. LIFELINE_Y is in screw SVG coordinates, so map it through
-    // the scrollGroup screen CTM to fixed-position viewport pixels.
-    const lifelineY = (window.PersonalLife && Number.isFinite(window.PersonalLife.LIFELINE_Y))
-      ? window.PersonalLife.LIFELINE_Y
-      : 500;
-    const pt = svg.createSVGPoint();
-    pt.x = 0;
-    pt.y = lifelineY;
-    const ctm = scrollGroup.getScreenCTM && scrollGroup.getScreenCTM();
-    if (!ctm) return;
-    const screenPoint = pt.matrixTransform(ctm);
-
-    const wrapRect = wrap.getBoundingClientRect();
-    const scienceRect = scienceBtn.getBoundingClientRect();
-    const scienceOffset = scienceRect.top - wrapRect.top;
-    const gapBelowLifeline = 6;
-    wrap.style.top = Math.round(screenPoint.y + gapBelowLifeline - scienceOffset) + "px";
-    wrap.style.bottom = "auto";
+    // Disabled — let CSS handle positioning
   },
 
   selectCategory(catId) {
@@ -312,11 +288,8 @@ const EventsRenderer = {
       rect.appendChild(t);
       rect.style.cursor = "pointer";
       rect.addEventListener("click", () => {
-        const d = new Date(Date.UTC(ev.year, 6, 1));
-        if (typeof timeState !== "undefined") {
-          if (typeof timeState.goToYear === "function") { timeState.goToYear(ev.year); return; }
-          if (typeof dateToScrollX === "function") { timeState.scrollX = dateToScrollX(d); timeState.dateUTC = d; }
-        }
+        const wiki = ev.wiki || ev.title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/ /g, "_");
+        window.open("https://en.wikipedia.org/wiki/" + wiki, "_blank");
       });
       group.appendChild(rect);
       const l = document.createElementNS(ns, "text");

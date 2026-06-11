@@ -2037,7 +2037,7 @@ window.HISTORICAL_EVENTS = [
     year: 1995,
     title: "Oklahoma City bombing",
     subtitle: "168 dead, worst US terror attack pre-9/11",
-    category: "disaster",
+    category: "psyops",
     color: "#795548"
   },
   {
@@ -2045,7 +2045,7 @@ window.HISTORICAL_EVENTS = [
     year: 2001,
     title: "9/11 attacks",
     subtitle: "2,977 dead, World Trade Center, Pentagon",
-    category: "disaster",
+    category: "psyops",
     color: "#795548"
   },
   {
@@ -3508,7 +3508,7 @@ window.HISTORICAL_EVENTS = [
     year: 1968,
     title: "MLK assassinated",
     subtitle: "Riots across 100+ US cities",
-    category: "politics",
+    category: "psyops",
     color: "#9C27B0"
   },
   {
@@ -3537,6 +3537,14 @@ window.HISTORICAL_EVENTS = [
     color: "#9C27B0"
   },
   {
+    id: "mk_ultra",
+    year: 1953,
+    title: "MK-Ultra",
+    subtitle: "CIA mind control program — illegal human experiments, 84+ institutions",
+    category: "psyops",
+    color: "#9C27B0"
+  },
+  {
     id: "watergate",
     year: 1972,
     title: "Watergate break-in",
@@ -3557,7 +3565,7 @@ window.HISTORICAL_EVENTS = [
     year: 1973,
     title: "Roe v. Wade",
     subtitle: "Constitutional right to abortion",
-    category: "politics",
+    category: "psyops",
     color: "#9C27B0"
   },
   {
@@ -4469,7 +4477,7 @@ window.HISTORICAL_EVENTS = [
     year: 1964,
     title: "Gulf of Tonkin incident",
     subtitle: "Congress authorizes full Vietnam escalation",
-    category: "warfare",
+    category: "psyops",
     color: "#F44336"
   },
   {
@@ -4493,7 +4501,7 @@ window.HISTORICAL_EVENTS = [
     year: 1970,
     title: "Kent State shootings",
     subtitle: "National Guard kills 4 anti-war protesters",
-    category: "warfare",
+    category: "psyops",
     color: "#F44336"
   },
   {
@@ -7176,14 +7184,6 @@ window.HISTORICAL_EVENTS = [
     category: "social",
     color: "#E040FB"
   },
-  {
-    id: "mlk_assassination_1968",
-    year: 1968,
-    title: "MLK assassinated",
-    subtitle: "Riots in 100+ cities, final blow to movement",
-    category: "social",
-    color: "#E040FB"
-  },
 
   // Women's rights
   {
@@ -7715,14 +7715,6 @@ window.HISTORICAL_EVENTS = [
     color: "#E040FB"
   },
   {
-    id: "kent_state_social",
-    year: 1970,
-    title: "Kent State shootings",
-    subtitle: "4 students killed, student strikes nationwide",
-    category: "social",
-    color: "#E040FB"
-  },
-  {
     id: "occupy_wall_street",
     year: 2011,
     title: "Occupy Wall Street",
@@ -7876,14 +7868,6 @@ window.HISTORICAL_EVENTS = [
     year: 1682,
     title: "La Salle claims Louisiana",
     subtitle: "France claims Mississippi basin to Gulf",
-    category: "empire",
-    color: "#4CAF50"
-  },
-  {
-    id: "salem_witch_trials",
-    year: 1692,
-    title: "Salem witch trials",
-    subtitle: "20 executed, colonial religious panic",
     category: "empire",
     color: "#4CAF50"
   },
@@ -9840,15 +9824,7 @@ window.HISTORICAL_EVENTS = [
     color: "#FF5722"
   },
 
-    {
-    id: "nine_eleven_warfare",
-    year: 2001,
-    title: "9/11 attacks",
-    subtitle: "2,977 dead, World Trade Center, Pentagon",
-    category: "warfare",
-    color: "#F44336"
-  },
-  ]
+    ]
 
 window.ERA_HISTORY_EVENTS = [
   {

@@ -95,13 +95,9 @@
 			btn.classList.toggle("active", btn.dataset.scale === timelineScale);
 		});
 
-		// Default sky mode by scale: personal → transit (real-time), generational → tropical (fixed)
+		// Default: all scales start in Transit (real-time) mode — sky moves on page load
 		if (typeof window.setSkyMode === "function") {
-			if (nextScale === "personal") {
-				window.setSkyMode("transit");
-			} else {
-				window.setSkyMode("tropical");
-			}
+			window.setSkyMode("transit");
 		}
 	}
 
