@@ -641,7 +641,9 @@ const PersonalLife = {
 
     const xBirth = yearToScrewX(birthYear);
     const yBirth = timelineY;
-    const xNowForLine = yearToScrewX(now.getFullYear());
+    const xNowForLine = (typeof dateToScrewX === "function")
+      ? dateToScrewX(now)
+      : yearToScrewX(now.getFullYear());
     const fracNowForLine = Math.max(0, (xNowForLine - xBirth) / (4 * ppj));
     const xEnd = xBirth + fracNowForLine * 4 * ppj;
     const yEnd = yBirth - fracNowForLine * screwH;
@@ -775,10 +777,10 @@ const PersonalLife = {
     g.appendChild(nowDot);
 
     const nowLbl = document.createElementNS(ns, "text");
-    nowLbl.setAttribute("x", xNow - 10); nowLbl.setAttribute("y", yNow + 4);
-    nowLbl.setAttribute("text-anchor", "end");
+    nowLbl.setAttribute("x", xNow); nowLbl.setAttribute("y", yNow - 8);
+    nowLbl.setAttribute("text-anchor", "middle");
     nowLbl.setAttribute("fill", color);
-    nowLbl.setAttribute("font-size", "9");
+    nowLbl.setAttribute("font-size", "14");
     nowLbl.setAttribute("font-weight", "700");
     nowLbl.textContent = currentAge.toString();
     g.appendChild(nowLbl);
@@ -1114,17 +1116,36 @@ function bindModalEventListeners() {
   const natalSaveBtn = document.getElementById("natalSaveBtn");
   if (natalSaveBtn) {
     natalSaveBtn.addEventListener("click", () => {
+      const personRadio = document.getElementById("natalModePerson");
+      const isPersonMode = personRadio && personRadio.checked;
       const name = document.getElementById("natalName");
       const date = document.getElementById("natalDate");
       const time = document.getElementById("natalTime");
       const city = document.getElementById("natalCity");
       if (date && date.value) {
-        PersonalLife.setBirth(
-          name ? name.value : "",
-          date.value,
-          time ? time.value : "12:00",
-          city ? city.value : ""
-        );
+        if (isPersonMode) {
+          // Person mode: add to profiles, DON'T touch active, DON'T close modal
+          const profileName = (name ? name.value : "").trim() || "Person " + Date.now();
+          PersonalLife.addPersonProfile(
+            profileName,
+            date.value,
+            time ? time.value : "12:00",
+            city ? city.value : ""
+          );
+          // Clear fields for next entry
+          if (name) name.value = "";
+          if (date) date.value = "";
+          if (time) time.value = "12:00";
+          if (city) city.value = "";
+        } else {
+          // Natal mode: set as active profile, closes modal, page resets to new natal
+          PersonalLife.setBirth(
+            name ? name.value : "",
+            date.value,
+            time ? time.value : "12:00",
+            city ? city.value : ""
+          );
+        }
       }
     });
   }
@@ -1148,6 +1169,61 @@ function bindModalEventListeners() {
   if (natalCloseBtn) natalCloseBtn.addEventListener("click", () => PersonalLife.closeNatalModal());
   const natalCloseX = document.getElementById("natalModalClose");
   if (natalCloseX) natalCloseX.addEventListener("click", () => PersonalLife.closeNatalModal());
+
+  // Radio toggle: Natal → show active profile, Person → clear fields
+  const natalModeNatal = document.getElementById("natalModeNatal");
+  const natalModePerson = document.getElementById("natalModePerson");
+  function applyNatalMode() {
+    const isNatal = natalModeNatal && natalModeNatal.checked;
+    const p = PersonalLife.getActiveProfile();
+    const nn = document.getElementById("natalName");
+    const nd = document.getElementById("natalDate");
+    const nt = document.getElementById("natalTime");
+    const nc = document.getElementById("natalCity");
+    if (isNatal) {
+      if (p && p.birthData) {
+        if (nn) nn.value = p.name || "";
+        if (nd) nd.value = p.birthData.date || "";
+        if (nt) nt.value = p.birthData.time || "12:00";
+        if (nc) nc.value = p.birthData.city || "";
+      } else {
+        if (nn) nn.value = "";
+        if (nd) nd.value = "";
+        if (nt) nt.value = "12:00";
+        if (nc) nc.value = "";
+      }
+    } else {
+      // Person mode: blank fields for adding someone new
+      if (nn) nn.value = "";
+      if (nd) nd.value = "";
+      if (nt) nt.value = "12:00";
+      if (nc) nc.value = "";
+    }
+  }
+  if (natalModeNatal) natalModeNatal.addEventListener("change", applyNatalMode);
+  if (natalModePerson) natalModePerson.addEventListener("change", applyNatalMode);
+
+  // Profile list double-click → Person mode, load that person
+  const profileList = document.getElementById("profileList");
+  if (profileList) {
+    profileList.addEventListener("dblclick", () => {
+      if (profileList.value) {
+        const p = PersonalLife.getProfile(profileList.value);
+        if (p) {
+          if (natalModePerson) natalModePerson.checked = true;
+          if (natalModeNatal) natalModeNatal.checked = false;
+          const nn = document.getElementById("natalName");
+          const nd = document.getElementById("natalDate");
+          const nt = document.getElementById("natalTime");
+          const nc = document.getElementById("natalCity");
+          if (nn) nn.value = p.name || "";
+          if (nd) nd.value = (p.birthData && p.birthData.date) || "";
+          if (nt) nt.value = (p.birthData && p.birthData.time) || "12:00";
+          if (nc) nc.value = (p.birthData && p.birthData.city) || "";
+        }
+      }
+    });
+  }
   const natalModal = document.getElementById("natalModal");
   if (natalModal) {
     natalModal.addEventListener("click", (e) => {

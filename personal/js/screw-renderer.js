@@ -1,6 +1,3 @@
-/* Personal page fallback for generation-only globals removed during split. */
-const showSaeculumLabels = true;
-const CUSTOM_GENERATION_LABELS = [];
 	/* screw-renderer.js — builds the timeline SVG screw */
 	/* =========================================================
 		   SECTION 09 — BUILD THE SCREW (STATIC GEOMETRY)
@@ -689,7 +686,9 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			const SCREW_BOTTOM = CANON.TIMELINE_Y;
 
 			// ---- 1) Vertical dashed lines at each conjunction position ----
-			for (let x = X_MIN; x <= X_MAX; x += PX_PER_MAJOR) {
+			// Align start to SCREW_EPOCH_X so lines pass through conj markers
+			const gridStart = SCREW_EPOCH_X + Math.floor((X_MIN - SCREW_EPOCH_X) / PX_PER_MAJOR) * PX_PER_MAJOR;
+			for (let x = gridStart; x <= X_MAX; x += PX_PER_MAJOR) {
 				const vLine = document.createElementNS(ns, "line");
 				vLine.setAttribute("x1", x);
 				vLine.setAttribute("x2", x);
@@ -1144,12 +1143,20 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					el.style.gap = "3px";
 					el.style.lineHeight = "1";
 					el.style.textShadow = "0 0 3px rgba(0,0,0,0.85), 0 0 3px rgba(0,0,0,0.85)";
+					el.style.background = "rgba(0,0,0,0.55)";
+					el.style.padding = "0 8px";
+					el.style.height = H + "px";
+					el.style.boxSizing = "border-box";
+					el.style.display = "inline-flex";
+					el.style.alignItems = "center";
+					el.style.borderRadius = "6px";
 
 					el.dataset.keep = "1";
 
 					// lock to left edge of the SVG on screen
 					const svgRect = svg.getBoundingClientRect();
-					el.style.left = `${svgRect.left + 14}px`;
+					const bandLeftPx = svgRect.left;
+					el.style.left = `${bandLeftPx}px`;
 
 					// Center on the rendered lanes. The SVG band group is 3px below the old 22px pad.
 					// Keep this deterministic; querying the rect here can fail during live rebuild/rerender timing.
@@ -1207,29 +1214,24 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				const MASKED_PAIR = isVenusMercury;
 
 				if (MASKED_PAIR && events && events.length >= 2) {
-					const firstDate = parseIsoZ(events[0].t);
-					const lastDate = parseIsoZ(events[events.length - 1].t);
-					if (Number.isFinite(firstDate.getTime()) && Number.isFinite(lastDate.getTime())) {
-						const xStart = dateToScrewX(firstDate);
-						const xEnd = dateToScrewX(lastDate);
-						if (Number.isFinite(xStart) && Number.isFinite(xEnd) && xEnd > xStart) {
-							const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					// Full screw span — use MINX/MAXX so mask covers the entire timeline
+					const xStart = MINX;
+					const xEnd = MAXX;
+					if (Number.isFinite(xStart) && Number.isFinite(xEnd) && xEnd > xStart) {
+						const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 							maskRect.setAttribute("x", xStart);
 							maskRect.setAttribute("y", Y);
 							maskRect.setAttribute("width", xEnd - xStart);
 							maskRect.setAttribute("height", H);
 							maskRect.setAttribute("fill", "rgba(255,255,255,0.08)");
 							maskRect.setAttribute("data-venus-mercury-mask", "1");
-							groupEl.appendChild(maskRect);
-						}
+						groupEl.appendChild(maskRect);
 					}
 					// Skip the individual rect rendering below
 					groupEl.appendChild(rectLayer);
 					groupEl.appendChild(glyphLayer);
 					return;
 				}
-
-				
 
 				// --- Safe viewport values (works even early-load) ---
 				const haveViewport = Number.isFinite(MINX) && Number.isFinite(MAXX) && Number.isFinite(PX_PER_MAJOR);
@@ -1675,7 +1677,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			text.setAttribute("font-size", "14");
 			text.setAttribute("font-weight", "bold");
 			text.setAttribute("opacity", "0.95");
-			text.setAttribute("text-anchor", "middle");
+			text.setAttribute("text-anchor", "start");
 			// Thick background-colored stroke erases the DLL behind each letter
 			text.setAttribute("paint-order", "stroke");
 			text.setAttribute("stroke", "#0d0d14");

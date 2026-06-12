@@ -608,6 +608,16 @@
 				window.NatalChart.enabled = true;
 				window.__natalDirty = (window.__natalDirty || 0) + 1;
 
+				// Disable live mode so the wheel follows the input date, not the clock
+				if (typeof window.setAstroWheelLiveMode === "function") {
+					window.setAstroWheelLiveMode(false);
+				}
+				// Clear house cache so transit ASC recomputes for the new timeline position
+				if (window.__houseCache) {
+					if (typeof window.__houseCache.clear === "function") window.__houseCache.clear();
+					else window.__houseCache = new Map();
+				}
+
 				if (typeof drawAstroWheel === "function") drawAstroWheel();
 			} catch(e) {
 				console.error("[natalSet] ERROR:", e.message, e.stack);

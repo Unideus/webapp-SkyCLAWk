@@ -3,7 +3,6 @@
 			SECTION 08 — DOM REFERENCES
 	========================================================= */
 
-	const DIAG_LABEL_Y_OFFSET = -18;
 	function updateElementButtonLabels() {}
 	const bands = document.getElementById("bands");
 	const diags = document.getElementById("diags");
@@ -609,6 +608,16 @@
 				window.NatalChart.enabled = true;
 				window.__natalDirty = (window.__natalDirty || 0) + 1;
 
+				// Disable live mode so the wheel follows the input date, not the clock
+				if (typeof window.setAstroWheelLiveMode === "function") {
+					window.setAstroWheelLiveMode(false);
+				}
+				// Clear house cache so transit ASC recomputes for the new timeline position
+				if (window.__houseCache) {
+					if (typeof window.__houseCache.clear === "function") window.__houseCache.clear();
+					else window.__houseCache = new Map();
+				}
+
 				if (typeof drawAstroWheel === "function") drawAstroWheel();
 			} catch(e) {
 				console.error("[natalSet] ERROR:", e.message, e.stack);
@@ -1065,6 +1074,10 @@
 			isPaused = false;
 
 			timeState.navTargetDateUTC = d;  // <-- this triggers the smooth glide in your main loop
+			// User navigation disables live mode so wheel follows the chosen date
+			if (typeof window.setAstroWheelLiveMode === "function") {
+				window.setAstroWheelLiveMode(false);
+			}
 			requestWheelRedraw();
 			}
 
@@ -1079,6 +1092,11 @@
 			speedSlider.value = 0;
 			isPaused = false;
 			gotoYearExact(year);
+			// User navigation disables live mode so wheel follows the chosen date
+			if (typeof window.setAstroWheelLiveMode === "function") {
+				window.setAstroWheelLiveMode(false);
+			}
+			window._auspiciousJumped = true;
 			if (typeof drawAstroWheel === "function") drawAstroWheel();
 			}
 

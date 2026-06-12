@@ -3113,6 +3113,11 @@ for (const k of show) {
     if (!mode || !['tropical','transit','natal'].includes(mode)) mode = 'tropical';
     _skyMode = mode;
     window.astrowheelSkyMode = mode;
+    // Clear cached houses so ASC recalculates on mode switch
+    if (window.__houseCache) {
+      if (typeof window.__houseCache.clear === "function") window.__houseCache.clear();
+      else window.__houseCache = new Map();
+    }
     updateSkyModeUI(mode);
     // Live interval: only run for transit and natal (planet positions update in natal mode)
     if (typeof window.setAstroWheelLiveMode === "function") {
