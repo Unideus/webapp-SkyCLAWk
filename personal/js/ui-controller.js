@@ -691,6 +691,48 @@
 		}
 	}
 	if (importToNatalBtn) importToNatalBtn.addEventListener("click", importDateToNatal);
+	
+	// Arrow connecting Import to Natal button → natal modal
+	const importArrow = document.getElementById("importArrow");
+	function positionImportArrow() {
+		if (!importArrow || !importToNatalBtn || !natalModal) return;
+		const btnRect = importToNatalBtn.getBoundingClientRect();
+		const modalRect = natalModal.getBoundingClientRect();
+		// Only show when modal is open
+		const modalVisible = natalModal.style.display !== "none" && modalRect.width > 0;
+		importArrow.style.display = modalVisible ? "block" : "none";
+		if (!modalVisible) return;
+		// Arrow starts at button right edge, curves up to modal bottom edge
+		const startX = btnRect.right - 8;
+		const startY = btnRect.top + btnRect.height / 2;
+		const endX = modalRect.left + modalRect.width / 2;
+		const endY = modalRect.bottom;
+		const w = Math.abs(endX - startX) + 20;
+		const h = Math.abs(endY - startY) + 20;
+		importArrow.style.left = (Math.min(startX, endX) - 10) + "px";
+		importArrow.style.top = (Math.min(startY, endY) - 10) + "px";
+		importArrow.setAttribute("width", String(w));
+		importArrow.setAttribute("height", String(h));
+		importArrow.setAttribute("viewBox", "0 0 " + w + " " + h);
+		const relStartX = startX - Math.min(startX, endX) + 10;
+		const relStartY = startY - Math.min(startY, endY) + 10;
+		const relEndX = endX - Math.min(startX, endX) + 10;
+		const relEndY = endY - Math.min(startY, endY) + 10;
+		const cp1x = relStartX;
+		const cp1y = relStartY - h * 0.4;
+		const cp2x = relEndX;
+		const cp2y = relEndY - h * 0.3;
+		const path = importArrow.querySelector("path");
+		const arrowHead = importArrow.querySelector("polygon");
+		if (path) path.setAttribute("d", `M${relStartX} ${relStartY} C${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${relEndX} ${relEndY}`);
+		if (arrowHead) arrowHead.setAttribute("points", `${relEndX-4} ${relEndY-10} ${relEndX+6} ${relEndY-6} ${relEndX-2} ${relEndY+2}`);
+	}
+	// Reposition on resize/scroll
+	window.addEventListener("resize", positionImportArrow);
+	window.addEventListener("scroll", positionImportArrow);
+	// Also position after any modal open
+	window.addEventListener("zy:screwBuilt", () => { setTimeout(positionImportArrow, 100); });
+	setInterval(positionImportArrow, 500);
 
 /* ============================================================
    SECTION 08.1 — CONTROL WIRING (INTERACTION BEHAVIOR)
