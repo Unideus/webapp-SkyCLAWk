@@ -1200,6 +1200,35 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				const isOverlay = (Y <= -(H * 1.5));
 				const laneIdx = isOverlay ? 1 : 0;
 
+				// ── Venus-Mercury mask: too dense (every ~6 mo = ~3000 events over 2400 yr).
+				// Render a single solid band instead of thousands of sub-pixel rects.
+				const pairKey = (p1Label && p2Label) ? `${p1Label}|${p2Label}` : '';
+				const isVenusMercury = pairKey === "Venus|Mercury" || pairKey === "Mercury|Venus";
+				const MASKED_PAIR = isVenusMercury;
+
+				if (MASKED_PAIR && events && events.length >= 2) {
+					const firstDate = parseIsoZ(events[0].t);
+					const lastDate = parseIsoZ(events[events.length - 1].t);
+					if (Number.isFinite(firstDate.getTime()) && Number.isFinite(lastDate.getTime())) {
+						const xStart = dateToScrewX(firstDate);
+						const xEnd = dateToScrewX(lastDate);
+						if (Number.isFinite(xStart) && Number.isFinite(xEnd) && xEnd > xStart) {
+							const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+							maskRect.setAttribute("x", xStart);
+							maskRect.setAttribute("y", Y);
+							maskRect.setAttribute("width", xEnd - xStart);
+							maskRect.setAttribute("height", H);
+							maskRect.setAttribute("fill", "rgba(255,255,255,0.08)");
+							maskRect.setAttribute("data-venus-mercury-mask", "1");
+							groupEl.appendChild(maskRect);
+						}
+					}
+					// Skip the individual rect rendering below
+					groupEl.appendChild(rectLayer);
+					groupEl.appendChild(glyphLayer);
+					return;
+				}
+
 				
 
 				// --- Safe viewport values (works even early-load) ---
@@ -1407,7 +1436,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				// -------------------------
 				const baseEvents = getEventsForPair("Saturn", "Jupiter");
 				if (baseEvents) {
-					drawBand(baselineGroup, baseEvents, Y_BASE, OP_BASE);
+					drawBand(baselineGroup, baseEvents, Y_BASE, OP_BASE, "Saturn", "Jupiter");
 					setHudLabelForLane(Y_BASE, "Saturn", "Jupiter");
 				}
 
@@ -1445,7 +1474,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					if (selKey !== "Saturn|Jupiter" && selKey !== "Jupiter|Saturn") {
 						const overlayEvents = getEventsForPair(sel.p1, sel.p2);
 						if (overlayEvents) {
-							drawBand(overlayGroup, overlayEvents, Y_OVER, OP_OVER);
+							drawBand(overlayGroup, overlayEvents, Y_OVER, OP_OVER, sel.p1, sel.p2);
 							setHudLabelForLane(Y_OVER, sel.p1, sel.p2);
 						}
 					}
