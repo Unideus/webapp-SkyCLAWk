@@ -310,6 +310,13 @@
   }
 
   function openModal() {
+    const card = elements.modal.querySelector(".aspect-search-card");
+    if (card) {
+      card.style.position = "";
+      card.style.left = "";
+      card.style.top = "";
+      card.style.margin = "";
+    }
     elements.modal.setAttribute("aria-hidden", "false");
     elements.bodyA.focus();
   }
@@ -369,13 +376,30 @@
   function buildUI() {
     const wheelCard = document.querySelector("#wheelModal > .zyModalCard");
     if (!wheelCard || document.getElementById("planetAspectSearchBtn")) return;
+    const categoryBar = document.getElementById("categoryBar");
+    const isPersonal = new URLSearchParams(window.location.search).get("variant") === "personal";
 
     const button = document.createElement("button");
     button.id = "planetAspectSearchBtn";
     button.type = "button";
     button.title = "Find exact planetary aspects";
     button.innerHTML = '<span aria-hidden="true">☿</span> Planet Aspect Search';
-    wheelCard.appendChild(button);
+    if (isPersonal && categoryBar) {
+      button.classList.add("cat-btn", "ephemeris-btn");
+      button.style.position = "static";
+      button.style.top = "auto";
+      button.style.right = "auto";
+      button.style.left = "auto";
+      button.style.marginBottom = "6px";
+      button.style.width = "auto";
+      setTimeout(() => {
+        if (!button.isConnected && categoryBar.isConnected) {
+          categoryBar.insertBefore(button, categoryBar.firstChild);
+        }
+      }, 0);
+    } else {
+      wheelCard.appendChild(button);
+    }
 
     const now = new Date();
     const defaultStart = new Date(Date.UTC(now.getUTCFullYear() - 5, 0, 1));

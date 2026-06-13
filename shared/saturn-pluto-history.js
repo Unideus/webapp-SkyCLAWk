@@ -50,3 +50,11 @@
     if (!knownIds.has(event.id)) events.push(mark(event));
   });
 })();
+
+// Rebuild category buttons if the renderer has already initialized
+if (typeof EventsRenderer !== "undefined" && EventsRenderer.CATEGORIES) {
+  // Force a re-scan of HISTORICAL_EVENTS for the new saturnPluto flags
+  if (typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(new CustomEvent("history:updated"));
+  }
+}

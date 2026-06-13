@@ -506,3 +506,10 @@ if (document.readyState === "loading") {
 } else {
   EventsRenderer.init();
 }
+
+// Rebuild categories when new history events are injected
+window.addEventListener("history:updated", () => {
+  if (EventsRenderer && typeof EventsRenderer.init === "function") {
+    EventsRenderer.init();
+  }
+});

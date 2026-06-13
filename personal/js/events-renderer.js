@@ -152,6 +152,7 @@ const EventsRenderer = {
       b.addEventListener("click", () => this.selectCategory(cat.id));
       bar.appendChild(b);
     });
+
     const n = document.createElement("button");
     n.className = "cat-btn";
     n.dataset.category = "";
@@ -496,3 +497,10 @@ if (document.readyState === "loading") {
 } else {
   EventsRenderer.init();
 }
+
+// Rebuild categories when new history events are injected
+window.addEventListener("history:updated", () => {
+  if (EventsRenderer && typeof EventsRenderer.init === "function") {
+    EventsRenderer.init();
+  }
+});

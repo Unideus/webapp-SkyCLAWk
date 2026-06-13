@@ -1,18 +1,19 @@
-// Neptune-pluto historical events (to be populated from podcast research)
-(function attachneptune-plutoHistory() {
+// Neptune-Pluto historical events (to be populated from podcast research)
+// Major conjunctions: 1891, 1850s, etc. (very long cycle ~13 years)
+(function attachNeptunePlutoHistory() {
   const events = window.HISTORICAL_EVENTS;
   if (!Array.isArray(events)) return;
 
-  const source = \"https://theastrologypodcast.com/\";
-  const podcast = \"\"; // TBA from research
+  const source = "https://theastrologypodcast.com/";
+  const podcast = ""; // TBA from research
 
   const existingIds = new Set([
     // TBA from podcast research
   ]);
 
   const mark = (event) => {
-    event.neptune_pluto = true;
-    event.astrologyMarker = \"neptune–\";
+    event.neptunePluto = true;
+    event.astrologyMarker = "♆–♇";
     event.researchSource = source;
     if (podcast) event.researchPodcast = podcast;
     return event;
