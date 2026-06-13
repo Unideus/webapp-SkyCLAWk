@@ -74,10 +74,16 @@ const EventsRenderer = {
     if (window.HISTORICAL_EVENTS) {
       const saturnNeptuneSeen = new Set();
       const saturnUranusSeen = new Set();
+      const saturnPlutoSeen = new Set();
+      const uranusNeptuneSeen = new Set();
+      const uranusPlutoSeen = new Set();
+      const neptunePlutoSeen = new Set();
+
       window.HISTORICAL_EVENTS.forEach(ev => {
         const c = ev.category || "other";
         if (!this.eventsByCategory[c]) this.eventsByCategory[c] = [];
         this.eventsByCategory[c].push(ev);
+
         if (ev.saturnNeptune) {
           const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
           if (!saturnNeptuneSeen.has(markerKey)) {
@@ -90,6 +96,34 @@ const EventsRenderer = {
           if (!saturnUranusSeen.has(markerKey)) {
             saturnUranusSeen.add(markerKey);
             this.eventsByCategory.saturn_uranus.push(ev);
+          }
+        }
+        if (ev.saturnPluto) {
+          const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
+          if (!saturnPlutoSeen.has(markerKey)) {
+            saturnPlutoSeen.add(markerKey);
+            this.eventsByCategory.saturn_pluto.push(ev);
+          }
+        }
+        if (ev.uranusNeptune) {
+          const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
+          if (!uranusNeptuneSeen.has(markerKey)) {
+            uranusNeptuneSeen.add(markerKey);
+            this.eventsByCategory.uranus_neptune.push(ev);
+          }
+        }
+        if (ev.uranusPluto) {
+          const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
+          if (!uranusPlutoSeen.has(markerKey)) {
+            uranusPlutoSeen.add(markerKey);
+            this.eventsByCategory.uranus_pluto.push(ev);
+          }
+        }
+        if (ev.neptunePluto) {
+          const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
+          if (!neptunePlutoSeen.has(markerKey)) {
+            neptunePlutoSeen.add(markerKey);
+            this.eventsByCategory.neptune_pluto.push(ev);
           }
         }
       });
@@ -161,6 +195,7 @@ const EventsRenderer = {
       mapBtn.id = "statesMapBtn";
       mapBtn.className = "cat-btn states-map-btn";
       mapBtn.title = "States Map Animation";
+      mapBtn.style.marginTop = "33px";
       mapBtn.innerHTML = '<span class="cat-btn-dot" style="background:#4a9eff;font-size:9px;">🗺</span><span class="cat-btn-label">States Map</span>';
       mapBtn.addEventListener("click", () => {
         if (window.USMapAnimation) window.USMapAnimation.toggle();
