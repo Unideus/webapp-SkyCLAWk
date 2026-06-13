@@ -4,6 +4,7 @@
   if (!Array.isArray(events)) return;
 
   const source = "https://en.wikipedia.org/wiki/Triple_conjunction";
+  const podcast = "https://www.youtube.com/watch?v=9JJLgO7XGlw";
 
   const existingIds = new Set([
     "uncle_toms_cabin",
@@ -30,6 +31,7 @@
     event.saturnUranus = true;
     event.astrologyMarker = "♄–♅";
     event.researchSource = source;
+    event.researchPodcast = podcast;
     return event;
   };
 
