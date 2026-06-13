@@ -4,6 +4,8 @@
 
 const EventsRenderer = {
   CATEGORIES: [
+    { id: "saturn_neptune", label: "Saturn–Neptune History",      abbr: "♄♆",   color: "#8B7CFF" },
+    { id: "saturn_uranus",   label: "Saturn–Uranus History",      abbr: "♄♅",   color: "#4FD1C5" },
     { id: "science",        label: "Science & Discovery",        abbr: "Sci",  color: "#00BCD4" },
     { id: "warfare",        label: "Warfare & Conflict",         abbr: "War",  color: "#F44336" },
     { id: "government",     label: "Government Expansion",       abbr: "Gov",  color: "#1976D2" },
@@ -71,10 +73,26 @@ const EventsRenderer = {
     this.eventsByCategory = {};
     this.CATEGORIES.forEach(cat => { this.eventsByCategory[cat.id] = []; });
     if (window.HISTORICAL_EVENTS) {
+      const saturnNeptuneSeen = new Set();
+      const saturnUranusSeen = new Set();
       window.HISTORICAL_EVENTS.forEach(ev => {
         const c = ev.category || "other";
         if (!this.eventsByCategory[c]) this.eventsByCategory[c] = [];
         this.eventsByCategory[c].push(ev);
+        if (ev.saturnNeptune) {
+          const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
+          if (!saturnNeptuneSeen.has(markerKey)) {
+            saturnNeptuneSeen.add(markerKey);
+            this.eventsByCategory.saturn_neptune.push(ev);
+          }
+        }
+        if (ev.saturnUranus) {
+          const markerKey = `${ev.year || ev.startYear}|${String(ev.title || "").toLowerCase()}`;
+          if (!saturnUranusSeen.has(markerKey)) {
+            saturnUranusSeen.add(markerKey);
+            this.eventsByCategory.saturn_uranus.push(ev);
+          }
+        }
       });
     }
     if (window.ERA_HISTORY_EVENTS) {
@@ -96,10 +114,6 @@ const EventsRenderer = {
 
     // Personal actions are part of the same category button rail.
     const actionButtons = [
-      { id: "ephemerisBtn", label: "Ephemeris", title: "Ephemeris", glyph: "☿", color: "#b26cff", cls: "ephemeris-btn", onClick: () => {
-        window.dispatchEvent(new CustomEvent("zy:ephemerisRequested"));
-        console.log("[personal] Ephemeris button clicked");
-      }},
       { id: "natalBtn", label: "Natal Data", title: "Natal Data", glyph: "✦", color: "#FFD700", cls: "natal-btn", onClick: () => {
         if (typeof PersonalLife !== "undefined" && PersonalLife.openNatalModal) PersonalLife.openNatalModal();
       }},
@@ -179,6 +193,12 @@ const EventsRenderer = {
     const BASE_Y = 240;
     const SPACING = 28;
 
+    function astroPrefix(ev) {
+      if (ev.saturnNeptune) return "♄–♆  ";
+      if (ev.saturnUranus) return "♄–♅  ";
+      return "";
+    }
+
     function textW(t) { return ((t || "").length * CHAR_W) + PAD * 2; }
 
     function addToPool(pool, x0, x1) {
@@ -233,7 +253,7 @@ const EventsRenderer = {
       l.setAttribute("font-size", "11");
       l.setAttribute("font-weight", "700");
       l.setAttribute("opacity", "0.95");
-      l.textContent = ev.title;
+      l.textContent = ev.title + (ev.saturnNeptune ? "  ♄–♆" : (ev.saturnUranus ? "  ♄–♅" : ""));
       group.appendChild(l);
       attachTooltip(bar, ev);
       attachTooltip(l, ev);
@@ -300,7 +320,7 @@ const EventsRenderer = {
       l.setAttribute("font-size", "10");
       l.setAttribute("font-weight", "600");
       l.setAttribute("opacity", "0.85");
-      l.textContent = ev.year + " " + (ev.title || "");
+      l.textContent = ev.year + " " + (ev.title || "") + (ev.saturnNeptune ? "  ♄–♆" : (ev.saturnUranus ? "  ♄–♅" : ""));
       group.appendChild(l);
       attachTooltip(rect, ev);
       attachTooltip(l, ev);
@@ -322,6 +342,12 @@ if (typeof document !== "undefined") {
 }
 const tooltipCache = {};
 
+function astroPrefixText(ev) {
+  if (ev && ev.saturnNeptune) return "♄–♆  ";
+  if (ev && ev.saturnUranus) return "♄–♅  ";
+  return "";
+}
+
 function showTooltip(ev, mouseX, mouseY) {
   const el = document.getElementById("eventTooltip");
   if (!el) return;
@@ -329,6 +355,8 @@ function showTooltip(ev, mouseX, mouseY) {
   const descEl = document.getElementById("tooltipDesc");
   const thumbEl = document.getElementById("tooltipThumb");
   const anchor = document.getElementById("tooltipAnchor");
+  const podcastWrap = document.getElementById("tooltipPodcast");
+  const podcastAnchor = document.getElementById("tooltipPodcastAnchor");
   if (!titleEl || !descEl || !anchor) return;
 
   // Show subtitle immediately (no network dependency)
@@ -341,7 +369,7 @@ function showTooltip(ev, mouseX, mouseY) {
       titlePrefix = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) + " ";
     }
   }
-  titleEl.textContent = titlePrefix + ev.title;
+  titleEl.textContent = astroPrefixText(ev) + titlePrefix + ev.title;
   
   // Use subtitle as instant summary, or fall back to subtitle-like info
   descEl.textContent = ev.subtitle || ev.description || "";
@@ -352,6 +380,16 @@ function showTooltip(ev, mouseX, mouseY) {
   // Try Wikipedia as background enrichment (silent, never blocks)
   const wiki = ev.wiki || ev.title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/ /g, "_");
   anchor.href = "https://en.wikipedia.org/wiki/" + wiki;
+
+  if (podcastWrap && podcastAnchor) {
+    if (ev.researchPodcast) {
+      podcastAnchor.href = ev.researchPodcast;
+      podcastWrap.style.display = "block";
+    } else {
+      podcastAnchor.removeAttribute("href");
+      podcastWrap.style.display = "none";
+    }
+  }
   
   if (tooltipCache[wiki]) {
     const data = tooltipCache[wiki];
@@ -408,13 +446,15 @@ function showTooltip(ev, mouseX, mouseY) {
   }
   
   // Position near mouse but keep in viewport
-  let left = mouseX + 16;
-  let top = mouseY - 10;
+  let left = mouseX + 8;
+  let top = mouseY + 12;
   const w = 380;
+  const h = 330;
   const vw = window.innerWidth;
-  if (left + w > vw - 20) left = mouseX - w - 16;
+  const vh = window.innerHeight;
+  if (left + w > vw - 12) left = mouseX - w - 8;
   if (left < 10) left = 10;
-  if (top + 300 > window.innerHeight) top = window.innerHeight - 310;
+  if (top + h > vh - 12) top = mouseY - h - 12;
   if (top < 10) top = 10;
   
   el.style.left = left + "px";
@@ -430,7 +470,7 @@ function hideTooltip() {
   hideTooltipTimer = setTimeout(() => {
     const el = document.getElementById("eventTooltip");
     if (el) el.style.display = "none";
-  }, 150);
+  }, 400);
 }
 
 function cancelHideTooltip() {
