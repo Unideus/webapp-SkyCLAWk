@@ -1929,7 +1929,7 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 /* ---------- Category bar collapse/expand (glass box) ---------- */
 #categoryBarWrap {
   position: fixed;
-  right: 20px;
+  right: 0;
   top: auto;
   bottom: 55px;
   height: auto;
@@ -1949,10 +1949,12 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 }
 
 #categoryBarWrap.collapsed {
+  right: 20px;
   transform: translateX(calc(100% - 4px));
 }
 
 #categoryBarWrap.collapsed.hover-peek {
+  right: 0;
   transform: translateX(0);
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

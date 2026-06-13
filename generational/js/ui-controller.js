@@ -239,6 +239,9 @@
 
 		screwSVGEl.style.height = `${needPx}px`;
 		document.documentElement.style.setProperty("--screw-svg-height", `${needPx}px`);
+		if (typeof window.syncCycleProjectionHeight === "function") {
+			window.syncCycleProjectionHeight();
+		}
 		}
 
 		// ---------------------------------------------------------
@@ -1076,6 +1079,10 @@
 			}
 			if (typeof requestWheelRedraw === "function") requestWheelRedraw();
 		}
+
+		window.addEventListener("zy:navigateToDate", (event) => {
+			glideToDateUTC(new Date(event.detail && event.detail.dateUTC));
+		});
 
 		function stepTimeListMs(times, direction) {
 			if (!Array.isArray(times) || !times.length) return null;

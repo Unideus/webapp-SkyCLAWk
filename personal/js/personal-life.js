@@ -42,6 +42,7 @@ const PersonalLife = {
         const data = JSON.parse(raw);
         this.profiles = data.profiles || [];
         this.activeProfile = data.activeProfile || null;
+        this.visibleProfiles = data.visibleProfiles || [];
       }
     } catch(e) { console.warn("PersonalLife: load error", e); }
     // Assign colors to profiles that don't have one yet
@@ -104,8 +105,28 @@ const PersonalLife = {
     this.populateProfileList();
   },
 
+  addPersonProfile(name, dateVal, timeVal, cityVal) {
+    const p = this.getProfile(name);
+    const dateStr = dateVal || "";
+    if (p) {
+      p.birthData = { date: dateStr, time: timeVal || "12:00", city: cityVal || "" };
+    } else {
+      const usedColors = this.profiles.map(pp => pp.color).filter(Boolean);
+      const color = this.PROFILE_COLORS ? this.PROFILE_COLORS[usedColors.length % this.PROFILE_COLORS.length] : "#fff";
+      this.profiles.push({ name: name, color: color, birthData: { date: dateStr, time: timeVal || "12:00", city: cityVal || "" }, lifeEvents: [] });
+    }
+    if (!this.visibleProfiles.includes(name)) {
+      this.visibleProfiles.push(name);
+    }
+    this.save();
+    this.renderAll();
+    this.populateProfileList();
+    // Do NOT change activeProfile or close modal
+  },
+
   deleteProfile(name) {
     this.profiles = this.profiles.filter(p => p.name !== name);
+    this.visibleProfiles = this.visibleProfiles.filter(n => n !== name);
     if (this.activeProfile === name) {
       this.activeProfile = this.profiles.length > 0 ? this.profiles[0].name : null;
       if (this.activeProfile) {
@@ -125,6 +146,7 @@ const PersonalLife = {
     const p = this.getProfile(name);
     if (!p) return;
     this.activeProfile = name;
+    this.visibleProfiles = [name];
     if (p.birthData) this.parseBirthDateUTC(p.birthData);
     else this.birthDateUTC = null;
     this.save();
@@ -183,6 +205,7 @@ const PersonalLife = {
       this.profiles.push({ name: profileName, birthData: { date: dateStr, time: timeVal || "12:00", city: cityVal || "" }, lifeEvents: [] });
     }
     this.activeProfile = profileName;
+    this.visibleProfiles = [profileName];
     this.save();
     this.renderAll();
     this.populateProfileList();
@@ -205,6 +228,9 @@ const PersonalLife = {
       p.lifeEvents = [];
     }
     this.birthDateUTC = null;
+    if (this.visibleProfiles.includes(this.activeProfile)) {
+      this.visibleProfiles = this.visibleProfiles.filter(n => n !== this.activeProfile);
+    }
     this.save();
     this.renderAll();
     this.populateProfileList();
@@ -256,8 +282,26 @@ const PersonalLife = {
       if (g) g.innerHTML = '';
     });
 
-    // Collect all persons: profiles with birth data + child events
-    const persons = this.collectAllPersons();
+    // Collect persons from visibleProfiles only
+    const persons = [];
+    (this.visibleProfiles.length > 0 ? this.visibleProfiles : 
+     (this.activeProfile ? [this.activeProfile] : [])).forEach(name => {
+      const p = this.getProfile(name);
+      if (!p || !p.birthData || !p.birthData.date) return;
+      const parts = p.birthData.date.split('-');
+      const birthYear = parseInt(parts[0]);
+      if (!birthYear) return;
+      persons.push({
+        type: 'profile',
+        profile: p,
+        name: p.name,
+        birthYear,
+        birthDateUTC: this.birthDateUTC,
+        isActive: p.name === this.activeProfile,
+        color: p.color || '#fff',
+        y: 0
+      });
+    });
     if (persons.length === 0) { this.showHideElements(); return; }
 
     // Compute Y positions — sort by birth year, stack around active

@@ -939,6 +939,34 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				saeculumGlowNode.setAttribute("flood-color", color);
 			}
 			window.updateSaeculumGlow = updateSaeculumGlow;
+
+			function syncCycleProjectionHeight() {
+				const svg = document.getElementById("screwSVG");
+				const projectionRoot = document.getElementById("cycleProjections");
+				if (!svg || !projectionRoot) return;
+
+				const svgHeight = Math.max(
+					parseFloat(svg.style.height) || 0,
+					svg.getBoundingClientRect().height || 0
+				);
+				const documentHeight = Math.max(
+					document.documentElement.scrollHeight || 0,
+					document.body ? document.body.scrollHeight : 0
+				);
+				const projectionHeight = Math.ceil(Math.max(
+					CANON.SCREW_TOTAL_HEIGHT,
+					svgHeight,
+					documentHeight
+				));
+
+				projectionRoot.querySelectorAll("rect").forEach((rect) => {
+					rect.setAttribute("height", String(projectionHeight));
+				});
+				projectionRoot.querySelectorAll("line").forEach((line) => {
+					line.setAttribute("y2", String(projectionHeight));
+				});
+			}
+			window.syncCycleProjectionHeight = syncCycleProjectionHeight;
 		
 			/* =========================================================
 				SECTION 09.6 — CONJUNCTION CYCLE BAND (SWAPPABLE)
@@ -951,7 +979,36 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			function buildConjunctionCycleBand() {
 				const baselineGroup = document.getElementById("elementalCycle");
 				const overlayGroup  = document.getElementById("overlayCycle");
+				const projectionRoot = document.getElementById("cycleProjections");
 				if (!baselineGroup) return;
+
+				const projectionState = window.__zyCycleProjectionState || (() => {
+					let saved = {};
+					try { saved = JSON.parse(localStorage.getItem("zy_cycle_projections") || "{}"); } catch (e) {}
+					return (window.__zyCycleProjectionState = {
+						baseline: saved.baseline !== false,
+						overlay: saved.overlay !== false
+					});
+				})();
+
+				function saveProjectionState() {
+					try { localStorage.setItem("zy_cycle_projections", JSON.stringify(projectionState)); } catch (e) {}
+				}
+
+				function getProjectionLane(laneKey) {
+					if (!projectionRoot) return null;
+					let lane = projectionRoot.querySelector(`[data-projection-lane="${laneKey}"]`);
+					if (!lane) {
+						lane = document.createElementNS("http://www.w3.org/2000/svg", "g");
+						lane.setAttribute("data-projection-lane", laneKey);
+						projectionRoot.appendChild(lane);
+					}
+					lane.innerHTML = "";
+					return lane;
+				}
+
+				const baselineProjection = getProjectionLane("baseline");
+				const overlayProjection = getProjectionLane("overlay");
 
 				// -----------------------------
 				// HUD housekeeping (screen-fixed labels)
@@ -1049,7 +1106,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					return out;
 				}
 
-				function setHudLabelForLane(Y, p1Label, p2Label) {
+				function setHudLabelForLane(Y, p1Label, p2Label, projectionKey) {
 					if (!p1Label || !p2Label) return;
 
 					const GLYPH = {
@@ -1133,7 +1190,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					// Re-apply every render so already-open pages do not keep stale label styles.
 					el.style.position = "fixed";
 					el.style.whiteSpace = "nowrap";
-					el.style.pointerEvents = "none";
+					el.style.pointerEvents = "auto";
+					el.style.cursor = "pointer";
 					el.style.fontFamily = "Segoe UI Symbol, Noto Sans Symbols2, Symbola, system-ui, sans-serif";
 					el.style.fontSize = "18px";
 					el.style.fontWeight = "900";
@@ -1143,14 +1201,28 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					el.style.gap = "3px";
 					el.style.lineHeight = "1";
 					el.style.textShadow = "0 0 3px rgba(0,0,0,0.85), 0 0 3px rgba(0,0,0,0.85)";
-					el.style.background = "rgba(0,0,0,0.55)";
+					el.style.background = "rgba(0,0,0,0.90)";
 					el.style.padding = "0 8px";
 					el.style.height = H + "px";
 					el.style.boxSizing = "border-box";
 					el.style.display = "inline-flex";
 					el.style.alignItems = "center";
 					el.style.borderRadius = "6px";
-					el.style.background = "rgba(0,0,0,0.55)";
+					el.style.border = projectionState[projectionKey]
+						? "1px solid rgba(255,255,255,0.55)"
+						: "1px solid rgba(255,255,255,0.16)";
+					el.style.opacity = "1";
+					el.title = projectionState[projectionKey]
+						? "Hide elemental projection through history"
+						: "Show elemental projection through history";
+					el.setAttribute("role", "button");
+					el.setAttribute("aria-pressed", projectionState[projectionKey] ? "true" : "false");
+					el.onclick = () => {
+						projectionState[projectionKey] = !projectionState[projectionKey];
+						saveProjectionState();
+						buildConjunctionCycleBand();
+					};
+					el.style.background = "rgba(0,0,0,0.90)";
 					el.style.padding = "0 8px";
 					el.style.height = H + "px";
 					el.style.boxSizing = "border-box";
@@ -1188,13 +1260,13 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const durationText = duration ? `<span style="font-size: 80%; opacity: 0.85; margin-left: 4px; line-height:1;">${duration}${String(duration).includes("mo") ? "" : " yrs"}</span>` : "";
 
 					// Larger planet glyphs, smaller conjunction mark, vertically centered as one flex row
-					el.innerHTML = `${planetGlyph(g1t)}${conjGlyph}${planetGlyph(g2t)}${durationText}`;
+					el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:3px;transform:translateY(2px);">${planetGlyph(g1t)}${conjGlyph}${planetGlyph(g2t)}${durationText}</span>`;
 				}
 
 				// -----------------------------
 				// band renderer
 				// -----------------------------
-				function drawBand(groupEl, events, Y, bandOpacity, p1Label, p2Label) {
+				function drawBand(groupEl, projectionGroup, projectionEnabled, events, Y, bandOpacity, p1Label, p2Label) {
 				if (!groupEl || !events || events.length < 2 || typeof dateToScrewX !== "function") return;
 
 				// Clear ONLY this band so old cycles don't stick around
@@ -1383,6 +1455,29 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					rect.setAttribute("opacity", String(bandOpacity * decay.fill));
 					rectLayer.appendChild(rect);
 
+					if (projectionGroup && projectionEnabled) {
+						const projectionRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+						projectionRect.setAttribute("x", x0);
+						projectionRect.setAttribute("y", "0");
+						projectionRect.setAttribute("width", w);
+						projectionRect.setAttribute("height", String(CANON.SCREW_TOTAL_HEIGHT));
+						projectionRect.setAttribute("fill", `rgb(${rgb})`);
+						projectionRect.setAttribute("fill-opacity", "0.05");
+						projectionRect.setAttribute("pointer-events", "none");
+						projectionGroup.appendChild(projectionRect);
+
+						const boundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
+						boundary.setAttribute("x1", x0);
+						boundary.setAttribute("x2", x0);
+						boundary.setAttribute("y1", "0");
+						boundary.setAttribute("y2", String(CANON.SCREW_TOTAL_HEIGHT));
+						boundary.setAttribute("stroke", `rgb(${rgb})`);
+						boundary.setAttribute("stroke-opacity", "0.15");
+						boundary.setAttribute("stroke-width", "1");
+						boundary.setAttribute("pointer-events", "none");
+						projectionGroup.appendChild(boundary);
+					}
+
 					// White boundary line — decays subtly so repeated older cycles recede
 					rect.setAttribute("shape-rendering", "crispEdges");
 					rect.setAttribute("stroke", "#ffffff");
@@ -1455,8 +1550,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				// -------------------------
 				const baseEvents = getEventsForPair("Saturn", "Jupiter");
 				if (baseEvents) {
-					drawBand(baselineGroup, baseEvents, Y_BASE, OP_BASE, "Saturn", "Jupiter");
-					setHudLabelForLane(Y_BASE, "Saturn", "Jupiter");
+					drawBand(baselineGroup, baselineProjection, projectionState.baseline, baseEvents, Y_BASE, OP_BASE, "Saturn", "Jupiter");
+					setHudLabelForLane(Y_BASE, "Saturn", "Jupiter", "baseline");
 				}
 
 				// shadow strip
@@ -1493,8 +1588,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					if (selKey !== "Saturn|Jupiter" && selKey !== "Jupiter|Saturn") {
 						const overlayEvents = getEventsForPair(sel.p1, sel.p2);
 						if (overlayEvents) {
-							drawBand(overlayGroup, overlayEvents, Y_OVER, OP_OVER, sel.p1, sel.p2);
-							setHudLabelForLane(Y_OVER, sel.p1, sel.p2);
+							drawBand(overlayGroup, overlayProjection, projectionState.overlay, overlayEvents, Y_OVER, OP_OVER, sel.p1, sel.p2);
+							setHudLabelForLane(Y_OVER, sel.p1, sel.p2, "overlay");
 						}
 					}
 				}
@@ -1503,6 +1598,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				Array.from(hud.children).forEach(ch => {
 					if (ch.dataset.keep !== "1") ch.remove();
 				});
+				syncCycleProjectionHeight();
 			}
 
 			// Back-compat: older code paths still call this

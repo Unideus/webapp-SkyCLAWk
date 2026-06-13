@@ -239,6 +239,9 @@
 
 		screwSVGEl.style.height = `${needPx}px`;
 		document.documentElement.style.setProperty("--screw-svg-height", `${needPx}px`);
+		if (typeof window.syncCycleProjectionHeight === "function") {
+			window.syncCycleProjectionHeight();
+		}
 		}
 
 		// ---------------------------------------------------------
@@ -1122,6 +1125,11 @@
 			}
 			requestWheelRedraw();
 			}
+
+		window.addEventListener("zy:navigateToDate", (event) => {
+			const dateUTC = new Date(event.detail && event.detail.dateUTC);
+			gotoConjunctionInstantMs(dateUTC.getTime());
+		});
 
 			function fallbackMasterConjunctionYears() {
 			if (typeof CONJUNCTION_YEARS === "undefined" || !Array.isArray(CONJUNCTION_YEARS)) return null;

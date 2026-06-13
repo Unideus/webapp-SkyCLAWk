@@ -6,6 +6,10 @@ const EventsRenderer = {
   CATEGORIES: [
     { id: "saturn_neptune", label: "Saturn–Neptune History",      abbr: "♄♆",   color: "#8B7CFF" },
     { id: "saturn_uranus",   label: "Saturn–Uranus History",      abbr: "♄♅",   color: "#4FD1C5" },
+    { id: "saturn_pluto",   label: "Saturn–Pluto History",        abbr: "♄♇",   color: "#FF6B6B" },
+    { id: "uranus_neptune", label: "Uranus–Neptune History",      abbr: "♅♆",   color: "#4ECDC4" },
+    { id: "uranus_pluto",   label: "Uranus–Pluto History",        abbr: "♅♇",   color: "#FFE66D" },
+    { id: "neptune_pluto",  label: "Neptune–Pluto History",       abbr: "♆♇",   color: "#A8DADC" },
     { id: "science",        label: "Science & Discovery",        abbr: "Sci",  color: "#00BCD4" },
     { id: "warfare",        label: "Warfare & Conflict",         abbr: "War",  color: "#F44336" },
     { id: "government",     label: "Government Expansion",       abbr: "Gov",  color: "#1976D2" },
