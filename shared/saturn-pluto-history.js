@@ -58,3 +58,45 @@ if (typeof EventsRenderer !== "undefined" && EventsRenderer.CATEGORIES) {
     window.dispatchEvent(new CustomEvent("history:updated"));
   }
 }
+
+
+// Robust applicator – waits for HISTORICAL_EVENTS if necessary
+function applySaturnPlutoMarkers() {
+  if (!window.HISTORICAL_EVENTS || !Array.isArray(window.HISTORICAL_EVENTS)) {
+    setTimeout(applySaturnPlutoMarkers, 30);
+    return;
+  }
+
+  const events = window.HISTORICAL_EVENTS;
+  const source = "https://en.wikipedia.org/wiki/Triple_conjunction";
+
+  const existingIds = new Set([ /* add known IDs here if needed */ ]);
+
+  const additions = [ /* the additions array is already in the file above */ ];
+
+  // Re-run the marking logic on current events
+  const mark = (event) => {
+    event.saturnPluto = true;
+    event.astrologyMarker = "♄–♇";
+    event.researchSource = source;
+    return event;
+  };
+
+  events.forEach((event) => {
+    if (existingIds.has(event.id)) mark(event);
+  });
+
+  const knownIds = new Set(events.map((event) => event.id));
+  additions.forEach((event) => {
+    if (!knownIds.has(event.id)) {
+      events.push(mark(event));
+    }
+  });
+
+  // Force renderer rebuild
+  if (typeof EventsRenderer !== "undefined" && typeof EventsRenderer.init === "function") {
+    EventsRenderer.init();
+  }
+}
+
+applySaturnPlutoMarkers();
