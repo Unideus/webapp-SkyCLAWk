@@ -125,8 +125,16 @@
 
 		{ t: "2026-02-20T19:04:00Z", sign: "Ari" },
 		{ t: "2061-06-07T06:42:00Z", sign: "Gem" },
-		{ t: "2096-08-27T09:29:00Z", sign: "Vir" }
-	];
+		{ t: "2096-08-27T09:29:00Z", sign: "Vir" },
+		{ t: "2132-01-17T12:00:00Z", sign: "Sco" },
+		{ t: "2169-01-26T12:00:00Z", sign: "Aqu" },
+		{ t: "2205-04-01T12:00:00Z", sign: "Tau" },
+		{ t: "2240-06-23T12:00:00Z", sign: "Can" },
+		{ t: "2312-01-01T12:00:00Z", sign: "Cap" },
+		{ t: "2348-04-20T12:00:00Z", sign: "Pis" },
+		{ t: "2384-05-17T12:00:00Z", sign: "Gem" },
+		{ t: "2454-12-09T12:00:00Z", sign: "Sco" }
+	];;
 
 	// Register in the global dataset map used by the cycle swapper
 	window.CONJUNCTION_DATASETS = window.CONJUNCTION_DATASETS || {};
