@@ -1121,6 +1121,12 @@
 				}
 				year = year ?? sorted[sorted.length - 1];
 			}
+			// Resolve to exact Saturn-Jupiter conjunction timestamp from the lattice
+			if (typeof CONJUNCTION_LATTICE !== "undefined" && Array.isArray(CONJUNCTION_LATTICE)) {
+				const match = CONJUNCTION_LATTICE.find(e => e && e.year === year && Number.isFinite(e.tMs));
+				if (match) return new Date(match.tMs);
+			}
+			// Fallback: Jan 1 at noon if no lattice match
 			return new Date(Date.UTC(year, 0, 1, 12, 0, 0));
 		}
 

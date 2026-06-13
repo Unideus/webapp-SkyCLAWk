@@ -1150,6 +1150,13 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					el.style.display = "inline-flex";
 					el.style.alignItems = "center";
 					el.style.borderRadius = "6px";
+					el.style.background = "rgba(0,0,0,0.55)";
+					el.style.padding = "0 8px";
+					el.style.height = H + "px";
+					el.style.boxSizing = "border-box";
+					el.style.display = "inline-flex";
+					el.style.alignItems = "center";
+					el.style.borderRadius = "6px";
 
 					el.dataset.keep = "1";
 
