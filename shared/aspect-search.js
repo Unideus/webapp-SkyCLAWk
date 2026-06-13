@@ -3,7 +3,7 @@
   "use strict";
 
   const DAY_MS = 86400000;
-  const MAX_RANGE_YEARS = 200;
+  const RANGE_STEP_YEARS = 200;
   const MAX_RESULTS = 500;
   const STORAGE_KEY = "zy_aspect_search";
 
@@ -78,6 +78,13 @@
   function stepDaysFor(bodyA, bodyB) {
     const rank = Math.min(SPEED_RANK[bodyA] ?? 3, SPEED_RANK[bodyB] ?? 3);
     return [0.2, 0.5, 1, 2, 4, 6][rank] || 2;
+  }
+
+  function adaptiveStepDays(bodyA, bodyB, startMs, endMs) {
+    const base = stepDaysFor(bodyA, bodyB);
+    const spanYears = Math.max(1, (endMs - startMs) / (365.2425 * DAY_MS));
+    const scale = Math.max(1, Math.ceil(spanYears / RANGE_STEP_YEARS));
+    return Math.min(30, base * scale);
   }
 
   function parseUTCDate(value, endOfDay) {
@@ -174,7 +181,7 @@
   async function findAspects(settings, token) {
     const startMs = parseUTCDate(settings.startDate, false);
     const endMs = parseUTCDate(settings.endDate, true);
-    const stepMs = stepDaysFor(settings.bodyA, settings.bodyB) * DAY_MS;
+    const stepMs = adaptiveStepDays(settings.bodyA, settings.bodyB, startMs, endMs) * DAY_MS;
     const angle = Number(settings.aspect);
     const targets = angle === 0 ? [0] : angle === 180 ? [180] : [angle, -angle];
     const hits = [];
@@ -280,9 +287,9 @@
       setStatus("Enter a valid UTC date range.", true);
       return;
     }
-    if ((endMs - startMs) / (365.2425 * DAY_MS) > MAX_RANGE_YEARS) {
-      setStatus(`Search ranges are limited to ${MAX_RANGE_YEARS} years.`, true);
-      return;
+    const spanYears = (endMs - startMs) / (365.2425 * DAY_MS);
+    if (spanYears > RANGE_STEP_YEARS) {
+      setStatus(`Wide range detected. Using a coarser scan for ${Math.ceil(spanYears)} years...`);
     }
     if (typeof window.getPlanetLongitudes !== "function") {
       setStatus("The ephemeris is not ready yet.", true);
@@ -303,7 +310,7 @@
       const limited = hits.length >= MAX_RESULTS ? ` First ${MAX_RESULTS} shown.` : "";
       setStatus(`${hits.length} exact aspect${hits.length === 1 ? "" : "s"} found.${limited}`);
     } catch (error) {
-      if (error.message !== "cancelled") setStatus("Search failed. Try a shorter date range.", true);
+      if (error.message !== "cancelled") setStatus("Search failed. Try a narrower range or wait longer.", true);
     } finally {
       if (token === cancelToken) setSearching(false);
     }
@@ -394,7 +401,12 @@
       button.style.width = "auto";
       setTimeout(() => {
         if (!button.isConnected && categoryBar.isConnected) {
-          categoryBar.insertBefore(button, categoryBar.firstChild);
+          const clearBtn = categoryBar.querySelector('button[data-category=""]');
+          if (clearBtn && clearBtn.parentElement === categoryBar) {
+            categoryBar.insertBefore(button, clearBtn);
+          } else {
+            categoryBar.appendChild(button);
+          }
         }
       }, 0);
     } else {

@@ -30,7 +30,7 @@
 
     // 2020
     { id: "covid19_pandemic_2020", year: 2020, date: "2020-01-12", title: "COVID-19 pandemic begins", subtitle: "Novel coronavirus confirmed in China; global lockdowns follow", category: "disaster", wiki: "COVID-19_pandemic" },
-    { id: "populism_rise_2016_2020", year: 2016, title: "Rise of populism peaks", subtitle: "Brexit referendum and Trump presidency challenge liberal order", category: "politics", wiki: "Populism" }
+    { id: "populism_rise_2016_2020", year: 2016, title: "Anti-establishment populism surges", subtitle: "Brexit referendum and Trump presidency challenge liberal order", category: "politics", wiki: "Populism" }
   ];
 
   const mark = (event) => {

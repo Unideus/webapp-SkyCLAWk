@@ -185,6 +185,7 @@ const EventsRenderer = {
       b.className = "cat-btn";
       b.dataset.category = cat.id;
       b.title = cat.label;
+      if (cat.id === "science") b.style.marginTop = "33px";
       b.innerHTML = "<span class=\"cat-btn-dot\" style=\"background:" + cat.color + "\"></span><span class=\"cat-btn-label\">" + cat.label + "</span>";
       b.addEventListener("click", () => this.selectCategory(cat.id));
       bar.appendChild(b);
@@ -195,7 +196,6 @@ const EventsRenderer = {
       mapBtn.id = "statesMapBtn";
       mapBtn.className = "cat-btn states-map-btn";
       mapBtn.title = "States Map Animation";
-      mapBtn.style.marginTop = "33px";
       mapBtn.innerHTML = '<span class="cat-btn-dot" style="background:#4a9eff;font-size:9px;">🗺</span><span class="cat-btn-label">States Map</span>';
       mapBtn.addEventListener("click", () => {
         if (window.USMapAnimation) window.USMapAnimation.toggle();
