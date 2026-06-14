@@ -3085,14 +3085,14 @@ for (const k of show) {
     originalCloseWheel();
   };
 
-  // Start in Transit (live) mode by default — the sky moves in real time on page load.
-  // __liveDate is a separate variable that never touches AstroEngine/timeState,
-  // so the timeline animation loop is not disrupted.
+  // Seed live mode infrastructure once so Transit/Natal can be enabled immediately when selected.
+  // Tropical remains the default visible state.
   startLiveUpdate();
+  stopLiveUpdate();
 
   // =========================================================
-  let _skyMode = 'transit';
-  window.astrowheelSkyMode = 'transit';
+  let _skyMode = 'tropical';
+  window.astrowheelSkyMode = 'tropical';
   // Compat: astrowheelFixedSky derived for planting.js references
   // Uses closure var _skyMode to avoid infinite recursion through get/set
   Object.defineProperty(window, 'astrowheelFixedSky', {
@@ -3138,10 +3138,10 @@ for (const k of show) {
     const mode = btn.id.replace('skyMode', '').toLowerCase();
     btn.addEventListener("click", () => setSkyMode(mode));
   }
-  // Start in Transit (live) mode
-  _skyMode = 'transit';
-  window.astrowheelSkyMode = 'transit';
-  updateSkyModeUI('transit');
+  // Start in Tropical mode
+  _skyMode = 'tropical';
+  window.astrowheelSkyMode = 'tropical';
+  updateSkyModeUI('tropical');
 
   // BODIES MODAL
   // =========================================================

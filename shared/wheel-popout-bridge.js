@@ -91,7 +91,7 @@
         location: cloneLocation(window.natalLocationData),
         profileName: activeProfileName()
       },
-      skyMode: window.astrowheelSkyMode || "transit",
+      skyMode: window.astrowheelSkyMode || "tropical",
       auspicious: auspiciousContext()
     };
   }

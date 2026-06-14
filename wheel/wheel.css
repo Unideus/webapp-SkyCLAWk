@@ -53,34 +53,42 @@ body {
 }
 
 .wheelWindowScroll {
-  min-width: 1360px;
-  min-height: 930px;
+  min-width: 1120px;
+  min-height: 760px;
   padding: 12px;
   box-sizing: border-box;
+  overflow: auto;
 }
 
 .wheel-popout-page #wheelModal.zyModal {
   position: static !important;
   inset: auto !important;
   display: block !important;
-  width: 1336px;
-  height: 900px;
+  width: min(calc(100vw - 24px), 1680px);
+  height: min(calc(100vh - 72px), 1120px);
   pointer-events: auto !important;
 }
 
 .wheel-popout-page #wheelModal > .zyModalCard {
   position: relative !important;
   inset: auto !important;
-  width: 1320px !important;
+  width: 100% !important;
   max-width: none !important;
-  height: 860px !important;
+  min-width: 1120px !important;
+  min-height: 760px !important;
+  height: 100% !important;
   margin: 0 !important;
   transform: none !important;
   box-sizing: border-box;
 }
 
 .wheel-popout-page .wheelStage {
-  height: 820px;
+  position: absolute;
+  left: var(--wheel-slot-left, 50px);
+  top: var(--wheel-slot-top, 0px);
+  width: var(--wheel-slot-size, 820px);
+  height: var(--wheel-slot-size, 820px);
+  transform: none;
 }
 
 .wheel-popout-page .zyResizeHandle {
@@ -96,6 +104,36 @@ body {
   flex-direction: column;
   gap: 6px;
   align-items: flex-start;
+}
+
+.wheel-popout-page #importArrow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  bottom: calc(100% - 35px);
+  left: calc(30% + 210px);
+  width: auto;
+  height: 80px;
+  opacity: 0.7;
+}
+
+.wheel-popout-page #importToNatalBtn {
+  color: #ffd700 !important;
+}
+
+.wheel-popout-page #importToNatalBtn:hover {
+  color: #ffdf5f !important;
+}
+
+.wheel-popout-page #natalPicker {
+  right: 305px !important;
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+.wheel-popout-page #natalLocationInput {
+  min-width: 110px !important;
+  flex: 1 1 110px !important;
 }
 
 .wheelControlLine,
@@ -221,15 +259,4 @@ body {
   background: rgba(180,140,80,.2);
   color: #e8c898;
   cursor: pointer;
-}
-
-@media (max-width: 1360px) {
-  .wheelWindowScroll {
-    min-width: 1180px;
-  }
-
-  .wheel-popout-page #wheelModal.zyModal {
-    transform: scale(.88);
-    transform-origin: top left;
-  }
 }
