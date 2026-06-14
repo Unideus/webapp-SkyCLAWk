@@ -1054,6 +1054,10 @@
 		// =========================================================
 
 		function getNavNowMs() {
+			if (timeState && timeState.navTargetDateUTC instanceof Date) {
+				const targetMs = timeState.navTargetDateUTC.getTime();
+				if (Number.isFinite(targetMs)) return targetMs;
+			}
 			if (timeState && timeState.dateUTC instanceof Date) {
 				const ms = timeState.dateUTC.getTime();
 				if (Number.isFinite(ms)) return ms;
@@ -1115,19 +1119,38 @@
 			return events.map(e => Date.parse(e && e.t)).filter(Number.isFinite);
 		}
 
-		function stepYearListToDate(years, direction) {
+		function getCrisisConjunctionTimesMs() {
+			const events = (typeof CONJUNCTION_DATA !== "undefined" && Array.isArray(CONJUNCTION_DATA))
+				? CONJUNCTION_DATA
+				: [];
+			return events
+				.filter(e => e && e.crisis)
+				.map(e => Date.parse(e && e.t))
+				.filter(Number.isFinite);
+		}
+
+		function stepYearListToDate(years, direction, wrap = true) {
 			if (!Array.isArray(years) || !years.length) return null;
 			const sorted = Array.from(new Set(years.filter(Number.isFinite))).sort((a, b) => a - b);
 			if (!sorted.length) return null;
 			const nowYear = dateUTCToContinuousYear(new Date(getNavNowMs()));
 			let year;
-			if (direction > 0) year = sorted.find(y => y > nowYear + 0.01) ?? sorted[0];
-			else {
+			if (direction > 0) {
+				year = sorted.find(y => y > nowYear + 0.01);
+				if (year == null) {
+					if (!wrap) return null;
+					year = sorted[0];
+				}
+			} else {
 				for (let i = sorted.length - 1; i >= 0; i--) {
 					if (sorted[i] < nowYear - 0.01) { year = sorted[i]; break; }
 				}
-				year = year ?? sorted[sorted.length - 1];
+				if (year == null) {
+					if (!wrap) return null;
+					year = sorted[sorted.length - 1];
+				}
 			}
+			if (year == null) return null;
 			// Resolve to exact Saturn-Jupiter conjunction timestamp from the lattice
 			if (typeof CONJUNCTION_LATTICE !== "undefined" && Array.isArray(CONJUNCTION_LATTICE)) {
 				const match = CONJUNCTION_LATTICE.find(e => e && e.year === year && Number.isFinite(e.tMs));
@@ -1154,12 +1177,12 @@
 			if (target !== null) glideToDateUTC(new Date(target));
 		});
 		if (nextCrisisBtn) nextCrisisBtn.addEventListener("click", () => {
-			const target = stepYearListToDate((typeof CRISIS_YEARS !== "undefined" ? CRISIS_YEARS : []), +1);
-			if (target) glideToDateUTC(target);
+			const target = stepTimeListMs(getCrisisConjunctionTimesMs(), +1);
+			if (target !== null) glideToDateUTC(new Date(target));
 		});
 		if (prevCrisisBtn) prevCrisisBtn.addEventListener("click", () => {
-			const target = stepYearListToDate((typeof CRISIS_YEARS !== "undefined" ? CRISIS_YEARS : []), -1);
-			if (target) glideToDateUTC(target);
+			const target = stepTimeListMs(getCrisisConjunctionTimesMs(), -1);
+			if (target !== null) glideToDateUTC(new Date(target));
 		});
 		if (nextElementBtn) nextElementBtn.addEventListener("click", () => {
 			if (typeof getNextElementSwitch !== "function") return;
@@ -1817,47 +1840,47 @@
 		}
 
 		function renderDateBox(date) {
-		  const day = date.getUTCDate().toString().padStart(2, "0");
-
-		  const monthTitle = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" }); // "Dec"
-		  const monthUpper = monthTitle.toUpperCase(); // "DEC"
-
-		  const year = date.getUTCFullYear();
+		  const displayTz = window.locationData?.tz || undefined;
+		  const dateParts = new Intl.DateTimeFormat("en-US", {
+			timeZone: displayTz,
+			year: "numeric",
+			month: "short",
+			day: "2-digit"
+		  }).formatToParts(date);
+		  const getPart = (type) => dateParts.find(part => part.type === type)?.value ?? "";
+		  const day = getPart("day");
+		  const monthTitle = getPart("month");
+		  const monthUpper = monthTitle.toUpperCase();
+		  const year = Number(getPart("year"));
+		  const localMonth = Number(new Intl.DateTimeFormat("en-US", {
+			timeZone: displayTz,
+			month: "numeric"
+		  }).format(date));
 
 		  // Continuous-ish year for phase detection (good enough for UI tint)
 		  const yearFrac =
 			year +
-			(date.getUTCMonth() / 12) +
-			((date.getUTCDate() - 1) / 365.2422);
+			((localMonth - 1) / 12) +
+			((Number(day) - 1) / 365.2422);
 
 			const turningKey = findTurningPhase(yearFrac); // "high" | "awakening" | "unraveling" | "crisis"
 
-			const localTzLabel2 = Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-				.formatToParts(date)
-				.find(p => p.type === "timeZoneName")?.value ?? "";
 			if (dateBoxText) {
 			  dateBoxText.textContent = `${day} ${monthUpper} ${year}`;
 			  dateBoxText.setAttribute("data-turning", turningKey.toUpperCase()); // label shows HIGH/CRISIS/etc
 			  dateBoxText.style.setProperty("--phase-rgb", TURNING_RGB[turningKey] || "255,255,255");
 			}
 
-		  // Astro center (requested) — show local timezone
-		  const localTzLabel = Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-			  .formatToParts(date)
-			  .find(p => p.type === "timeZoneName")?.value ?? "";
 		  if (astroDateText) astroDateText.textContent = `${day} ${monthTitle} ${year}`;
 
-		  // Keep the native date input synchronized (UTC) unless the user is editing
+		  // Keep the date input synchronized to the same timezone used by the wheel.
 		  // Allow tabbing between date/time/location without reverting
 		  const activeEl = document.activeElement;
 		  const isEditingDate = activeEl === dateBoxInput;
 		  const isEditingRelated = activeEl === timeBoxInput || activeEl === locationBoxInput;
 		  const userEditing = isEditingDate || isEditingRelated || dateBoxInput.dataset.dirty;
 		  if (dateBoxInput && !userEditing) {
-			const dd = String(date.getUTCDate()).padStart(2, "0");
-			const mon = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
-			const yyyy = String(date.getUTCFullYear());
-			const pretty = `${dd} ${mon} ${yyyy}`;
+			const pretty = `${day} ${monthTitle} ${year}`;
 			if (dateBoxInput.value !== pretty) dateBoxInput.value = pretty;
 			dateBoxInput.classList.remove("invalid");
 		  }

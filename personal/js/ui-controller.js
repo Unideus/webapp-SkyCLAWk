@@ -1957,47 +1957,47 @@
 		}
 
 		function renderDateBox(date) {
-		  const day = date.getUTCDate().toString().padStart(2, "0");
-
-		  const monthTitle = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" }); // "Dec"
-		  const monthUpper = monthTitle.toUpperCase(); // "DEC"
-
-		  const year = date.getUTCFullYear();
+		  const displayTz = window.locationData?.tz || undefined;
+		  const dateParts = new Intl.DateTimeFormat("en-US", {
+			timeZone: displayTz,
+			year: "numeric",
+			month: "short",
+			day: "2-digit"
+		  }).formatToParts(date);
+		  const getPart = (type) => dateParts.find(part => part.type === type)?.value ?? "";
+		  const day = getPart("day");
+		  const monthTitle = getPart("month");
+		  const monthUpper = monthTitle.toUpperCase();
+		  const year = Number(getPart("year"));
+		  const localMonth = Number(new Intl.DateTimeFormat("en-US", {
+			timeZone: displayTz,
+			month: "numeric"
+		  }).format(date));
 
 		  // Continuous-ish year for phase detection (good enough for UI tint)
 		  const yearFrac =
 			year +
-			(date.getUTCMonth() / 12) +
-			((date.getUTCDate() - 1) / 365.2422);
+			((localMonth - 1) / 12) +
+			((Number(day) - 1) / 365.2422);
 
 			const turningKey = findTurningPhase(yearFrac); // "high" | "awakening" | "unraveling" | "crisis"
 
-			const localTzLabel2 = Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-				.formatToParts(date)
-				.find(p => p.type === "timeZoneName")?.value ?? "";
 			if (dateBoxText) {
 			  dateBoxText.textContent = `${day} ${monthUpper} ${year}`;
 			  dateBoxText.setAttribute("data-turning", turningKey.toUpperCase()); // label shows HIGH/CRISIS/etc
 			  dateBoxText.style.setProperty("--phase-rgb", TURNING_RGB[turningKey] || "255,255,255");
 			}
 
-		  // Astro center (requested) — show local timezone
-		  const localTzLabel = Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-			  .formatToParts(date)
-			  .find(p => p.type === "timeZoneName")?.value ?? "";
 		  if (astroDateText) astroDateText.textContent = `${day} ${monthTitle} ${year}`;
 
-		  // Keep the native date input synchronized (UTC) unless the user is editing
+		  // Keep the date input synchronized to the same timezone used by the wheel.
 		  // Allow tabbing between date/time/location without reverting
 		  const activeEl = document.activeElement;
 		  const isEditingDate = activeEl === dateBoxInput;
 		  const isEditingRelated = activeEl === timeBoxInput || activeEl === locationBoxInput;
 		  const userEditing = isEditingDate || isEditingRelated || dateBoxInput.dataset.dirty;
 		  if (dateBoxInput && !userEditing) {
-			const dd = String(date.getUTCDate()).padStart(2, "0");
-			const mon = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
-			const yyyy = String(date.getUTCFullYear());
-			const pretty = `${dd} ${mon} ${yyyy}`;
+			const pretty = `${day} ${monthTitle} ${year}`;
 			if (dateBoxInput.value !== pretty) dateBoxInput.value = pretty;
 			dateBoxInput.classList.remove("invalid");
 		  }
