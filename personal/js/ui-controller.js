@@ -96,7 +96,7 @@
 
 		// Default: all scales start in Transit (real-time) mode — sky moves on page load
 		if (typeof window.setSkyMode === "function") {
-			window.setSkyMode("transit");
+			window.setSkyMode("tropical");
 		}
 	}
 
@@ -2242,7 +2242,7 @@
 
 						      // 4) Switch sky mode to Transit (transit ASC at 9 o'clock, toggle visible as active)
 						      if (typeof window.setSkyMode === "function") {
-						        window.setSkyMode("transit");
+						        window.setSkyMode("tropical");
 						      } else {
 						        window.astrowheelSkyMode = "transit";
 						        if (typeof window.setAstroWheelLiveMode === "function") {

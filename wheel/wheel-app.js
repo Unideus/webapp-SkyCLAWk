@@ -24,6 +24,33 @@
   let initialModeApplied = false;
   let pendingNatalLocation = null;
   let citiesPromise = null;
+  let wheelLayoutRaf = 0;
+
+  function applyWheelLayout() {
+    wheelLayoutRaf = 0;
+    const card = document.querySelector("#wheelModal > .zyModalCard");
+    const stage = document.getElementById("wheelStage");
+    if (!card || !stage) return;
+
+    const leftInset = 50;
+    const topInset = 0;
+    const rightInset = 450;
+    const bottomInset = 40;
+
+    const availableWidth = Math.max(320, card.clientWidth - leftInset - rightInset);
+    const availableHeight = Math.max(320, card.clientHeight - topInset - bottomInset);
+    const size = Math.max(320, Math.min(availableWidth, availableHeight));
+    const top = topInset + Math.max(0, (availableHeight - size) / 2);
+
+    stage.style.setProperty("--wheel-slot-left", `${leftInset}px`);
+    stage.style.setProperty("--wheel-slot-top", `${top}px`);
+    stage.style.setProperty("--wheel-slot-size", `${size}px`);
+  }
+
+  function requestWheelLayout() {
+    if (wheelLayoutRaf) return;
+    wheelLayoutRaf = window.requestAnimationFrame(applyWheelLayout);
+  }
 
   function setStatus(text, connected) {
     if (!status) return;
@@ -131,7 +158,7 @@
 
     if (state.initial && !initialModeApplied && typeof window.setSkyMode === "function") {
       initialModeApplied = true;
-      window.setSkyMode(state.skyMode || "transit");
+      window.setSkyMode(state.skyMode || "tropical");
     }
 
     const date = new Date(state.dateUTC);
@@ -279,6 +306,14 @@
   document.getElementById("wheelClose")?.addEventListener("click", () => window.close());
 
   window.openAstroWheel?.();
+  requestWheelLayout();
+  window.addEventListener("resize", requestWheelLayout);
+  if (typeof ResizeObserver === "function") {
+    const card = document.querySelector("#wheelModal > .zyModalCard");
+    if (card) {
+      new ResizeObserver(requestWheelLayout).observe(card);
+    }
+  }
   send({ type: "wheel:hello" });
 
   window.setInterval(() => {
