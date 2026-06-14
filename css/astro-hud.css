@@ -1419,6 +1419,7 @@
   border: 1px solid rgba(255,255,255,.25);
   background: #ffffff14;
   color: #fff;
+  color-scheme: dark;
   font-family: ui-monospace, monospace;
   font-size: 12px;
   cursor: pointer;
@@ -1778,6 +1779,7 @@
   border: 1px solid rgba(255,255,255,.25);
   background: #ffffff14;
   color: #fff;
+  color-scheme: dark;
   font-family: ui-monospace, monospace;
   font-size: 12px;
   width: 118px;
@@ -1797,6 +1799,7 @@
   border: 1px solid rgba(255,255,255,.25);
   background: #ffffff14;
   color: #fff;
+  color-scheme: dark;
   font-size: 12px;
   width: auto;
 }
@@ -1807,6 +1810,13 @@
 #natalLocationInput::placeholder {
   color: rgba(255,255,255,.4);
   font-size: 11px;
+}
+#natalDateInput::-webkit-calendar-picker-indicator,
+#natalTimeInput::-webkit-calendar-picker-indicator,
+#natalDateInput::-webkit-clear-button,
+#natalTimeInput::-webkit-clear-button,
+#natalTimeInput::-webkit-inner-spin-button {
+  filter: invert(0.92) sepia(0.35) saturate(1.6) hue-rotate(358deg);
 }
 
 /* Houses button - removed, now styled with bodiesBtn */
@@ -1933,6 +1943,14 @@
   background: rgba(255,255,255,.20);
   border-color: rgba(255,255,255,.45) !important;
   color: rgba(255,255,255,.96);
+}
+
+#importToNatalBtn {
+  color: #d4af37 !important;
+}
+
+#importToNatalBtn:hover {
+  color: #f1cf6a !important;
 }
 
 #controlButtonsRow button:active,

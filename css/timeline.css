@@ -2238,6 +2238,38 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 }
 
 /* Life Events modal */
+#natalModal {
+  color-scheme: dark;
+}
+#natalModal input,
+#natalModal select,
+#natalModal button {
+  color-scheme: dark;
+}
+#natalModal input,
+#natalModal select {
+  background: rgba(30,30,35,0.92) !important;
+  color: #eee !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+#natalModal input::placeholder {
+  color: rgba(255,255,255,0.42);
+}
+#natalModal input:focus,
+#natalModal select:focus {
+  border-color: rgba(255,200,100,0.5) !important;
+  box-shadow: 0 0 0 2px rgba(255,200,100,0.1);
+}
+#natalModal select option {
+  background: #1a1a2e;
+  color: #eee;
+}
+#natalModal input::-webkit-calendar-picker-indicator,
+#natalModal input::-webkit-clear-button,
+#natalModal input::-webkit-inner-spin-button {
+  filter: invert(0.92) sepia(0.35) saturate(1.6) hue-rotate(358deg);
+}
+
 #lifeEventModal {
   font-family: system-ui, -apple-system, sans-serif;
   animation: fadeIn 0.15s ease;
