@@ -8,6 +8,7 @@
   const wheelFab   = document.getElementById("wheelFab");
   const wheelClose = document.getElementById("wheelClose");
   const wheelImg   = document.getElementById("wheelImg");
+  const standaloneWindow = document.body.classList.contains("wheel-popout-page");
 
   if (!wheelModal || !wheelFab || !wheelImg) {
     console.warn("[astro-wheel] modal DOM not found; wheel disabled.");
@@ -119,6 +120,10 @@
     window.openAstroWheel = openWheel;
 
     function closeWheel() {
+      if (standaloneWindow) {
+        wheelModal.setAttribute("aria-hidden", "false");
+        return;
+      }
       wheelModal.setAttribute("aria-hidden", "true");
 
       // reset (safe)
@@ -167,7 +172,7 @@ let cardStartLeft = 0, cardStartTop = 0;
     wheelCard.style.transform = "none";
   }
 
-  if (wheelCard) {
+  if (wheelCard && !standaloneWindow) {
     wheelCard.addEventListener("pointerdown", (ev) => {
       // Don't start drag from buttons/HUD interactions.
       if (ev.target.closest("button")) return;
@@ -244,7 +249,7 @@ let cardStartLeft = 0, cardStartTop = 0;
     wheelCard.style.setProperty("--wheelH", `${h}px`);
   }
 
-  if (wheelCard && resizeHandle) {
+  if (wheelCard && resizeHandle && !standaloneWindow) {
     resizeHandle.addEventListener("pointerdown", (ev) => {
       if (wheelModal.getAttribute("aria-hidden") !== "false") return;
 

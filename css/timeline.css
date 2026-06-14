@@ -152,6 +152,20 @@ button.uiPill:active{
   overflow: hidden;         /* prevents any push-down */
 }
 
+.wheelFabSplit{
+  width: calc(var(--logo-h) - 60px);
+  min-width: calc(var(--logo-h) - 60px);
+  height: calc(var(--logo-h) - 8px);
+  display: grid;
+  grid-template-rows: 3fr 1fr;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-bg);
+  isolation: isolate;
+}
+
 /* Scale wrapper: two boxes side by side */
 #menuTitle #menuRightStack #scaleWrapper{
   display: flex;
@@ -175,14 +189,18 @@ button.uiPill:active{
 
 /* Zodiac button in menuRightStack (left of scale selector) */
 #menuTitle #menuRightStack #wheelFab.wheelFabMenu{
+  appearance: none;
   flex: 0 0 auto;
-  width: calc(var(--logo-h) - 60px);
-  min-width: calc(var(--logo-h) - 60px);
-  height: calc(var(--logo-h) - 8px);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
   padding: 4px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius) !important;
-  background: var(--ui-bg);
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -202,7 +220,7 @@ button.uiPill:active{
 
 #menuTitle #menuRightStack #wheelFab.wheelFabMenu .zodiac-label-top{
   position: absolute;
-  top: 24px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 15px;
@@ -214,7 +232,7 @@ button.uiPill:active{
 
 #menuTitle #menuRightStack #wheelFab.wheelFabMenu .zodiac-label-middle{
   position: absolute;
-  top: 42px;
+  top: 28px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 15px;
@@ -226,12 +244,12 @@ button.uiPill:active{
 
 /* Inner zodiac wheel circle */
 #menuTitle #menuRightStack #wheelFab.wheelFabMenu .zodiac-wheel-icon{
-  width: 55%;
-  padding-bottom: 55%;
+  width: 45%;
+  padding-bottom: 45%;
   height: 0;
   border-radius: 50%;
   position: absolute;
-  top: 68%;
+  top: 69%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: conic-gradient(
@@ -251,6 +269,46 @@ button.uiPill:active{
   );
   -webkit-mask: radial-gradient(transparent 35%, black 36%);
   mask: radial-gradient(transparent 35%, black 36%);
+}
+
+.wheelPopoutBtn{
+  all: unset;
+  appearance: none;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  border-top: 1px solid rgba(255,255,255,.16);
+  border-radius: 0;
+  background: rgba(255,255,255,.035);
+  color: rgba(255,255,255,.8);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.wheelFabSplit:hover{
+  border-color: var(--ui-border-hover);
+}
+
+.wheelFabSplit #wheelFab:hover,
+.wheelPopoutBtn:hover{
+  background: var(--ui-bg-hover) !important;
+  color: #fff;
+}
+
+.wheelFabSplit #wheelFab:focus-visible,
+.wheelPopoutBtn:focus-visible{
+  outline: 2px solid rgba(255,255,255,.5);
+  outline-offset: -3px;
 }
 #cycleFab{
   display: inline-flex !important;
@@ -2274,12 +2332,14 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
 /* =========================================================
    RESPONSIVE — narrow screens
    ========================================================= */
-#wheelFab-small { display: none; }
+#wheelFab-small,
+#wheelPopoutBtn-small { display: none; }
 
 @media (max-width: 1100px) {
   #menuTitle .menuLogo { display: none; }
   #menuTitle #menuRightStack { display: none; }
-  #wheelFab-small { display: inline-flex !important; }
+  #wheelFab-small,
+  #wheelPopoutBtn-small { display: inline-flex !important; }
 }
 @media (max-width: 800px) {
   #menuTitle { --logo-h: 70px; }

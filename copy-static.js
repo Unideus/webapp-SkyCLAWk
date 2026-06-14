@@ -95,6 +95,20 @@ if (existsSync(ptSrc)) {
     console.log('Copied: planting/planting.css')
 }
 
+// Copy standalone wheel scripts and CSS. Vite owns wheel/index.html so its
+// transformed module references remain intact.
+const wheelSrc = resolve(root, 'wheel')
+const wheelDst = resolve(dist, 'wheel')
+if (existsSync(wheelSrc)) {
+    mkdirSync(wheelDst, { recursive: true })
+    for (const f of ['wheel-prelude.js', 'wheel-app.js', 'wheel.css']) {
+        const src = resolve(wheelSrc, f)
+        const dst = resolve(wheelDst, f)
+        if (existsSync(src)) cpSync(src, dst)
+    }
+    console.log('Copied: wheel scripts and CSS')
+}
+
 // Copy _redirects
 const rdSrc = resolve(root, '_redirects')
 const rdDst = resolve(dist, '_redirects')

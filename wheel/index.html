@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SkyCLAWk Zodiac Wheel</title>
+  <link rel="icon" href="../timelinetitle.webp" type="image/webp">
+  <link rel="stylesheet" href="../css/timeline.css">
+  <link rel="stylesheet" href="../css/astro-hud.css">
+  <link rel="stylesheet" href="./wheel.css">
+</head>
+<body class="wheel-popout-page">
+  <div class="wheelWindowBar">
+    <div>
+      <strong>Zodiac Wheel</strong>
+      <span id="wheelConnectionStatus">Connecting to timeline...</span>
+    </div>
+    <button id="wheelClose" type="button">Close Window</button>
+  </div>
+
+  <button id="wheelFab" type="button" hidden aria-hidden="true"></button>
+
+  <main class="wheelWindowScroll">
+    <div id="wheelModal" class="zyModal" role="dialog" aria-modal="false" aria-hidden="false">
+      <div class="zyModalCard" role="document">
+        <div id="wheelDateOverlay"><span id="wheelDateValue">--</span></div>
+
+        <div id="natalPicker" class="natalPicker">
+          <span>NATAL</span>
+          <input id="natalDateInput" type="date">
+          <input id="natalTimeInput" type="time" step="60" value="12:00">
+          <input id="natalLocationInput" type="text" placeholder="City" autocomplete="off">
+          <div id="natalLocationDropdown" class="location-dropdown" style="display:none"></div>
+          <button id="natalSetBtn" class="uiPill" type="button">Set</button>
+          <button id="natalCancelBtn" class="uiPill" type="button">Clear</button>
+        </div>
+
+        <div id="controlButtonsRow">
+          <div class="wheelControlLine">
+            <button id="bodiesBtn" type="button">Bodies</button>
+            <span id="housesBtnWrap">
+              <button id="housesBtn" type="button">Houses</button>
+              <span id="housesToggle"><span id="housesToggleDot"></span></span>
+            </span>
+            <button id="importToNatalBtn" type="button">Import to Natal</button>
+          </div>
+          <div class="wheelControlLine">
+            <div id="skyModeToggle">
+              <button id="skyModeTropical" class="skyModeOption" type="button">☉ Tropical</button>
+              <button id="skyModeTransit" class="skyModeOption" type="button">▶ Transit</button>
+              <button id="skyModeNatal" class="skyModeOption" type="button">✦ Natal</button>
+            </div>
+          </div>
+          <div class="wheelControlLine">
+            <button id="shadowBtn" type="button">◐ <span id="shadowBtnLabel">Shadow</span></button>
+            <button id="cyclesBtn" type="button">⟳ Cycles</button>
+          </div>
+        </div>
+
+        <div id="wheelRulerOverlay">
+          <div class="grid-label">RULERS</div>
+          <div id="wheelRulerGrid"></div>
+          <div class="ruler-mode-buttons">
+            <button id="rulerTransitBtn" class="uiPill ruler-mode-btn is-active" type="button">T</button>
+            <button id="rulerNatalBtn" class="uiPill ruler-mode-btn" type="button">N</button>
+          </div>
+        </div>
+
+        <div id="wheelTransitsOverlay">
+          <div class="grid-label">TRANSITS</div>
+          <div id="wheelTransitsGrid"></div>
+        </div>
+
+        <div id="wheelNatalOverlay">
+          <div class="grid-label">NATAL</div>
+          <div id="wheelNatalGrid"></div>
+        </div>
+
+        <div id="wheelEventInfoOverlay">
+          <a id="auspiciousNavLink" href="/auspicious/" target="_blank" rel="noopener">
+            <div class="lots-header"><span class="grid-label">Auspicious Event</span></div>
+            <div id="wheelEventInfoGrid">Open Auspicious Calculator</div>
+          </a>
+        </div>
+
+        <div id="wheelLotsOverlay">
+          <div class="lots-header">
+            <span class="wheelLotsTitle">
+              <span id="lotsMasterToggle" title="Show/hide Hermetic Lots"><span id="lotsMasterDot"></span></span>
+              <button id="lotsHeaderBtn" type="button">Hermetic Lots</button>
+            </span>
+            <div class="lots-mode-buttons">
+              <button id="lotsTransitBtn" class="uiPill lots-mode-btn is-active" type="button">T</button>
+              <button id="lotsNatalBtn" class="uiPill lots-mode-btn" type="button">N</button>
+            </div>
+          </div>
+          <div class="lots-column-headers">
+            <span class="lots-hdr-name">Name</span>
+            <span class="lots-hdr-sign">Sign/Long</span>
+            <span class="lots-hdr-house">Hs</span>
+          </div>
+          <div id="wheelLotsGrid"></div>
+          <div id="lotsModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+            <div class="subModalCard lotsModalCard" role="document">
+              <button id="lotsClose" class="subModalClose" type="button">×</button>
+              <div class="lotsModalTitle">Select <span class="wheelGold">Hermetic Lots</span></div>
+              <div id="lotsGrid" class="lots-selector-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="wheelLunarPhasesOverlay">
+          <div class="lots-header">
+            <span class="grid-label">Nearest Lunar Phases</span>
+            <div class="lots-mode-buttons">
+              <button id="lunarTransitBtn" class="uiPill lunar-mode-btn is-active" type="button">T</button>
+              <button id="lunarNatalBtn" class="uiPill lunar-mode-btn" type="button">N</button>
+            </div>
+          </div>
+          <div class="lunar-phases-table" id="wheelLunarPhasesGrid"></div>
+        </div>
+
+        <div id="wheelAspectsOverlay"><div id="wheelAspectsGrid"></div></div>
+
+        <div id="wheelElementalOverlay">
+          <div class="lots-header">
+            <span class="grid-label">Elements</span>
+            <div class="lots-mode-buttons">
+              <button id="elemTransitBtn" class="uiPill lunar-mode-btn is-active" type="button">T</button>
+              <button id="elemNatalBtn" class="uiPill lunar-mode-btn" type="button">N</button>
+            </div>
+          </div>
+          <div id="wheelElementalGrid"></div>
+        </div>
+
+        <div class="wheelStage" id="wheelStage">
+          <img id="wheelImg" alt="Astro wheel" draggable="false">
+        </div>
+
+        <div id="bodiesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="subModalCard bodiesModalCard" role="document">
+            <button id="bodiesClose" class="subModalClose" type="button">×</button>
+            <div class="bodiesModalTitle">Select Bodies</div>
+            <div id="bodiesGrid" class="bodies-grid"></div>
+          </div>
+        </div>
+
+        <div id="housesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="subModalCard housesModalCard" role="document">
+            <button id="housesClose" class="subModalClose" type="button">×</button>
+            <div class="housesModalTitle">House System</div>
+            <div id="housesGrid" class="houses-grid">
+              <button class="house-option active" data-system="whole-sign">Whole Sign</button>
+              <button class="house-option" data-system="P">Placidus</button>
+              <button class="house-option" data-system="porphyry">Porphyry</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="shadowModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="subModalCard shadowModalCard" role="document">
+            <div class="subModalHeading">
+              <span><span id="shadowPlanetGlyph">♃</span> Planet Shadow</span>
+              <button id="shadowClose" class="subModalClose" type="button">×</button>
+            </div>
+            <select id="shadowPlanetSelect">
+              <option value="sun">☉ Sun</option><option value="moon">☽ Moon</option>
+              <option value="mercury">☿ Mercury</option><option value="venus">♀ Venus</option>
+              <option value="mars">♂ Mars</option><option value="jupiter" selected>♃ Jupiter</option>
+              <option value="saturn">♄ Saturn</option><option value="uranus">♅ Uranus</option>
+              <option value="neptune">♆ Neptune</option><option value="pluto">♇ Pluto</option>
+            </select>
+            <p>Find and display the selected planet's nearest retrograde shadow arc.</p>
+            <div class="subModalActions">
+              <button id="shadowApplyBtn" type="button">Apply</button>
+              <button id="shadowClearBtn" type="button">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cyclesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="subModalCard cyclesModalCard">
+          <div class="subModalHeading">
+            <span>Planetary Cycles</span>
+            <button id="cyclesClose" class="subModalClose" type="button">×</button>
+          </div>
+          <label>Aspect Pattern
+            <select id="cyclesAspectSelect">
+              <option value="">Off - use single planet cycle</option>
+              <option value="0">☌ Conjunction</option><option value="60">✶ Sextile</option>
+              <option value="90">□ Square</option><option value="120">△ Trine</option>
+              <option value="180">☍ Opposition</option>
+            </select>
+          </label>
+          <div class="cyclePair">
+            <select id="cyclesAspectPlanetA"></select>
+            <select id="cyclesAspectPlanetB"></select>
+          </div>
+          <label>Single Planet Cycle<select id="cyclesPlanetSelect"></select></label>
+          <div class="cycleModes">
+            <button class="cycle-mode-btn" data-mode="retrograde" type="button">⟲ Retro</button>
+            <button class="cycle-mode-btn" data-mode="synodic" type="button">☌ Synodic</button>
+            <button class="cycle-mode-btn" data-mode="both" type="button">Both</button>
+          </div>
+          <div class="subModalActions">
+            <button id="cyclesApplyBtn" type="button">Apply</button>
+            <button id="cyclesClearBtn" type="button">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="./wheel-prelude.js"></script>
+  <script type="module" src="../shared/swe-init.js"></script>
+  <script src="../generational/js/vendor/astronomy.browser.min.js"></script>
+  <script src="../shared/astronomy-adapter.js"></script>
+  <script src="../shared/heaven-data.js"></script>
+  <script src="../generational/js/planetary-cycles.js"></script>
+  <script src="../shared/aspect-search.js"></script>
+  <script src="../shared/astro-wheel.js"></script>
+  <script src="./wheel-app.js"></script>
+</body>
+</html>
