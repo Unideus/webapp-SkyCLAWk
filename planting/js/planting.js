@@ -11,7 +11,6 @@
 
   initPlantingOverlayToggle("plantingTransitsToggle", "wheelTransitsGrid");
   initPlantingOverlayToggle("plantingElementsToggle", "wheelElementalGrid");
-  initRealTimeSkyModeButton();
 
   if (startNewPlanBtn) {
     startNewPlanBtn.href = buildPermaculturePlanUrl("new");
@@ -76,35 +75,4 @@
     setExpanded(false);
   }
 
-  function initRealTimeSkyModeButton() {
-    const skyModeFixed = document.getElementById("skyModeFixed");
-    const skyModeLive = document.getElementById("skyModeLive");
-    if (!skyModeFixed || !skyModeLive) return;
-
-    function updateSkyModeUI(isFixed) {
-      skyModeFixed.style.background = isFixed ? "rgba(0,200,80,.35)" : "rgba(255,255,255,.1)";
-      skyModeFixed.style.color = isFixed ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)";
-      skyModeFixed.style.fontWeight = isFixed ? "600" : "400";
-      skyModeLive.style.background = !isFixed ? "rgba(0,200,80,.35)" : "rgba(255,255,255,.1)";
-      skyModeLive.style.color = !isFixed ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)";
-      skyModeLive.style.fontWeight = !isFixed ? "600" : "400";
-    }
-
-    function setSkyMode(isFixed) {
-      window.astrowheelFixedSky = isFixed;
-      window.plantingSkyMode = isFixed ? "fixed" : "real-time";
-      updateSkyModeUI(isFixed);
-      if (typeof window.setAstroWheelLiveMode === "function") {
-        window.setAstroWheelLiveMode(!isFixed);
-      }
-      document.body.classList.toggle("real-time-sky-mode", !isFixed);
-      document.body.classList.toggle("fixed-sky-mode", isFixed);
-      if (typeof window.drawAstroWheel === "function") window.drawAstroWheel();
-    }
-
-    skyModeFixed.addEventListener("click", () => setSkyMode(true));
-    skyModeLive.addEventListener("click", () => setSkyMode(false));
-
-    setSkyMode(true);
-  }
 })();

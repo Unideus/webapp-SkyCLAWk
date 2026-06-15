@@ -2152,6 +2152,9 @@ if (nextElementBtn) {
 			updateLabels(scrollX);
 			updateDate();
 			updateElementButtonLabels();
+			if (typeof window.updatePlantingNowLuminaryFrame === "function") {
+				window.updatePlantingNowLuminaryFrame(t);
+			}
 			if (typeof updateSaeculumGlow === "function") updateSaeculumGlow();
 			// 3D River backdrop (Phase 1): follow the master time flow
 			if (window.River3D) {

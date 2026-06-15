@@ -364,8 +364,9 @@ let cardStartLeft = 0, cardStartTop = 0;
 
     // 0° Aries at 9 o’clock (same convention as MyTimeline)
     let baseLon = Number.isFinite(opts.baseLon) ? opts.baseLon : 0;
-    if (baseLon === 0 && !window.astrowheelFixedSky && typeof window.getHouseCusps === "function") {
-      // Live mode: always compute ASC fresh for the date being shown — no caching.
+    const skyMode = window.astrowheelSkyMode || "tropical";
+    if (baseLon === 0 && skyMode === "transit" && typeof window.getHouseCusps === "function") {
+      // Transit mode: place the timeline date/location ASC at 9 o'clock.
       const loc = window.locationData || null;
       const d = opts.dateUTC instanceof Date && Number.isFinite(opts.dateUTC.getTime()) ? opts.dateUTC : null;
       if (loc && loc.lat != null && loc.lon != null && d) {
@@ -2490,42 +2491,45 @@ for (const k of show) {
     originalCloseWheel();
   };
 
-  // Start in Fixed mode (no live update by default — wheel follows timeline)
-  // startLiveUpdate();  // <-- removed: was causing wheel to ignore timeline scrubbing
+  // Keep the wheel tied to the timeline date; sky mode only changes orientation.
 
   // =========================================================
-  window.astrowheelFixedSky = true;
-  // Segmented toggle: Fixed (left) vs Live (right)
-  const skyModeFixed = document.getElementById("skyModeFixed");
-  const skyModeLive = document.getElementById("skyModeLive");
-  function updateSkyModeUI(isFixed) {
-    if (skyModeFixed) {
-      skyModeFixed.style.background = isFixed ? "rgba(0,200,80,.35)" : "rgba(255,255,255,.1)";
-      skyModeFixed.style.color = isFixed ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)";
-      skyModeFixed.style.fontWeight = isFixed ? "600" : "400";
-    }
-    if (skyModeLive) {
-      skyModeLive.style.background = !isFixed ? "rgba(0,200,80,.35)" : "rgba(255,255,255,.1)";
-      skyModeLive.style.color = !isFixed ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)";
-      skyModeLive.style.fontWeight = !isFixed ? "600" : "400";
-    }
+  window.astrowheelSkyMode = "tropical";
+  const skyModeTropical = document.getElementById("skyModeTropical");
+  const skyModeTransit = document.getElementById("skyModeTransit");
+  const skyModeButtons = [skyModeTropical, skyModeTransit];
+  const skyModeColors = {
+    tropical: "rgba(255,200,50,.35)",
+    transit: "rgba(0,200,80,.35)"
+  };
+  function updateSkyModeUI(mode) {
+    skyModeButtons.forEach(button => {
+      if (!button) return;
+      const isActive = button.id.replace("skyMode", "").toLowerCase() === mode;
+      button.classList.toggle("skyModeActive", isActive);
+      button.classList.toggle("active", isActive);
+      button.style.setProperty("background", isActive ? skyModeColors[mode] : "rgba(255,255,255,.1)", "important");
+      button.style.setProperty("color", isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)", "important");
+      button.style.setProperty("font-weight", isActive ? "600" : "400", "important");
+    });
   }
-  function setSkyMode(isFixed) {
-    window.astrowheelFixedSky = isFixed;
-    updateSkyModeUI(isFixed);
-    if (typeof window.setAstroWheelLiveMode === "function") {
-      window.setAstroWheelLiveMode(!isFixed);
+  function setSkyMode(mode) {
+    if (mode !== "transit") mode = "tropical";
+    window.astrowheelSkyMode = mode;
+    if (window.__houseCache) {
+      if (typeof window.__houseCache.clear === "function") window.__houseCache.clear();
+      else window.__houseCache = new Map();
     }
+    updateSkyModeUI(mode);
     drawAstroWheel();
   }
-  if (skyModeFixed) {
-    skyModeFixed.addEventListener("click", () => setSkyMode(true));
-  }
-  if (skyModeLive) {
-    skyModeLive.addEventListener("click", () => setSkyMode(false));
-  }
-  // Start in Fixed mode
-  updateSkyModeUI(true);
+  window.setSkyMode = setSkyMode;
+  skyModeButtons.forEach(button => {
+    if (!button) return;
+    const mode = button.id.replace("skyMode", "").toLowerCase();
+    button.addEventListener("click", () => setSkyMode(mode));
+  });
+  updateSkyModeUI("tropical");
   
   // BODIES MODAL
   // =========================================================

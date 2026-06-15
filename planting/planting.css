@@ -10,6 +10,23 @@
   --planting-now-anchor-open: 0.30;
 }
 
+#menuTitle #menuRightStack {
+  flex: 0 0 110px;
+  width: 110px !important;
+  min-width: 110px;
+  overflow: visible;
+}
+
+#plantingNowLuminary {
+  will-change: transform;
+}
+
+#plantingNowMoon,
+#plantingNowMoonRim,
+#plantingNowSolarEclipseCue {
+  will-change: transform;
+}
+
 #dateBoxOuter {
   width: 200px;
 }

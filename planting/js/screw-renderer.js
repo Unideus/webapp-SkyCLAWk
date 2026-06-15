@@ -2110,9 +2110,10 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			updatePlantingNowLuminary();
 		}
 
-		function updatePlantingNowLuminary() {
+		function updatePlantingNowLuminary(options = {}) {
 			const host = document.getElementById("plantingNowLuminary");
 			if (!host) return;
+			const updateDetails = options.updateDetails !== false;
 			const bounds = typeof getPlantingViewportBounds === "function" ? getPlantingViewportBounds() : null;
 			if (!bounds) return;
 			const currentDate = getPlantingCurrentDate();
@@ -2124,34 +2125,45 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			const orbit = getPlantingLunarOrbitGeometry(currentDate, phaseDeg, 200);
 			const moonX = orbit.moon.x;
 			const moonY = orbit.moon.y;
-			const moon = host.querySelector("#plantingNowMoon");
-			const moonDark = host.querySelector("#plantingNowMoonDark");
-			const moonLight = host.querySelector("#plantingNowMoonLight");
-			const moonRim = host.querySelector("#plantingNowMoonRim");
-			const lunarOrbitPath = host.querySelector("#plantingNowLunarOrbitPath");
-			const northNode = host.querySelector("#plantingNowNorthNode");
-			const southNode = host.querySelector("#plantingNowSouthNode");
-			const northNodeLabel = host.querySelector("#plantingNowNorthNodeLabel");
-			const northNodeLeader = host.querySelector("#plantingNowNorthNodeLeader");
-			const moonZodiacReadout = host.querySelector("#plantingNowMoonZodiacReadout");
-			const moonPhaseIconDark = host.querySelector("#plantingNowMoonPhaseIconDark");
-			const moonPhaseIconLight = host.querySelector("#plantingNowMoonPhaseIconLight");
-			const moonPhaseIconRim = host.querySelector("#plantingNowMoonPhaseIconRim");
-			const moonPhaseName = host.querySelector("#plantingNowMoonPhaseName");
-			const moonZodiacGlyph = host.querySelector("#plantingNowMoonZodiacGlyph");
-			const moonZodiacDegree = host.querySelector("#plantingNowMoonZodiacDegree");
-			const sunZodiacReadout = host.querySelector("#plantingNowSunZodiacReadout");
-			const sunZodiacGlyph = host.querySelector("#plantingNowSunZodiacGlyph");
-			const sunZodiacDegree = host.querySelector("#plantingNowSunZodiacDegree");
-			const sunSeasonLabel = host.querySelector("#plantingNowSunLabel");
-			const nextLunationText = host.querySelector("#plantingNowNextLunationText");
-			const nextEclipseText = host.querySelector("#plantingNowNextEclipseText");
-			const orbitVeilFeather = host.querySelector("#plantingNowOrbitVeilFeather");
-			const orbitVeilCore = host.querySelector("#plantingNowOrbitVeilCore");
-			const solarEclipseCue = host.querySelector("#plantingNowSolarEclipseCue");
-			const solarEclipseAura = host.querySelector("#plantingNowSolarEclipseAura");
-			const solarEclipseRing = host.querySelector("#plantingNowSolarEclipseRing");
-			const solarEclipseShadow = host.querySelector("#plantingNowSolarEclipseShadow");
+			const refs = host.__plantingNowRefs || (host.__plantingNowRefs = {
+				moon: host.querySelector("#plantingNowMoon"),
+				moonDark: host.querySelector("#plantingNowMoonDark"),
+				moonLight: host.querySelector("#plantingNowMoonLight"),
+				moonRim: host.querySelector("#plantingNowMoonRim"),
+				lunarOrbitPath: host.querySelector("#plantingNowLunarOrbitPath"),
+				northNode: host.querySelector("#plantingNowNorthNode"),
+				southNode: host.querySelector("#plantingNowSouthNode"),
+				northNodeLabel: host.querySelector("#plantingNowNorthNodeLabel"),
+				northNodeLeader: host.querySelector("#plantingNowNorthNodeLeader"),
+				moonZodiacReadout: host.querySelector("#plantingNowMoonZodiacReadout"),
+				moonPhaseIconDark: host.querySelector("#plantingNowMoonPhaseIconDark"),
+				moonPhaseIconLight: host.querySelector("#plantingNowMoonPhaseIconLight"),
+				moonPhaseIconRim: host.querySelector("#plantingNowMoonPhaseIconRim"),
+				moonPhaseName: host.querySelector("#plantingNowMoonPhaseName"),
+				moonZodiacGlyph: host.querySelector("#plantingNowMoonZodiacGlyph"),
+				moonZodiacDegree: host.querySelector("#plantingNowMoonZodiacDegree"),
+				sunZodiacReadout: host.querySelector("#plantingNowSunZodiacReadout"),
+				sunZodiacGlyph: host.querySelector("#plantingNowSunZodiacGlyph"),
+				sunZodiacDegree: host.querySelector("#plantingNowSunZodiacDegree"),
+				sunSeasonLabel: host.querySelector("#plantingNowSunLabel"),
+				nextLunationText: host.querySelector("#plantingNowNextLunationText"),
+				nextEclipseText: host.querySelector("#plantingNowNextEclipseText"),
+				orbitVeilFeather: host.querySelector("#plantingNowOrbitVeilFeather"),
+				orbitVeilCore: host.querySelector("#plantingNowOrbitVeilCore"),
+				solarEclipseCue: host.querySelector("#plantingNowSolarEclipseCue"),
+				solarEclipseAura: host.querySelector("#plantingNowSolarEclipseAura"),
+				solarEclipseRing: host.querySelector("#plantingNowSolarEclipseRing"),
+				solarEclipseShadow: host.querySelector("#plantingNowSolarEclipseShadow")
+			});
+			const {
+				moon, moonDark, moonLight, moonRim, lunarOrbitPath,
+				northNode, southNode, northNodeLabel, northNodeLeader,
+				moonZodiacReadout, moonPhaseIconDark, moonPhaseIconLight,
+				moonPhaseIconRim, moonPhaseName, moonZodiacGlyph, moonZodiacDegree,
+				sunZodiacReadout, sunZodiacGlyph, sunZodiacDegree, sunSeasonLabel,
+				nextLunationText, nextEclipseText, orbitVeilFeather, orbitVeilCore,
+				solarEclipseCue, solarEclipseAura, solarEclipseRing, solarEclipseShadow
+			} = refs;
 
 			host.style.transform = `translate3d(${screenX - orbit.centerX}px, ${sunY - orbit.sunY}px, 0)`;
 			const orbitPathD = getPlantingLunarOrbitPath(orbit);
@@ -2233,7 +2245,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				moonRim.setAttribute("stroke-width", orbit.eclipseAlignment ? (isLunarEclipse ? "2.1" : "1.8") : "1");
 				moonRim.style.filter = orbit.eclipseAlignment ? (isLunarEclipse ? "drop-shadow(0 0 8px #dc2626)" : "drop-shadow(0 0 7px #f97316)") : "";
 
-				if (moonZodiacReadout && moonPhaseIconDark && moonPhaseIconLight && moonPhaseIconRim && moonPhaseName && moonZodiacGlyph && moonZodiacDegree) {
+				if (updateDetails && moonZodiacReadout && moonPhaseIconDark && moonPhaseIconLight && moonPhaseIconRim && moonPhaseName && moonZodiacGlyph && moonZodiacDegree) {
 					const zodiac = getPlantingMoonZodiacSign(currentDate);
 					const phaseReadout = getPlantingMoonPhaseReadout(phaseDeg);
 					const iconX = -130;
@@ -2257,7 +2269,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				}
 			}
 
-			if (sunZodiacReadout && sunZodiacGlyph && sunZodiacDegree) {
+			if (updateDetails && sunZodiacReadout && sunZodiacGlyph && sunZodiacDegree) {
 				const sunZodiac = getPlantingSunZodiacSign(currentDate);
 				const currentSeason = getPlantingCurrentSeason(currentDate);
 				const degree = Math.floor(sunZodiac.degreeInSign);
@@ -2274,17 +2286,29 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				if (!title.parentNode) sunZodiacReadout.appendChild(title);
 			}
 
-			if (nextLunationText && nextEclipseText) {
+			if (updateDetails && nextLunationText && nextEclipseText) {
 				const nextSummary = getPlantingNextLunarSummary(currentDate);
 				nextLunationText.textContent = nextSummary.lunation;
 				nextEclipseText.textContent = nextSummary.eclipse;
 			}
 		}
 
+		let lastPlantingMoonDetailFrame = 0;
+		window.updatePlantingNowLuminaryFrame = function updatePlantingNowLuminaryFrame(frameTime) {
+			const now = Number.isFinite(frameTime) ? frameTime : performance.now();
+			const updateDetails = !lastPlantingMoonDetailFrame || (now - lastPlantingMoonDetailFrame) >= 80;
+			updatePlantingNowLuminary({ updateDetails });
+			if (updateDetails) {
+				updatePlantingMoonPhaseReadout();
+				lastPlantingMoonDetailFrame = now;
+			}
+		};
+
 		if (!window.__plantingNowLuminaryTimer) {
 			const tickPlantingNowLuminary = () => {
-				updatePlantingNowLuminary();
-				updatePlantingMoonPhaseReadout();
+				if (typeof window.updatePlantingNowLuminaryFrame === "function") {
+					window.updatePlantingNowLuminaryFrame(performance.now());
+				}
 				const delay = document.hidden ? 5000 : 1000;
 				window.__plantingNowLuminaryTimer = window.setTimeout(tickPlantingNowLuminary, delay);
 			};

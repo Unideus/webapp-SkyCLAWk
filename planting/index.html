@@ -22,7 +22,7 @@
 
 	<link href="../css/timeline.css?v=29" rel="stylesheet"/>
 	<link href="../css/astro-hud.css?v=40" rel="stylesheet"/>
-	<link href="/planting/planting.css?v=1019" rel="stylesheet"/>
+	<link href="/planting/planting.css?v=1020" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	<link rel="stylesheet" href="../shared/subscribe-modal.css">
@@ -43,11 +43,15 @@
 
 					<div id="menuRightStack">
 
-						<button id="wheelFab" class="uiPill wheelFabMenu" type="button"
-							aria-haspopup="dialog"
-							aria-controls="wheelModal"
-							aria-expanded="false"
-							aria-label="Open astro wheel"><span class="zodiac-label-top">Zodiac</span><span class="zodiac-label-middle">Wheel</span><span class="zodiac-wheel-icon"></span></button>
+						<div class="wheelFabSplit">
+							<button id="wheelFab" class="wheelFabMenu wheelFabPrimary" type="button"
+								aria-haspopup="dialog"
+								aria-controls="wheelModal"
+								aria-expanded="false"
+								aria-label="Open Zodiac Wheel modal"><span class="zodiac-label-top">Zodiac</span><span class="zodiac-label-middle">Wheel</span><span class="zodiac-wheel-icon"></span></button>
+							<button id="wheelPopoutBtn" class="wheelPopoutBtn" type="button"
+								aria-label="Open Zodiac Wheel in a separate window"><span aria-hidden="true">↗</span> Pop Out</button>
+						</div>
 					</div>
 				</div>
 				
@@ -89,8 +93,8 @@
 						</div>
 						<div style="display:flex;gap:8px;align-items:center;">
 						<div id="skyModeToggle" style="display:flex;gap:0;border-radius:8px;overflow:visible;border:1px solid rgba(255,255,255,.3);pointer-events:auto;">
-  <button id="skyModeFixed" class="skyModeOption skyModeActive" style="all:unset;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;background:rgba(0,200,80,.35);border:none;color:rgba(255,255,255,.9);font-weight:600;display:inline-flex;align-items:center;" type="button">☉ Fixed</button>
-  <button id="skyModeLive" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;" type="button">▶ Live</button>
+  <button id="skyModeTropical" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;border:none;display:inline-flex;align-items:center" type="button">☉ Tropical</button>
+  <button id="skyModeTransit" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;border:none;display:inline-flex;align-items:center" type="button">▶ Transit</button>
 </div>
 						<button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">⟳ Cycles</button>
 						</div>
@@ -497,6 +501,7 @@
 		});
 	</script>
 
+<script src="../shared/wheel-popout-bridge.js?v=2"></script>
 <script src="../shared/subscribe-modal.js" defer></script>
 </body>
 	</html>
