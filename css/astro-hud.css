@@ -1457,32 +1457,44 @@
 }
 
 #planetAspectSearchBtn {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(178,108,255,.55);
-  background: rgba(72,34,110,.72);
-  color: #e2c9ff;
-  font: 600 11px/1.1 system-ui, sans-serif;
-  letter-spacing: .02em;
-  white-space: nowrap;
-  cursor: pointer;
-  pointer-events: auto;
-  box-shadow: 0 6px 16px rgba(0,0,0,.4);
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
+  all: unset !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(178,108,255,.55) !important;
+  background: rgba(72,34,110,.72) !important;
+  color: #e2c9ff !important;
+  font: 600 11px/1.1 system-ui, sans-serif !important;
+  letter-spacing: .02em !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.4) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
 }
 
 #planetAspectSearchBtn:hover {
-  background: rgba(112,55,164,.82);
-  border-color: rgba(210,170,255,.85);
-  color: #fff;
+  background: rgba(112,55,164,.82) !important;
+  border-color: rgba(210,170,255,.85) !important;
+  color: #fff !important;
 }
 
 #stellariumBtn {
-  font: 600 11px/1.1 system-ui, sans-serif;
-  letter-spacing: .02em;
-  white-space: nowrap;
+  all: unset !important;
+  padding: 6px 12px !important;
+  font: 600 11px/1.1 system-ui, sans-serif !important;
+  letter-spacing: .02em !important;
+  white-space: nowrap !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(100,140,255,.35) !important;
+  background: rgba(10,10,30,.5) !important;
+  color: rgba(150,180,255,.85) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  pointer-events: auto !important;
 }
 
 #stellariumBtn:hover {
@@ -1752,8 +1764,8 @@
 }
 
 @media (max-width: 760px) {
-  #planetAspectSearchBtn {
-    right: 250px;
+  #wheelRightBtnRow {
+    right: 200px;
   }
 
   .aspect-search-form {
@@ -1899,7 +1911,6 @@
 /* Unified astrowheel modal controls */
 #controlButtonsRow,
 #controlButtonsRow button,
-#controlButtonsRow span,
 .subModalCard,
 .subModalCard button,
 .subModalCard select,

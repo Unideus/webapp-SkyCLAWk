@@ -1,18 +1,16 @@
 // js/main.js — Vite entry point
-// Boots Swiss Ephemeris from local WASM copy
+// Boots Swiss Ephemeris via the npm library's load() function
+// which resolves the correct WASM from @fusionstrings/swiss-eph
 
-import { Constants, SwissEph, load } from "../../node_modules/@fusionstrings/swiss-eph/src/main.js";
+import { Constants, SwissEph, load } from "@fusionstrings/swiss-eph/wasi";
 import { initSWE, computeChart, formatChart, PLANET_NAMES, PLANET_SYMBOLS, SIGN_NAMES } from "./astro-engine.js";
 import { TOPICS, scoreMoment, findBestTime } from "./rules-engine.js";
 
 async function boot() {
   try {
-    // WASM is copied to /wasm/swiss_eph.wasm (via public/ directory, served by Vite)
-    const wasmUrl = new URL("/auspicious/wasm/swiss_eph.wasm", window.location.origin);
-    const resp = await fetch(wasmUrl);
-    if (!resp.ok) throw new Error("WASM fetch failed: " + resp.status);
-    const wasmModule = await WebAssembly.compile(await resp.arrayBuffer());
-    const eph = new SwissEph(wasmModule);
+    // Use the npm library's load() which resolves the bundled WASM
+    // This gives us the full Swiss Ephemeris (1.27MB) with ephe data embedded
+    const eph = await load();
 
     const swe = {
       swe_calc_ut: (jd_ut, ipl, iflag) => {

@@ -1289,6 +1289,25 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 
 		function renderPlantingRibbonLane(groupEl, windows, y, height, opacity) {
 			if (!groupEl) return;
+			if (!groupEl.dataset.guidanceEventsBound) {
+				const openSegment = target => {
+					const segment = target?.closest?.(".planting-guidance-segment");
+					if (!segment || !groupEl.contains(segment)) return;
+					try {
+						const detail = JSON.parse(segment.dataset.guidance || "{}");
+						window.dispatchEvent(new CustomEvent("planting-guidance-open", { detail }));
+					} catch (error) {
+						console.warn("[planting-guidance] Could not open segment", error);
+					}
+				};
+				groupEl.addEventListener("click", event => openSegment(event.target));
+				groupEl.addEventListener("keydown", event => {
+					if (event.key !== "Enter" && event.key !== " ") return;
+					event.preventDefault();
+					openSegment(event.target);
+				});
+				groupEl.dataset.guidanceEventsBound = "true";
+			}
 			const years = getVisibleYearsForPlantingScale();
 			for (let year = years.start; year <= years.end; year++) {
 				windows.forEach(win => {
@@ -1320,14 +1339,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						startDate: `${year}-${String(win.start[0]).padStart(2, "0")}-${String(win.start[1]).padStart(2, "0")}`,
 						endDate: `${year}-${String(win.end[0]).padStart(2, "0")}-${String(win.end[1]).padStart(2, "0")}`
 					};
-					const openGuidance = () => window.dispatchEvent(new CustomEvent("planting-guidance-open", { detail }));
-					rect.addEventListener("click", openGuidance);
-					rect.addEventListener("keydown", event => {
-						if (event.key === "Enter" || event.key === " ") {
-							event.preventDefault();
-							openGuidance();
-						}
-					});
+					rect.dataset.guidance = JSON.stringify(detail);
 					const title = createSvgEl("title");
 					title.textContent = `${win.label} · click for planting guidance`;
 					rect.appendChild(title);
