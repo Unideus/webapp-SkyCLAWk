@@ -1945,10 +1945,14 @@
   color: rgba(255,255,255,.96);
 }
 
+#wheelModal #importToNatalBtn,
+.wheel-popout-page #importToNatalBtn,
 #importToNatalBtn {
   color: #d4af37 !important;
 }
 
+#wheelModal #importToNatalBtn:hover,
+.wheel-popout-page #importToNatalBtn:hover,
 #importToNatalBtn:hover {
   color: #f1cf6a !important;
 }
