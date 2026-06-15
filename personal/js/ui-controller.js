@@ -995,6 +995,9 @@
 			// Timeline scale selector (Yuga / Generational / Personal)
 			if (scaleSelector) {
 			setTimelineScale(timelineScale); // init (default = generational)
+			if (typeof window.setAstroWheelLiveMode === "function") {
+				window.setAstroWheelLiveMode(true);
+			}
 
 			scaleSelector.addEventListener("click", (e) => {
 				const btn = e.target.closest(".scaleOpt");
@@ -1730,6 +1733,9 @@
 			freezeTime();
 			timeState.navTargetDateUTC = new Date();   // user's current instant
 			requestWheelRedraw();
+			if (typeof window.setAstroWheelLiveMode === "function") {
+				window.setAstroWheelLiveMode(true);
+			}
 		});
 	}
 
@@ -2072,6 +2078,11 @@
 				if (typeof window.setAstroWheelLiveMode === "function") {
 					window.setAstroWheelLiveMode(false);
 				}
+			}
+
+			// When idle and live mode is active, keep the app anchored to wall time.
+			if (Math.abs(v) < 0.0001 && !timeState.navTargetDateUTC && window.__liveDate instanceof Date && !window._auspiciousJumped) {
+				AstroEngine.setDateUTC(window.__liveDate);
 			}
 
 			// --- BUTTON NAVIGATION (SMOOTH / LOG-STYLE EASE) ---

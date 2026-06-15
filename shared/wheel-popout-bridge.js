@@ -25,11 +25,11 @@
   }
 
   function currentDate() {
-    if (window.timeState?.navTargetDateUTC instanceof Date) {
-      return window.timeState.navTargetDateUTC;
-    }
     if (window.__liveDate instanceof Date && !window._auspiciousJumped) {
       return window.__liveDate;
+    }
+    if (window.timeState?.navTargetDateUTC instanceof Date) {
+      return window.timeState.navTargetDateUTC;
     }
     if (window.timeState?.dateUTC instanceof Date) {
       return window.timeState.dateUTC;

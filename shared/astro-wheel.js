@@ -1436,14 +1436,14 @@ for (const k of show) {
     if (!wheelImg) return;
 
     // Date chain priority:
-    // 1. navTargetDateUTC (user navigation - button clicks, date box)
-    // 2. __liveDate (real-time clock when in transit/natal live mode)
+    // 1. __liveDate (real-time clock when live mode is active)
+    // 2. navTargetDateUTC (user navigation - button clicks, date box)
     // 3. timeState.dateUTC (normal timeline position)
     // 4. AstroEngine fallback
     // 5. new Date() (last resort)
     const isLive = isLiveMode && window.__liveDate instanceof Date && !window._auspiciousJumped;
-    const t = (typeof timeState !== "undefined" && timeState && timeState.navTargetDateUTC instanceof Date) ? timeState.navTargetDateUTC :
-        (isLive) ? window.__liveDate :
+    const t = (isLive) ? window.__liveDate :
+        (typeof timeState !== "undefined" && timeState && timeState.navTargetDateUTC instanceof Date) ? timeState.navTargetDateUTC :
         (typeof timeState !== "undefined" && timeState && timeState.dateUTC instanceof Date) ? timeState.dateUTC :
         (window.AstroEngine && window.AstroEngine.dateUTC instanceof Date) ? window.AstroEngine.dateUTC :
         (window.AstroEngine && window.AstroEngine.dateUTC) ? new Date(window.AstroEngine.dateUTC) :
@@ -3032,21 +3032,37 @@ for (const k of show) {
   let liveUpdateInterval = null;
   let isLiveMode = false;
 
+  function syncLiveClock() {
+    if (!isLiveMode) return;
+    if (window._auspiciousJumped) return;
+
+    // Keep the wheel on wall-clock time until the user explicitly takes over.
+    window.__liveDate = new Date();
+
+    // Keep the timeline authority in sync too, so the wheel and timeline
+    // stop feeling frozen when live mode is active.
+    if (window.AstroEngine && typeof window.AstroEngine.setDateUTC === "function") {
+      const speedSlider = document.getElementById("speedSlider");
+      const hasManualNav = typeof timeState !== "undefined" && timeState && timeState.navTargetDateUTC instanceof Date;
+      const sliderValue = speedSlider ? Number(speedSlider.value) : 0;
+      if (!hasManualNav && Math.abs(sliderValue) < 0.0001) {
+        if (typeof timeState !== "undefined" && timeState && "navTargetDateUTC" in timeState) {
+          timeState.navTargetDateUTC = null;
+        }
+        window.AstroEngine.setDateUTC(window.__liveDate || new Date());
+      }
+    }
+
+    if (wheelModal.getAttribute("aria-hidden") === "false") {
+      drawAstroWheel();
+    }
+  }
+
   function startLiveUpdate() {
     if (liveUpdateInterval) return;
     isLiveMode = true;
-    // Set __liveDate immediately so first wheel open shows live time
-    window.__liveDate = new Date();
-    liveUpdateInterval = setInterval(() => {
-      if (wheelModal.getAttribute("aria-hidden") !== "false") return;
-      // Don't waste CPU when a natal chart is active
-      if (window.NatalChart && window.NatalChart.enabled && window.astrowheelSkyMode !== 'natal') return;
-      // Update __liveDate to current wall clock — does NOT touch AstroEngine/timeState
-      if (!window._auspiciousJumped) {
-        window.__liveDate = new Date();
-      }
-      drawAstroWheel();
-    }, 5000);
+    syncLiveClock();
+    liveUpdateInterval = setInterval(syncLiveClock, 1000);
   }
 
   function stopLiveUpdate() {
@@ -3088,7 +3104,6 @@ for (const k of show) {
   // Seed live mode infrastructure once so Transit/Natal can be enabled immediately when selected.
   // Tropical remains the default visible state.
   startLiveUpdate();
-  stopLiveUpdate();
 
   // =========================================================
   let _skyMode = 'tropical';
@@ -3124,10 +3139,7 @@ for (const k of show) {
       else window.__houseCache = new Map();
     }
     updateSkyModeUI(mode);
-    // Live interval: only run for transit and natal (planet positions update in natal mode)
-    if (typeof window.setAstroWheelLiveMode === "function") {
-      window.setAstroWheelLiveMode(mode !== 'tropical');
-    }
+    // Sky mode only controls rendering. Live clock state is managed separately.
     // If user went back to Tropical, release the auspicious anchor
     if (mode === 'tropical') window._auspiciousJumped = false;
     drawAstroWheel();
