@@ -421,6 +421,17 @@ body #screwSVG {
   left: calc(var(--planting-sidebar-w) + var(--planting-sidebar-gap) + 24px);
   width: calc(100% - var(--planting-sidebar-w) - var(--planting-sidebar-gap) - 44px);
   overflow: hidden;
+  pointer-events: auto !important;
+}
+
+body #screwSVG #scrollGroup,
+body #screwSVG #overlayCycle,
+body #screwSVG #elementalCycle {
+  pointer-events: auto !important;
+}
+
+body #screwSVG .planting-guidance-segment {
+  pointer-events: all !important;
 }
 
 .plantingMoonPhaseReadout {
@@ -899,6 +910,7 @@ body.zodiac-panel-open .plantingSidebar {
 .planting-guidance-segment {
   cursor: pointer;
   transition: opacity 120ms ease, filter 120ms ease;
+  pointer-events: all !important;
 }
 
 .planting-guidance-segment:hover,

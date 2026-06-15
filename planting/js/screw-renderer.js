@@ -16,6 +16,7 @@
 	function buildScrew() {
 			
 			const svg = document.getElementById("screwSVG");
+			if (svg) svg.style.pointerEvents = "auto";
 
 
 			// SVG layer order is defined in index.html.
