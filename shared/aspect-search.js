@@ -410,7 +410,12 @@
         }
       }, 0);
     } else {
-      wheelCard.appendChild(button);
+      const container = document.getElementById("aspectSearchBtnContainer");
+      if (container) {
+        container.appendChild(button);
+      } else {
+        wheelCard.appendChild(button);
+      }
     }
 
     const now = new Date();
@@ -494,4 +499,46 @@
   } else {
     buildUI();
   }
+
+
+  // Stellarium Web integration
+  function initStellariumBtn() {
+    const btn = document.getElementById("stellariumBtn");
+    if (!btn || btn._stellariumWired) return;
+    btn._stellariumWired = true;
+    btn.addEventListener("click", function() {
+      // Get current date from wheel state
+      let d = window.__liveDate || null;
+      if (!d && window.timeState && window.timeState.dateUTC) {
+        d = window.timeState.dateUTC;
+      }
+      if (!d) d = new Date();
+      
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      const hours = String(d.getUTCHours()).padStart(2, "0");
+      const minutes = String(d.getUTCMinutes()).padStart(2, "0");
+      const dateStr = year + "-" + month + "-" + day;
+      const timeStr = hours + "%3A" + minutes;
+      
+      // Get location
+      let lat = 40.7128, lon = -74.006; // default NYC
+      if (window.natalLocationData && window.natalLocationData.lat != null) {
+        lat = window.natalLocationData.lat;
+        lon = window.natalLocationData.lon;
+      }
+      
+      const url = "https://stellarium-web.org/?lat=" + lat + "&lon=" + lon + "&date=" + dateStr + "&time=" + timeStr;
+      window.open(url, "_blank");
+    });
+  }
+
+  // Run on DOMContentLoaded
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initStellariumBtn);
+  } else {
+    initStellariumBtn();
+  }
+
 })();

@@ -1226,19 +1226,64 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 		}
 
 		function getPlantingRibbonWindows() {
-			return {
+			const params = new URLSearchParams(window.location.search);
+			const location = window.locationData || {};
+			const latitude = Number(location.lat);
+			const isSouthern = Number.isFinite(latitude) && latitude < 0;
+			const zone = String(params.get("zone") || "");
+			const zoneNumber = Number.parseInt(zone, 10);
+			const koppen = String(params.get("koppen") || "");
+			const isTropical = koppen.startsWith("A") || zoneNumber >= 11;
+			const isArid = koppen.startsWith("B");
+
+			if (isTropical) {
+				return {
+					constraints: [
+						{ label: "Heat / sun stress", start: [2, 15], end: [5, 31], color: "#f97316", reason: "High heat and evaporative demand can stress new transplants and shallow roots.", response: "Favor early-morning work, shade tender starts, mulch, and maintain even moisture." },
+						{ label: "Heavy rain / disease", start: [6, 1], end: [10, 15], color: "#38bdf8", reason: "Persistent rain and leaf wetness can increase waterlogging and disease pressure.", response: "Prioritize drainage, airflow, staking, and short dry planting windows." },
+						{ label: "Dry-season stress", start: [10, 16], end: [12, 31], color: "#f59e0b", reason: "Declining rainfall raises establishment and irrigation risk.", response: "Plant only where irrigation and deep mulch are ready." }
+					],
+					actions: [
+						{ label: "Plant with irrigation", start: [1, 1], end: [5, 15], color: "#22c55e", reason: "Warm soils support growth, but establishment depends on reliable moisture.", response: "Plant heat-adapted crops and perennials with irrigation in place." },
+						{ label: "Drain / protect", start: [5, 16], end: [10, 15], color: "#38bdf8", reason: "Wet-season work should reduce saturation and foliar disease.", response: "Improve drainage, trellis, prune for airflow, and pause during saturated periods." },
+						{ label: "Mulch / irrigate", start: [10, 16], end: [12, 31], color: "#facc15", reason: "Dry-season planting needs active water conservation.", response: "Mulch deeply, irrigate at the root zone, and monitor young plants." }
+					]
+				};
+			}
+
+			const windows = {
 				constraints: [
-					{ label: "Frost risk", start: [1, 1], end: [3, 20], color: "#60a5fa" },
-					{ label: "Heat stress", start: [6, 21], end: [8, 31], color: "#f97316" },
-					{ label: "Storm / wind risk", start: [8, 15], end: [10, 15], color: "#a78bfa" },
-					{ label: "Dormancy", start: [11, 15], end: [12, 31], color: "#22c55e" }
+					{ label: "Frost / cold soil", start: [1, 1], end: [3, zoneNumber && zoneNumber <= 5 ? 31 : 20], color: "#60a5fa", reason: "Freezing nights and cold soil can damage tender growth and slow germination.", response: "Wait, start indoors, or use frost protection until conditions improve." },
+					{ label: isArid ? "Heat / water deficit" : "Heat stress", start: [6, 21], end: [8, 31], color: "#f97316", reason: "High temperature and evaporative demand increase transplant and moisture stress.", response: "Water deeply, mulch, provide temporary shade, and avoid midday transplanting." },
+					{ label: "Wind / storm risk", start: [9, 1], end: [10, 15], color: "#a78bfa", reason: "Seasonal wind and storms can damage unsupported plants and exposed new trees.", response: "Stake only where needed, secure covers, and delay planting around severe weather." },
+					{ label: "Frost return", start: [10, 16], end: [12, 31], color: "#3b82f6", reason: "Shortening days and returning freezes limit tender crop establishment.", response: "Protect remaining crops, harvest tender produce, and favor dormant planting." }
 				],
 				actions: [
-					{ label: "Sow / prep", start: [1, 15], end: [3, 15], color: "#facc15" },
-					{ label: "Plant / transplant", start: [3, 1], end: [5, 31], color: "#22c55e" },
-					{ label: "Tend / mulch", start: [5, 15], end: [8, 31], color: "#38bdf8" },
-					{ label: "Harvest / protect", start: [7, 1], end: [11, 15], color: "#f59e0b" }
+					{ label: "Start / prepare", start: [1, 15], end: [3, 15], color: "#facc15", reason: "This is the preparation and protected-start window for the coming season.", response: "Start suitable crops indoors, prepare beds, repair irrigation, and stage mulch." },
+					{ label: "Sow / transplant", start: [3, 16], end: [5, 31], color: "#22c55e", reason: "Warming soil and declining frost risk create the main establishment window.", response: "Direct sow cool-tolerant crops first, then transplant tender plants after frost risk passes." },
+					{ label: "Water / tend", start: [6, 1], end: [8, 31], color: "#38bdf8", reason: "Active growth shifts priority from establishment to moisture and canopy management.", response: "Irrigate, mulch, trellis, scout, and succession-sow where heat permits." },
+					{ label: "Harvest / protect", start: [9, 1], end: [12, 15], color: "#f59e0b", reason: "Maturity and falling temperatures make harvest and protection the priority.", response: "Harvest, preserve, protect tender crops, and plant hardy dormant stock where appropriate." }
 				]
+			};
+
+			if (!isSouthern) return windows;
+
+			function shiftSixMonths(items) {
+				return items.flatMap(item => {
+					const shift = ([month, day]) => [((month + 5) % 12) + 1, day];
+					const start = shift(item.start);
+					const end = shift(item.end);
+					if (start[0] <= end[0]) return [{ ...item, start, end }];
+					return [
+						{ ...item, start, end: [12, 31] },
+						{ ...item, start: [1, 1], end }
+					];
+				});
+			}
+
+			return {
+				constraints: shiftSixMonths(windows.constraints),
+				actions: shiftSixMonths(windows.actions)
 			};
 		}
 
@@ -1264,12 +1309,33 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						stroke: "rgba(255,255,255,0.42)",
 						"stroke-width": "0.65"
 					});
+					rect.setAttribute("class", "planting-guidance-segment");
+					rect.setAttribute("tabindex", "0");
+					rect.setAttribute("role", "button");
+					rect.setAttribute("aria-label", `${win.label}, ${year}`);
+					const detail = {
+						...win,
+						lane: groupEl.id === "overlayCycle" ? "condition" : "action",
+						year,
+						startDate: `${year}-${String(win.start[0]).padStart(2, "0")}-${String(win.start[1]).padStart(2, "0")}`,
+						endDate: `${year}-${String(win.end[0]).padStart(2, "0")}-${String(win.end[1]).padStart(2, "0")}`
+					};
+					const openGuidance = () => window.dispatchEvent(new CustomEvent("planting-guidance-open", { detail }));
+					rect.addEventListener("click", openGuidance);
+					rect.addEventListener("keydown", event => {
+						if (event.key === "Enter" || event.key === " ") {
+							event.preventDefault();
+							openGuidance();
+						}
+					});
 					const title = createSvgEl("title");
-					title.textContent = win.label;
+					title.textContent = `${win.label} · click for planting guidance`;
 					rect.appendChild(title);
 					groupEl.appendChild(rect);
 				});
 			}
+
+			window.refreshPlantingGuidanceBands = renderPlantingCycleRibbons;
 		}
 
 		function positionPlantingCycleHud() {

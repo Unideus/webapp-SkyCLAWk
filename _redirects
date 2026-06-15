@@ -27,4 +27,8 @@
 
 # Swiss Ephemeris WASM + data files
 /ephe/* /ephe/:splat 200
-/swiss_eph.wasm /swiss_eph.wasm 200
+/auspicious/wasm/* /auspicious/wasm/:splat 200
+
+# Wheel popout
+/wheel/ /wheel/index.html 200
+/wheel/* /wheel/:splat 200

@@ -22,7 +22,7 @@
 
 	<link href="../css/timeline.css?v=29" rel="stylesheet"/>
 	<link href="../css/astro-hud.css?v=40" rel="stylesheet"/>
-	<link href="/planting/planting.css?v=1020" rel="stylesheet"/>
+	<link href="/planting/planting.css?v=1021" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	<link rel="stylesheet" href="../shared/subscribe-modal.css">
@@ -96,7 +96,6 @@
   <button id="skyModeTropical" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;border:none;display:inline-flex;align-items:center" type="button">☉ Tropical</button>
   <button id="skyModeTransit" class="skyModeOption" style="all:unset;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;border:none;display:inline-flex;align-items:center" type="button">▶ Transit</button>
 </div>
-						<button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">⟳ Cycles</button>
 						</div>
 					</div>
 
@@ -170,34 +169,6 @@
 						</div>
 					</div>
 				</div>
-				<div id="cyclesModal" class="subModal" role="dialog" aria-modal="true" aria-hidden="true">
-					<div class="subModalCard cyclesModalCard" style="top:60px;left:10px;min-width:220px;background:rgba(10,10,12,0.97);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 16px;">
-						<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-							<span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600;letter-spacing:.05em;">PLANETARY CYCLES</span>
-							<button id="cyclesClose" class="subModalClose" style="position:static;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
-						</div>
-						<select id="cyclesPlanetSelect" style="width:100%;background:rgba(30,30,35,0.95);color:#dcc8a0;border:1px solid rgba(160,135,90,.35);border-radius:8px;padding:8px 10px;font-size:16px;cursor:pointer;outline:none;margin-bottom:10px;">
-							<option value="mercury">☿ Mercury</option>
-							<option value="venus" selected>♀ Venus</option>
-							<option value="mars">♂ Mars</option>
-							<option value="jupiter">♃ Jupiter</option>
-							<option value="saturn">♄ Saturn</option>
-							<option value="uranus">♅ Uranus</option>
-							<option value="neptune">♆ Neptune</option>
-							<option value="pluto">♇ Pluto</option>
-						</select>
-						<div style="display:flex;gap:6px;margin-bottom:10px;">
-							<button class="cycle-mode-btn" data-mode="retrograde" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">⟲ Retro</button>
-							<button class="cycle-mode-btn" data-mode="synodic" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">☌ Synodic</button>
-							<button class="cycle-mode-btn" data-mode="both" style="flex:1;all:unset;padding:6px 8px;font-size:13px;border-radius:8px;background:rgba(100,100,100,.15);border:1px solid rgba(100,100,100,.3);color:rgba(180,180,180,.5);cursor:pointer;text-align:center;font-weight:600;">Both</button>
-						</div>
-						<div style="display:flex;gap:8px;justify-content:flex-end;">
-							<button id="cyclesApplyBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(180,140,80,.25);color:#e8c898;">Apply</button>
-							<button id="cyclesClearBtn" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(160,135,90,.35);cursor:pointer;font-size:11px;background:rgba(30,25,18,.9);color:#ccc0a8;">Clear</button>
-						</div>
-					</div>
-				</div>
-
 				<div id="cycleModal" class="zyModal" role="dialog" aria-modal="true" aria-hidden="true">
 					<div class="zyModalBackdrop" data-close="cycle"></div>
 
@@ -220,6 +191,52 @@
 
 						<div class="cycleActions">
 							<button id="cycleApply" class="uiPill" type="button">Apply</button>
+						</div>
+					</div>
+				</div>
+				<div id="plantingGuidanceModal" class="plantingGuidanceModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="plantingGuidanceTitle">
+					<div class="plantingGuidanceBackdrop" data-planting-guidance-close></div>
+					<div class="plantingGuidanceCard" role="document">
+						<header class="plantingGuidanceHeader">
+							<div>
+								<div class="plantingGuidanceKicker" id="plantingGuidanceKicker">Planting guidance</div>
+								<h2 id="plantingGuidanceTitle">Seasonal conditions</h2>
+								<p id="plantingGuidanceRange">Select a band segment for details.</p>
+							</div>
+							<button id="plantingGuidanceClose" class="plantingGuidanceClose" type="button" aria-label="Close planting guidance">×</button>
+						</header>
+
+						<div class="plantingGuidanceStatus">
+							<div><span>Location</span><strong id="plantingGuidanceLocation">Page location</strong></div>
+							<div><span>Climate</span><strong id="plantingGuidanceClimate">Seasonal estimate</strong></div>
+							<div><span>Confidence</span><strong id="plantingGuidanceConfidence">Estimated</strong></div>
+						</div>
+
+						<section class="plantingGuidanceLead">
+							<div id="plantingGuidanceSwatch" class="plantingGuidanceSwatch" aria-hidden="true"></div>
+							<div>
+								<h3 id="plantingGuidanceLeadTitle">What matters now</h3>
+								<p id="plantingGuidanceReason">Guidance is calculated from the selected date, location, climate, and connected planting plan.</p>
+							</div>
+						</section>
+
+						<div class="plantingGuidanceColumns">
+							<section>
+								<h3>Affected plants</h3>
+								<p id="plantingGuidancePlants">Connect a Permaculture plan for crop-specific guidance.</p>
+							</section>
+							<section>
+								<h3>Recommended response</h3>
+								<p id="plantingGuidanceResponse">Use the action band as the concise next step.</p>
+							</section>
+							<section>
+								<h3>Evidence</h3>
+								<ul id="plantingGuidanceEvidence"></ul>
+							</section>
+							<section>
+								<h3>Lunar timing</h3>
+								<p id="plantingGuidanceLunar">Lunar timing refines suitable dates but does not override weather or crop requirements.</p>
+							</section>
 						</div>
 					</div>
 				</div>
@@ -474,13 +491,13 @@
 
 		<script src="js/heaven-data.js"></script>
 
-		<script src="js/screw-renderer.js"></script>
+		<script src="js/screw-renderer.js?v=2"></script>
 		<script src="js/astro-wheel.js?v=2"></script>
 		<script src="js/conjunction-selector.js"></script>
 
 		<!-- 3D (Phase 1) — Three.js global build + simple renderer wrapper -->
-		<script src="js/ui-controller.js"></script>
-		<script src="js/planting.js"></script>
+		<script src="js/ui-controller.js?v=2"></script>
+		<script src="js/planting.js?v=2"></script>
 	<script>
 	// Navigation: Scale selector navigates to skyclock or timeline variants
 		document.querySelectorAll('.scaleOpt').forEach(btn => {

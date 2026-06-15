@@ -109,6 +109,22 @@ if (existsSync(wheelSrc)) {
     console.log('Copied: wheel scripts and CSS')
 }
 
+// Copy auspicious WASM + public assets
+const ausPublicSrc = resolve(root, 'auspicious/public')
+const ausPublicDst = resolve(dist, 'auspicious')
+if (existsSync(ausPublicSrc)) {
+    // Copy public subdirectories into dist/auspicious/ so Vite-relative paths work
+    for (const entry of ['wasm']) {
+        const src = resolve(ausPublicSrc, entry)
+        const dst = resolve(ausPublicDst, entry)
+        if (existsSync(src)) {
+            mkdirSync(dst, { recursive: true })
+            cpSync(src, dst, { recursive: true })
+            console.log('Copied: auspicious/' + entry + '/')
+        }
+    }
+}
+
 // Copy _redirects
 const rdSrc = resolve(root, '_redirects')
 const rdDst = resolve(dist, '_redirects')

@@ -1522,8 +1522,11 @@
 			}
 
 			// Initialize location detection after cities are loaded
-			loadCities().then(() => {
-				detectUserLocation();
+			loadCities().then(async () => {
+				await detectUserLocation();
+				if (typeof window.refreshPlantingGuidanceBands === "function") {
+					window.refreshPlantingGuidanceBands();
+				}
 				if (typeof drawAstroWheel === "function") {
 					drawAstroWheel();
 				}
@@ -1565,6 +1568,9 @@
 				if (locationDropdown) locationDropdown.style.display = "none";
 				// Store lat/lon/tz on window for house calculations
 				window.locationData = { lat: city.lat, lon: city.lon, tz: city.tz };
+				if (typeof window.refreshPlantingGuidanceBands === "function") {
+					window.refreshPlantingGuidanceBands();
+				}
 														// Clear house cache so new location takes effect immediately
 				if (window.__houseCache) window.__houseCache.clear();
 				// Redraw wheel with new house cusps and updated timezone

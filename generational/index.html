@@ -20,7 +20,7 @@
 		 ========================================================= -->
 
 	<link href="../css/timeline.css?v=154" rel="stylesheet"/>
-	<link href="../css/astro-hud.css?v=51" rel="stylesheet"/>
+	<link href="../css/astro-hud.css?v=52" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	<link rel="stylesheet" href="../shared/subscribe-modal.css">
@@ -215,6 +215,7 @@
 						<button id="shadowBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.82);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">◐ Shadow</button>
 						<button id="cyclesBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">⟳ Cycles</button>
 						</div>
+						
 					</div>
 
 					<!-- Transits grid overlay at top right of wheel -->
@@ -227,6 +228,11 @@
 						<button id="rulerTransitBtn" class="uiPill ruler-mode-btn is-active" type="button" title="Show Transit Ruler">T</button>
 						<button id="rulerNatalBtn" class="uiPill ruler-mode-btn" type="button" title="Show Natal Ruler">N</button>
 					</div>
+				</div>
+								<!-- Right-side button row: Stellarium + Aspect Search -->
+				<div id="wheelRightBtnRow" style="position:absolute;top:52px;right:255px;z-index:210;display:flex;gap:6px;align-items:center;pointer-events:none;">
+					<button id="stellariumBtn" style="all:unset;padding:6px 10px;font-size:11px;border-radius:8px;background:rgba(10,10,30,.5);border:1px solid rgba(100,140,255,.35);color:rgba(150,180,255,.85);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;gap:4px;" type="button" title="Open this sky in Stellarium Web">🔭 Star Map</button>
+					<span id="aspectSearchBtnContainer" style="display:inline-flex;align-items:center;pointer-events:auto;"></span>
 				</div>
 				<div id="wheelTransitsOverlay">
 							<div class="grid-label">TRANSITS</div>
@@ -661,7 +667,7 @@
 		<script src="js/time-engine.js"></script>
 		<script src="js/generation-model.js"></script>
 		<script src="../shared/astronomy-adapter.js?v=151"></script>
-    <script src="../shared/aspect-search.js?v=6"></script>
+    <script src="../shared/aspect-search.js?v=7"></script>
 		<script src="js/planetary-cycles.js?v=150"></script>
 
 		<!-- Era markers must load BEFORE screw-renderer builds the SVG -->

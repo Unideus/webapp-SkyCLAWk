@@ -8,7 +8,6 @@
   const channel = typeof BroadcastChannel === "function"
     ? new BroadcastChannel(CHANNEL_NAME)
     : null;
-  const status = document.getElementById("wheelConnectionStatus");
   const modeLabels = { generational: "Generational", personal: "Personal" };
   const planetOptions = [
     ["sun", "☉ Sun"], ["moon", "☽ Moon"], ["mercury", "☿ Mercury"],
@@ -50,12 +49,6 @@
   function requestWheelLayout() {
     if (wheelLayoutRaf) return;
     wheelLayoutRaf = window.requestAnimationFrame(applyWheelLayout);
-  }
-
-  function setStatus(text, connected) {
-    if (!status) return;
-    status.textContent = text;
-    status.classList.toggle("is-connected", !!connected);
   }
 
   function populateCycleSelect(id, selected) {
@@ -141,7 +134,6 @@
     lastStateAt = Date.now();
 
     const sourceLabel = modeLabels[state.sourceMode] || "Timeline";
-    setStatus(`Connected to ${sourceLabel} timeline`, true);
     document.title = `${sourceLabel} Zodiac Wheel`;
 
     const locationValue = cloneLocation(state.location);
@@ -302,8 +294,6 @@
     document.getElementById("natalLocationInput").value = locationValue?.name || "";
     pendingNatalLocation = cloneLocation(locationValue);
   });
-
-  document.getElementById("wheelClose")?.addEventListener("click", () => window.close());
 
   window.openAstroWheel?.();
   requestWheelLayout();
