@@ -288,22 +288,91 @@ let cardStartLeft = 0, cardStartTop = 0;
   // Wheel closed by default - user must click Zodiac Wheel button to open
   // requestAnimationFrame(openWheel);
 
-  // ---------------------------------------------------------
-  // Preload constellation SVG and embed as data URL (works inside data: SVG wheel)
-  // ---------------------------------------------------------
-  let HEAVEN_DATA_URL = "";
-  let constellationReady = false;
+  // Blob-backed SVG wheel renders need the constellation art embedded.
+  // Keep it user-toggleable because it is the heaviest wheel layer. It lives as
+  // one persistent DOM image so Chromium does not re-decode it inside every
+  // regenerated wheel Blob.
+  const wheelStage = document.getElementById("wheelStage");
+  let constellationImg = null;
+  window.constellationsVisible = window.constellationsVisible !== false;
 
-  fetch("/heaven_constellations.svg")
-    .then(r => {
-      return r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`));
-    })
-    .then(txt => {
-      HEAVEN_DATA_URL = "data:image/svg+xml," + encodeURIComponent(txt);
-      constellationReady = true;
-      if (typeof requestWheelRedraw === "function") requestWheelRedraw();
-    })
-    .catch(err => console.warn("[wheel] heaven_constellations.svg load failed:", err));
+  function ensureConstellationLayer() {
+    if (!wheelStage || constellationImg) return constellationImg;
+    constellationImg = document.createElement("img");
+    constellationImg.id = "wheelConstellationsImg";
+    constellationImg.alt = "";
+    constellationImg.draggable = false;
+    constellationImg.src = "/heaven_constellations.svg";
+    constellationImg.style.cssText = [
+      "position:absolute",
+      "left:4.56%",
+      "top:2.89%",
+      "width:92.44%",
+      "height:92.44%",
+      "object-fit:contain",
+      "pointer-events:none",
+      "user-select:none",
+      "-webkit-user-drag:none",
+      "opacity:.55",
+      "z-index:1",
+      "transform-origin:center center",
+      "will-change:transform"
+    ].join(";");
+    constellationImg.onerror = () => {
+      console.warn("[wheel] heaven_constellations.svg load failed");
+    };
+    wheelStage.insertBefore(constellationImg, wheelImg);
+    wheelImg.style.zIndex = "2";
+    wheelImg.style.position = wheelImg.style.position || "absolute";
+    return constellationImg;
+  }
+
+  function computeWheelBaseLon(t) {
+    let baseLon = 0;
+    const skyMode = window.astrowheelSkyMode || 'tropical';
+    if (typeof window.getHouseCusps !== "function") return baseLon;
+    try {
+      if (skyMode === 'transit') {
+        const loc = window.locationData || null;
+        if (loc && loc.lat != null && loc.lon != null && t instanceof Date && Number.isFinite(t.getTime())) {
+          const ha = window.getHouseCusps(t, loc.lat, loc.lon);
+          const asc = Number(ha?.asc);
+          if (Number.isFinite(asc)) baseLon = (asc % 360 + 360) % 360;
+        }
+      } else if (skyMode === 'natal') {
+        const natalLoc = (window.NatalChart && window.NatalChart.enabled && window.natalLocationData)
+          ? window.natalLocationData : null;
+        const natalDate = (window.NatalChart && window.NatalChart.enabled && window.NatalChart.dateUTC)
+          ? window.NatalChart.dateUTC : null;
+        if (natalLoc && natalLoc.lat != null && natalLoc.lon != null && natalDate) {
+          const ha = window.getHouseCusps(natalDate, natalLoc.lat, natalLoc.lon);
+          const asc = Number(ha?.asc);
+          if (Number.isFinite(asc)) baseLon = (asc % 360 + 360) % 360;
+        }
+      }
+    } catch(_) {}
+    return baseLon;
+  }
+
+  function updateConstellationLayer(t, baseLon = 0) {
+    const img = ensureConstellationLayer();
+    if (!img) return;
+    const visible = window.constellationsVisible !== false;
+    img.style.display = visible ? "block" : "none";
+    if (!visible) return;
+
+    let precessionDeg = 0;
+    if (t instanceof Date && Number.isFinite(t.getTime())) {
+      const jdUt = (t.getTime() / 86400000) + 2440587.5;
+      const epoch = (typeof window.PRECESS_EPOCH_JD === "number") ? window.PRECESS_EPOCH_JD : 2451545.0;
+      const arcsecPerYear = (typeof window.PRECESS_ARCSEC_PER_YEAR === "number") ? window.PRECESS_ARCSEC_PER_YEAR : 50.29;
+      const sign = (typeof window.PRECESS_SIGN === "number") ? window.PRECESS_SIGN : -1;
+      const years = (jdUt - epoch) / 365.2422;
+      precessionDeg = sign * (years * (arcsecPerYear / 3600));
+    }
+    img.style.transform = `rotate(${3 + precessionDeg + baseLon}deg)`;
+  }
+  ensureConstellationLayer();
 
   // =========================================================
   // SVG WHEEL RENDERER (ported from MyTimeline)
@@ -1132,16 +1201,7 @@ for (const k of show) {
     // base manual rotation + precession
     const STAR_ROT = 3; // degrees (+ clockwise)
 
-    const starOverlay = HEAVEN_DATA_URL ? `
-      <g opacity="0.55" transform="rotate(${STAR_ROT + precessionDeg + baseLon} ${cx} ${cy})">
-        <image href="${HEAVEN_DATA_URL}"
-               x="${(cx - STAR_RADIUS) + STAR_DX}"
-               y="${(cy - STAR_RADIUS) + STAR_DY}"
-               width="${STAR_RADIUS * 2}"
-               height="${STAR_RADIUS * 2}"
-               preserveAspectRatio="xMidYMid meet" />
-      </g>
-    ` : "";
+    const starOverlay = "";
 
 
     // ---- House cusps (Placidus via SwissEph, or Porphyry from ASC/MC)
@@ -1352,13 +1412,76 @@ for (const k of show) {
         ${eclipticTicks}
       </svg>
     `;
-    return "data:image/svg+xml," + encodeURIComponent(svg);
+    return svg;
   }
 
   // =========================================================
   // PUBLIC: drawAstroWheel() (called from ui-controller.js)
   // =========================================================
   let _lastDrawMs = 0;
+  let _wheelObjectUrl = "";
+  let _lastWheelRenderKey = "";
+
+  function setWheelImageSVG(svg) {
+    if (!wheelImg || !svg) return;
+    const previousUrl = _wheelObjectUrl;
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    const nextUrl = URL.createObjectURL(blob);
+    _wheelObjectUrl = nextUrl;
+
+    wheelImg.onload = () => {
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+    };
+    wheelImg.onerror = () => {
+      if (_wheelObjectUrl === nextUrl) _wheelObjectUrl = "";
+      URL.revokeObjectURL(nextUrl);
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+    };
+    wheelImg.src = nextUrl;
+  }
+
+  function stableRound(value, precision = 100) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.round(n * precision) / precision : null;
+  }
+
+  function buildWheelRenderKey(t, lons, keys, natalLons, baseLon) {
+    const pickedLons = {};
+    for (const k of keys) pickedLons[k] = stableRound(lons?.[k], 100);
+    const pickedNatal = {};
+    if (natalLons) {
+      for (const k of Object.keys(natalLons).sort()) pickedNatal[k] = stableRound(natalLons[k], 100);
+    }
+    const cyclePins = Array.isArray(window.cycleTrackState?.pins)
+      ? window.cycleTrackState.pins.map(p => [stableRound(p.lon, 100), p.type || "", p.aspect || "", p.time || 0])
+      : [];
+    return JSON.stringify({
+      t: t instanceof Date && Number.isFinite(t.getTime()) ? t.getTime() : null,
+      baseLon: stableRound(baseLon, 100),
+      keys,
+      lons: pickedLons,
+      natal: {
+        enabled: !!(window.NatalChart && window.NatalChart.enabled),
+        date: window.NatalChart?.dateUTC instanceof Date ? window.NatalChart.dateUTC.getTime() : null,
+        lons: pickedNatal
+      },
+      houseSystem: window.houseSystem || "whole-sign",
+      housesVisible: window.housesVisible !== false,
+      lotsMasterOn: window.lotsMasterOn === true,
+      enabledLots: window.enabledLots || null,
+      skyMode: window.astrowheelSkyMode || "tropical",
+      cycleMode: window.cycleMode || "",
+      cyclePlanet: window.cyclePlanet || "",
+      cycleAspect: window.cycleAspect || null,
+      cyclePins,
+      shadow: window.planetShadow ? {
+        planet: window.planetShadow.planet || "",
+        visible: !!window.planetShadow.visible,
+        phase: window.planetShadow.phase || "",
+        passes: window.planetShadow.passes || []
+      } : null
+    });
+  }
 
   // Standalone date overlay updater (used by drawAstroWheel and the early-return guard)
   function updateWheelDateOverlay(t) {
@@ -1434,7 +1557,6 @@ for (const k of show) {
 
   function drawAstroWheel() {
     if (!wheelImg) return;
-
     // Date chain priority:
     // 1. __liveDate (real-time clock when live mode is active)
     // 2. navTargetDateUTC (user navigation - button clicks, date box)
@@ -1615,11 +1737,17 @@ for (const k of show) {
     }
 
     const natalLons = (window.NatalChart && window.NatalChart.longitudes) ? window.NatalChart.longitudes : null;
-    const url = renderWheelSVG(lons, { baseLon: 0, showKeys: keys, natalLons, dateUTC: t })
-    wheelImg.src = url;
+    const baseLon = computeWheelBaseLon(t);
+    updateConstellationLayer(t, baseLon);
 
-    // Update date/time overlay at top of wheel
+    // Update date/time overlay at top of wheel even when the SVG frame is unchanged.
     updateWheelDateOverlay(t);
+
+    const renderKey = buildWheelRenderKey(t, lons, keys, natalLons, baseLon);
+    if (renderKey !== _lastWheelRenderKey) {
+      setWheelImageSVG(renderWheelSVG(lons, { baseLon, showKeys: keys, natalLons, dateUTC: t }));
+      _lastWheelRenderKey = renderKey;
+    }
 
     // ---- Frame-by-frame cycle tracking — watch the tracked planet/pair on every draw ---
     const cm = window.cycleMode;
@@ -1747,7 +1875,9 @@ for (const k of show) {
       window.cycleTrackState = ts;
       // renderWheelSVG ran just before tracking, so force one immediate repaint when a new pin lands.
       if (aspectPinAdded && typeof renderWheelSVG === 'function') {
-        wheelImg.src = renderWheelSVG(lons, { baseLon: 0, showKeys: keys, natalLons, dateUTC: t });
+        const pinRenderKey = buildWheelRenderKey(t, lons, keys, natalLons, baseLon);
+        setWheelImageSVG(renderWheelSVG(lons, { baseLon, showKeys: keys, natalLons, dateUTC: t }));
+        _lastWheelRenderKey = pinRenderKey;
       }
     } else if (cm && cp && lons && Number.isFinite(Number(lons[cp]))) {
       if (!window.cycleTrackState || !window.cycleTrackState.active || window.cycleTrackState.cycleKind !== 'single') {
@@ -3228,6 +3358,29 @@ for (const k of show) {
     });
   }
   initHousesToggle();
+
+  // ---- Constellation visibility toggle
+  const constellationsBtn = document.getElementById("constellationsBtn");
+  function updateConstellationsBtn() {
+    if (!constellationsBtn) return;
+    const visible = window.constellationsVisible !== false;
+    constellationsBtn.classList.toggle("active", visible);
+    constellationsBtn.setAttribute("aria-pressed", visible ? "true" : "false");
+    constellationsBtn.textContent = visible ? "Constellations On" : "Constellations Off";
+    constellationsBtn.style.background = visible ? "rgba(56,189,248,.24)" : "rgba(0,0,0,.42)";
+    constellationsBtn.style.borderColor = visible ? "rgba(125,211,252,.72)" : "rgba(255,255,255,.26)";
+    constellationsBtn.style.color = visible ? "rgba(240,249,255,.98)" : "rgba(255,255,255,.66)";
+    constellationsBtn.style.boxShadow = visible ? "0 0 14px rgba(56,189,248,.26)" : "none";
+  }
+  if (constellationsBtn) {
+    updateConstellationsBtn();
+    constellationsBtn.addEventListener("click", function(ev) {
+      ev.stopPropagation();
+      window.constellationsVisible = window.constellationsVisible === false;
+      updateConstellationsBtn();
+      if (typeof drawAstroWheel === "function") drawAstroWheel();
+    });
+  }
   
 
   function openHousesModal() {

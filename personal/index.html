@@ -20,7 +20,7 @@
 		 ========================================================= -->
 
 	<link href="../css/timeline.css?v=158" rel="stylesheet"/>
-	<link href="../css/astro-hud.css?v=48" rel="stylesheet"/>
+	<link href="../css/astro-hud.css?v=184" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
 	<link rel="stylesheet" href="../shared/subscribe-modal.css">
@@ -201,6 +201,7 @@
 						<span id="housesBtnWrap" style="all:unset;display:inline-flex;align-items:center;gap:0;border-radius:8px;overflow:visible;border:1px solid rgba(255,255,255,.3);pointer-events:auto;">
 						<button id="housesBtn" style="all:unset;padding:6px 12px;font-size:11px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Houses</button>
 						<span id="housesToggle" style="display:inline-flex;align-items:center;cursor:pointer;width:32px;height:16px;border-radius:8px;background:rgba(34,197,94,.5);padding:2px;transition:background 0.2s;pointer-events:auto;flex-shrink:0;user-select:none;"><span id="housesToggleDot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform 0.2s;transform:translateX(14px);pointer-events:none;"></span></span></span>
+						<button id="constellationsBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.88);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button" aria-pressed="true">Constellations On</button>
 						<button id="importToNatalBtn" style="all:unset;padding:6px 12px;font-size:11px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#FFD700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;pointer-events:auto;" type="button">Import to Natal</button>
 						<svg id="importArrow" style="position:fixed;pointer-events:none;z-index:100;opacity:0.6;display:none;" width="160" height="220" viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 200 C 10 80, 130 60, 130 20" stroke="rgba(255,215,0,0.7)" stroke-width="2.5" stroke-dasharray="4,3" fill="none"/><polygon points="126,28 136,24 128,16" fill="rgba(255,215,0,0.7)"/></svg>
 						</div>
@@ -714,12 +715,10 @@
 
 		<script src="js/generation-model.js"></script>
 		<script src="js/screw-renderer.js?v=164"></script>
-		<script src="../shared/astro-wheel.js?v=159"></script>
+		<script src="../shared/astro-wheel.js?v=184"></script>
 		<script src="js/conjunction-selector.js?v=2"></script>
 
-		<!-- 3D river/screw perspective layer from original personal scale -->
-		<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
-		<script src="js/render-river-3d.js"></script>
+		<!-- 3D river/screw perspective layer — REMOVED (dead code) -->
 
 		<!-- Historical events data and renderer -->
 		<script src="js/_historical_events.js"></script>
@@ -978,7 +977,7 @@
 				{ id: 'bidenContainer', thumbId: 'bidenThumb', labelId: 'bidenLabel', termStart: 2021 },
 				{ id: 'trumpContainer', thumbId: 'trumpThumb', labelId: 'trumpLabel', termStart: 2025 }
 			];
-			
+
 			function getPresidentScreenX(targetYear) {
 				if (typeof yearToScrewX !== 'function') return null;
 				
@@ -1015,12 +1014,20 @@
 				});
 			}
 			
-			// Smooth animation loop
-			function animatePresidents() {
+			let updateMonarchPositions = null;
+			function updateTimelineThumbPositions() {
 				updatePresidentPositions();
-				requestAnimationFrame(animatePresidents);
+				if (typeof updateMonarchPositions === "function") {
+					updateMonarchPositions();
+				}
 			}
-			animatePresidents();
+
+			// Smooth animation loop
+			function animateTimelineThumbs() {
+				updateTimelineThumbPositions();
+				requestAnimationFrame(animateTimelineThumbs);
+			}
+			animateTimelineThumbs();
 			
 			// Update on resize
 			window.addEventListener('resize', updatePresidentPositions);
@@ -1108,21 +1115,13 @@
 				setTimeout(renderMonarchs, 500);
 
 				// Animation loop: keep monarchs aligned to timeline as it scrolls
-				function updateMonarchPositions() {
+				updateMonarchPositions = function() {
 					monarchContainer.querySelectorAll(".monarchWrapper").forEach((wrapper, idx) => {
 						const m = MONARCHS[idx];
 						if (!m) return;
 						const x = getPresidentScreenX(m.reignStart);
 						if (x) wrapper.style.left = x + "px";
 					});
-				}
-
-				// Hook into the same animation loop
-				const origAnimatePresidents = animatePresidents;
-				animatePresidents = function() {
-					updatePresidentPositions();
-					updateMonarchPositions();
-					requestAnimationFrame(animatePresidents);
 				};
 			}
 		</script>
