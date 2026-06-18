@@ -51,15 +51,6 @@
   });
 })();
 
-// Rebuild category buttons if the renderer has already initialized
-if (typeof EventsRenderer !== "undefined" && EventsRenderer.CATEGORIES) {
-  // Force a re-scan of HISTORICAL_EVENTS for the new saturnPluto flags
-  if (typeof window.dispatchEvent === "function") {
-    window.dispatchEvent(new CustomEvent("history:updated"));
-  }
-}
-
-
 // Robust applicator – waits for HISTORICAL_EVENTS if necessary
 function applySaturnPlutoMarkers() {
   if (!window.HISTORICAL_EVENTS || !Array.isArray(window.HISTORICAL_EVENTS)) {
@@ -93,21 +84,9 @@ function applySaturnPlutoMarkers() {
     }
   });
 
-  // Force renderer rebuild
-  if (typeof EventsRenderer !== "undefined" && typeof EventsRenderer.init === "function") {
-    EventsRenderer.init();
+  if (typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(new CustomEvent("history:updated"));
   }
 }
 
 applySaturnPlutoMarkers();
-
-// Extra safety: directly rebuild if the object exists
-setTimeout(() => {
-  if (typeof EventsRenderer !== "undefined") {
-    if (typeof EventsRenderer.groupEvents === "function") EventsRenderer.groupEvents();
-    if (typeof EventsRenderer.buildCategoryBar === "function") EventsRenderer.buildCategoryBar();
-    if (typeof EventsRenderer.renderMarkers === "function") EventsRenderer.renderMarkers();
-    console.log("[saturn-pluto] Forced direct rebuild of category bar");
-  }
-}, 80);
-

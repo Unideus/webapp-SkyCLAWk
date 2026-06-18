@@ -307,6 +307,7 @@
     if (shadowWindowCache.has(key)) return shadowWindowCache.get(key).map(w => Object.assign({}, w));
     const windows = buildShadowWindows(planet, fromDate, toDate);
     shadowWindowCache.set(key, windows.map(w => Object.assign({}, w)));
+    if (shadowWindowCache.size > MAX_LON_CACHE) shadowWindowCache.delete(shadowWindowCache.keys().next().value);
     return windows;
   }
 

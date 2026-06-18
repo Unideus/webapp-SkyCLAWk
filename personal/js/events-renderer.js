@@ -25,12 +25,15 @@ const EventsRenderer = {
 
   activeCategory: null,
   eventsByCategory: {},
+  _chromeWired: false,
 
   init() {
     this.groupEvents();
     this.buildCategoryBar();
     this.positionCategoryBarOnLifeline();
     this.renderMarkers();
+    if (this._chromeWired) return;
+    this._chromeWired = true;
     // Re-render/re-anchor when screw rebuilds
     window.addEventListener("zy:screwBuilt", () => {
       this.positionCategoryBarOnLifeline();

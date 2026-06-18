@@ -438,6 +438,7 @@ window.getFixedStarLongitudes = function(dateUTC) {
 // Houses: Placidus by default, returns 12 cusps + Asc/MC
 // =========================================================
 window.__houseCache = new Map(); // keyed by "jd_ut,lat,lon,sys"
+const __HOUSE_CACHE_MAX = 5000;
 
 window.getHouseCusps = function(dateUTC, lat, lon) {
   // Try SwissEph first if available
@@ -509,6 +510,7 @@ window.getHouseCusps = function(dateUTC, lat, lon) {
         const cusps = rawCusps.slice(1, 13);
         const houses = { cusps, asc, mc, raw: result };
         window.__houseCache.set(cacheKey, houses);
+        if (window.__houseCache.size > __HOUSE_CACHE_MAX) window.__houseCache.delete(window.__houseCache.keys().next().value);
         return houses;
       }
     }

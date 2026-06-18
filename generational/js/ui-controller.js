@@ -175,7 +175,7 @@
 		const nextSatJupConjBtn = document.getElementById("nextSatJupConjBtn");
 		const prevSatJupConjBtn = document.getElementById("prevSatJupConjBtn");
 		const astroContainer = document.getElementById("astroContainer");
-		const river3dContainer = document.getElementById("river3dContainer");
+		// river3dContainer REMOVED (dead 3D river code)
 		const diagLabels = document.getElementById("diagLabels");
 		const saeculumWave = document.getElementById("saeculumWave");
 		const saeculumLight = document.getElementById("saeculumLight");
@@ -279,8 +279,7 @@
 			syncTimeMarkerLayout();
 			syncScrewSVGHeight();
 			syncEventShield();
-			syncRiverClip();
-			if (window.River3D) River3D.resize();
+			// syncRiverClip + River3D.resize REMOVED (dead 3D river code)
 			});
 
 			// ---------------------------------------------------------
@@ -290,36 +289,9 @@
 			//   top    = CANON.SCREW_TOP_PAD
 			//   bottom = CANON.SCREW_TOP_PAD + CANON.TIMELINE_Y
 			// ---------------------------------------------------------
-			function syncRiverClip() {
-			if (!window.River3D) return;
+			// syncRiverClip REMOVED (dead 3D river code)
 
-			const svg = document.getElementById("screwSVG");
-			if (!svg) return;
-
-			const topLine  = svg.querySelector("#elementalBoundaryLine");
-			const axisLine = svg.querySelector("#timelineAxisLine");
-			if (!topLine || !axisLine) return;
-
-			const topPx = topLine.getBoundingClientRect().top;
-			const botPx = axisLine.getBoundingClientRect().top;
-			River3D.setBand(topPx, botPx);
-
-			const screwRect = svg.getBoundingClientRect();
-			const nowBoundaryScreenX = screwRect.left + getNowScreenX();
-
-			River3D.setXEdge(nowBoundaryScreenX);
-			River3D.setXClip(screwRect.left, nowBoundaryScreenX);
-			
-			// ✅ Archetype box river (labelSVG)
-				if (labelSVGEl && typeof River3D.setLabelRect === "function") {
-				const lr = labelSVGEl.getBoundingClientRect();
-				River3D.setLabelRect(lr.left, lr.top, lr.right, lr.bottom);
-				}
-			}
-
-		window.addEventListener("resize", () => {
-			if (typeof syncRiverClip === "function") syncRiverClip();
-		});
+		// syncRiverClip resize listener REMOVED (dead 3D river code)
 
 		window.addEventListener("scroll", () => {
 			if (isWheelOpen()) syncEventShield();
@@ -1895,12 +1867,19 @@
 		let lastWheelDrawMs = 0;
 		const WHEEL_FRAME_MS = 500; // Redraw wheel at most every 500ms during animation (2fps) — SWE WASM is expensive
 		let lastIdleFrameMs = 0;
-		const IDLE_FRAME_MS = 250; // When paused/idle, refresh at 4fps instead of burning 60fps.
+				const IDLE_FRAME_MS = 250; // When paused/idle, refresh at 4fps instead of burning 60fps.
+				const WHEEL_IDLE_FRAME_MS = 120; // Wheel open but paused: 8fps — feels responsive without burning CPU
 		const HIDDEN_FRAME_MS = 1000; // Browser tab hidden/backgrounded: 1fps health check only.
+		let wheelRedrawPending = false;
 
 		function requestWheelRedraw() {
 			if (typeof drawAstroWheel === 'function' && isWheelOpen()) {
-				drawAstroWheel();
+				if (wheelRedrawPending) return;
+				wheelRedrawPending = true;
+				requestAnimationFrame(() => {
+					wheelRedrawPending = false;
+					if (isWheelOpen()) drawAstroWheel();
+				});
 			}
 		}
 
@@ -1931,8 +1910,9 @@
 
 			// Idle tabs were still doing full label/layout work at 60fps.
 			// Keep controls responsive, but throttle when nothing is moving.
-			const idleNow = pausedNow && !isWheelOpen();
-			const minFrameMs = document.hidden ? HIDDEN_FRAME_MS : (idleNow ? IDLE_FRAME_MS : 0);
+						const idleNow = pausedNow && !isWheelOpen();
+						const wheelIdle = pausedNow && isWheelOpen();
+						const minFrameMs = document.hidden ? HIDDEN_FRAME_MS : (idleNow ? IDLE_FRAME_MS : (wheelIdle ? WHEEL_IDLE_FRAME_MS : 0));
 			if (minFrameMs && lastIdleFrameMs && (t - lastIdleFrameMs) < minFrameMs) {
 				setTimeout(() => requestAnimationFrame(animate), Math.max(0, minFrameMs - (t - lastIdleFrameMs)));
 				return;
@@ -2017,16 +1997,7 @@
 			updateDate();
 
 			if (typeof updateSaeculumGlow === "function") updateSaeculumGlow();
-			// 3D River backdrop (Phase 1): follow the master time flow
-			if (window.River3D) {
-			// keep band + NOW edge updated
-			syncRiverClip();
-
-			River3D.update({
-				dt,
-				yearsPerSec: (Math.abs(yearsPerSec) < 0.0001) ? 0 : yearsPerSec
-				});
-			}
+			// 3D River backdrop REMOVED (dead code)
 
 			// Only redraw the wheel when the modal is open, and throttle redraw rate.
 			const wheelOpen = isWheelOpen();
@@ -2046,13 +2017,7 @@
 	  initScrewRenderer();
 	}
 
-	// Phase 1: mount the 3D river backdrop (safe no-op if missing)
-		if (river3dContainer && window.River3D) {
-		River3D.init("river3dContainer");
-
-		// Immediately set band + NOW edge once (prevents "start point too far right" on refresh)
-		if (typeof syncRiverClip === "function") syncRiverClip();
-		}
+	// Phase 1: 3D river backdrop REMOVED (dead code)
 
 	// Ensure layout/shield is correct AFTER the DOM has painted once
 		requestAnimationFrame(() => {
@@ -2060,10 +2025,7 @@
 		syncScrewSVGHeight();
 		syncEventShield();
 
-		// ✅ lock river into the screw band immediately after first paint
-		if (window.River3D) {
-			syncRiverClip();
-		}
+		// 3D river lock REMOVED (dead code)
 		});
 
 		// 🔁 Start loop (only once)
@@ -2159,12 +2121,6 @@
 						})();
 
 	// 📷 When the sky map loads, force a redraw (optional but fine)
-	const wheelImgEl = document.getElementById("wheelImg");
-	if (wheelImgEl) {
-			wheelImgEl.onload = () => {
-				requestWheelRedraw();
-			};
-		};
 	
 	// Populate the Auspicious Event Info overlay from URL params
 	  function populateAuspiciousEventInfo(params, dt) {
