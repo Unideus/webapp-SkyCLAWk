@@ -1362,6 +1362,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			const baselineTopPad = 22;
 			const actionsCenterY = svgRect.top + baselineTopPad + (height / 2);
 			const constraintsCenterY = actionsCenterY - (height + gap);
+			const labelLeft = svgRect.left + 64;
 
 			[
 				{ selector: '[data-planting-cycle-label="constraints"]', y: constraintsCenterY },
@@ -1369,9 +1370,16 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			].forEach(item => {
 				const el = hud.querySelector(item.selector);
 				if (!el) return;
-				el.style.left = `${svgRect.left + 14}px`;
+				el.style.left = `${labelLeft}px`;
 				el.style.top = `${item.y - (el.offsetHeight / 2)}px`;
 			});
+
+			const keyBtn = hud.querySelector("[data-planting-key-open]");
+			if (keyBtn) {
+				keyBtn.style.left = `${svgRect.left + 14}px`;
+				keyBtn.style.top = `${constraintsCenterY - (height / 2)}px`;
+				keyBtn.style.height = `${(height * 2) + gap}px`;
+			}
 		}
 
 		function renderPlantingCycleRibbons() {
@@ -1403,47 +1411,30 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				hud.style.zIndex = "5";
 				document.body.appendChild(hud);
 
+				const keyBtn = document.createElement("button");
+				keyBtn.type = "button";
+				keyBtn.textContent = "Key";
+				keyBtn.className = "plantingCycleKeyBtn";
+				keyBtn.setAttribute("data-planting-key-open", "true");
+				keyBtn.setAttribute("aria-haspopup", "dialog");
+				keyBtn.setAttribute("aria-controls", "plantingKeyModal");
+				keyBtn.style.position = "fixed";
+				hud.appendChild(keyBtn);
+
 				[
 					{ key: "constraints", label: "Constraints" },
 					{ key: "actions", label: "Actions" }
 				].forEach(item => {
 					const el = document.createElement("div");
 					el.textContent = item.label;
+					el.className = "plantingCycleLabel";
 					el.dataset.plantingCycleLabel = item.key;
 					el.style.position = "fixed";
-					el.style.whiteSpace = "nowrap";
-					el.style.fontSize = "12px";
-					el.style.fontWeight = "900";
-					el.style.letterSpacing = "0.12em";
-					el.style.color = "#fff";
-					el.style.textTransform = "uppercase";
-					el.style.textShadow = "0 0 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.9)";
 					hud.appendChild(el);
 				});
 				positionPlantingCycleHud();
 			}
 
-			const labelBaseX = SCREW_EPOCH_X - (PX_PER_YEAR * 1.55);
-			[
-				{ group: constraintsGroup, label: "Constraints", y: -(height * 2 + gap) + height - 4 },
-				{ group: actionsGroup, label: "Actions", y: -height + height - 4 }
-			].forEach(item => {
-				if (!item.group) return;
-				const label = createSvgEl("text", {
-					x: labelBaseX,
-					y: item.y,
-					fill: "#ffffff",
-					"font-size": "11",
-					"font-weight": "900",
-					"letter-spacing": "0.1em",
-					"paint-order": "stroke",
-					stroke: "rgba(0,0,0,0.82)",
-					"stroke-width": "2",
-					"stroke-linejoin": "round"
-				});
-				label.textContent = item.label;
-				item.group.appendChild(label);
-			});
 		}
 
 		function renderPlantingMonthTicks() {

@@ -10,7 +10,10 @@
   const startNewPlanBtn = document.getElementById("startNewPlanBtn");
   const guidanceModal = document.getElementById("plantingGuidanceModal");
   const guidanceClose = document.getElementById("plantingGuidanceClose");
+  const keyModal = document.getElementById("plantingKeyModal");
+  const keyClose = document.getElementById("plantingKeyClose");
   let lastGuidanceTrigger = null;
+  let lastKeyTrigger = null;
 
   initPlantingOverlayToggle("plantingTransitsToggle", "wheelTransitsGrid");
   initPlantingOverlayToggle("plantingElementsToggle", "wheelElementalGrid");
@@ -31,6 +34,7 @@
   window.plantingPlanContext = planContext;
 
   initPlantingGuidanceModal();
+  initPlantingKeyModal();
 
   const hasPlanContext = Object.values(planContext).some(Boolean);
   if (!hasPlanContext) return;
@@ -168,6 +172,40 @@
     });
     document.addEventListener("keydown", event => {
       if (event.key === "Escape" && guidanceModal.getAttribute("aria-hidden") === "false") closeGuidance();
+    });
+  }
+
+  function initPlantingKeyModal() {
+    if (!keyModal) return;
+    document.body.appendChild(keyModal);
+
+    function openKey(trigger) {
+      lastKeyTrigger = trigger || document.activeElement;
+      keyModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("planting-key-open");
+      keyClose?.focus();
+    }
+
+    function closeKey() {
+      keyModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("planting-key-open");
+      if (lastKeyTrigger && typeof lastKeyTrigger.focus === "function") {
+        lastKeyTrigger.focus();
+      }
+    }
+
+    document.addEventListener("click", event => {
+      const trigger = event.target?.closest?.("[data-planting-key-open]");
+      if (!trigger) return;
+      event.preventDefault();
+      openKey(trigger);
+    });
+    keyClose?.addEventListener("click", closeKey);
+    keyModal.querySelectorAll("[data-planting-key-close]").forEach(el => {
+      el.addEventListener("click", closeKey);
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && keyModal.getAttribute("aria-hidden") === "false") closeKey();
     });
   }
 

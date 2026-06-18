@@ -11,10 +11,33 @@
 }
 
 #menuTitle #menuRightStack {
-  flex: 0 0 110px;
-  width: 110px !important;
-  min-width: 110px;
+  flex: 0 0 auto;
+  width: auto !important;
+  min-width: 0;
   overflow: visible;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.wheelFabSplit{
+  width: calc(var(--logo-h) - 60px);
+  min-width: calc(var(--logo-h) - 60px);
+  height: calc(var(--logo-h) - 8px);
+  display: grid;
+  grid-template-rows: 3fr 1fr;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-bg);
+  isolation: isolate;
+}
+
+.wheelFabSplit .wheelPopoutBtn{
+  height: 100%;
+  border-top: 1px solid rgba(255,255,255,.16);
 }
 
 #plantingNowLuminary {
@@ -434,6 +457,52 @@ body #screwSVG .planting-guidance-segment {
   pointer-events: all !important;
 }
 
+.plantingCycleLabel {
+  box-sizing: border-box;
+  min-width: 112px;
+  padding: 5px 10px 5px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.9);
+  pointer-events: none;
+}
+
+.plantingCycleKeyBtn {
+  box-sizing: border-box;
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 55, 0.48);
+  border-radius: 7px;
+  background: rgba(19, 17, 11, 0.92);
+  color: #fff7d6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 8px 22px rgba(0,0,0,.36);
+}
+
+.plantingCycleKeyBtn:hover {
+  border-color: rgba(250, 204, 21, 0.72);
+  background: rgba(56, 45, 17, 0.96);
+}
+
 .plantingMoonPhaseReadout {
   position: fixed;
   left: var(--planting-moon-readout-left, 16px);
@@ -791,6 +860,20 @@ body.zodiac-panel-open .plantingSidebar {
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.72);
 }
 
+.plantingKeyCard {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.plantingKeyModal .plantingGuidanceCard {
+  background:
+    radial-gradient(circle at 12% 6%, rgba(212, 175, 55, 0.16), transparent 34%),
+    linear-gradient(155deg, rgba(24, 25, 19, 0.99), rgba(5, 7, 6, 0.99));
+}
+
+.plantingKeyModal .plantingKeyBody {
+  padding-top: 18px;
+}
+
 .plantingGuidanceHeader {
   display: flex;
   align-items: flex-start;
@@ -900,6 +983,76 @@ body.zodiac-panel-open .plantingSidebar {
   background: rgba(0, 0, 0, 0.2);
 }
 
+.plantingKeyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.plantingKeySection {
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.plantingKeySection h3 {
+  margin: 0 0 12px;
+  color: #fff7d6;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.plantingKeyItem {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 0;
+}
+
+.plantingKeyItem + .plantingKeyItem {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.plantingKeyItem strong,
+.plantingKeyItem p {
+  display: block;
+}
+
+.plantingKeyItem strong {
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.plantingKeyItem p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.45;
+}
+
+.legendSwatch {
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.22) inset;
+}
+
+.legendBlue{ background: #60a5fa; }
+.legendOrange{ background: #f97316; }
+.legendPurple{ background: #a78bfa; }
+.legendIndigo{ background: #3b82f6; }
+.legendGold{ background: #facc15; }
+.legendGreen{ background: #22c55e; }
+.legendCyan{ background: #38bdf8; }
+.legendAmber{ background: #f59e0b; }
+.legendSpring{ background: #ef4444; }
+.legendSummer{ background: #3b82f6; }
+.legendFall{ background: #facc15; }
+.legendWinter{ background: #22c55e; }
+
 #plantingGuidanceEvidence {
   margin: 0;
   padding-left: 18px;
@@ -934,5 +1087,13 @@ body.zodiac-panel-open .plantingSidebar {
   .plantingGuidanceStatus,
   .plantingGuidanceColumns {
     grid-template-columns: 1fr;
+  }
+
+  .plantingKeyGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .plantingKeyCard {
+    width: calc(100vw - 16px);
   }
 }
