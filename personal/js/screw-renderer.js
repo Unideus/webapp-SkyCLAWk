@@ -1255,12 +1255,12 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const cycleKey = `${p1Label}|${p2Label}`;
 					const duration = CYCLE_DURATION[cycleKey] || CYCLE_DURATION["default"];
 					
-					const planetGlyph = (g) => `<span class="conjHudPlanetGlyph" style="font-size:1.55em; line-height:1; display:inline-block; transform: translateY(0.02em);">${g}</span>`;
+					const planetGlyph = (g) => `<span class="conjHudPlanetGlyph" style="font-size:${Math.max(12, H - 4)}px; line-height:1; display:inline-block;">${g}</span>`;
 					const conjGlyph = `<span class="conjHudConjGlyph" style="font-size:0.58em; line-height:1; opacity:0.9; display:inline-block; transform: translateY(-0.03em);">☌</span>`;
 					const durationText = duration ? `<span style="font-size: 80%; opacity: 0.85; margin-left: 4px; line-height:1;">${duration}${String(duration).includes("mo") ? "" : " yrs"}</span>` : "";
 
 					// Larger planet glyphs, smaller conjunction mark, vertically centered as one flex row
-					el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:3px;transform:translateY(2px);">${planetGlyph(g1t)}${conjGlyph}${planetGlyph(g2t)}${durationText}</span>`;
+					el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:3px;">${planetGlyph(g1t)}${conjGlyph}${planetGlyph(g2t)}${durationText}</span>`;
 				}
 
 				// -----------------------------
