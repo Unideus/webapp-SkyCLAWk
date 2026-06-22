@@ -315,7 +315,7 @@ let cardStartLeft = 0, cardStartTop = 0;
       "-webkit-user-drag:none",
       "opacity:.55",
       "z-index:1",
-      "transform-origin:center center",
+      "transform-origin:49.16% 50.96%",
       "will-change:transform"
     ].join(";");
     constellationImg.onerror = () => {
