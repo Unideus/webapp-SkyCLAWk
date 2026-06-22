@@ -1979,18 +1979,6 @@
   color: #f1cf6a !important;
 }
 
-#wheelModal #constellationsBtn,
-.wheel-popout-page #constellationsBtn,
-#constellationsBtn {
-  background: rgba(56,189,248,.24) !important;
-  border-color: rgba(125,211,252,.72) !important;
-  color: rgba(240,249,255,.98) !important;
-  box-shadow: 0 0 14px rgba(56,189,248,.26) !important;
-  min-width: 132px !important;
-  position: relative !important;
-  z-index: 215 !important;
-}
-
 #controlButtonsRow button:active,
 #cyclesBtn:active,
 #shadowBtn:active,

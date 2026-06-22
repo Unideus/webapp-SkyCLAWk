@@ -288,44 +288,26 @@ let cardStartLeft = 0, cardStartTop = 0;
   // Wheel closed by default - user must click Zodiac Wheel button to open
   // requestAnimationFrame(openWheel);
 
-  // Blob-backed SVG wheel renders need the constellation art embedded.
-  // Keep it user-toggleable because it is the heaviest wheel layer. It lives as
-  // one persistent DOM image so Chromium does not re-decode it inside every
-  // regenerated wheel Blob.
-  const wheelStage = document.getElementById("wheelStage");
-  let constellationImg = null;
-  window.constellationsVisible = window.constellationsVisible !== false;
+  // ---------------------------------------------------------
+  // Preload constellation SVG and embed as data URL (works inside data: SVG wheel)
+  // ---------------------------------------------------------
+  // NOTE: Constellation toggle removed from webapp (2026-06-22).
+  // The toggle concept is saved for the Godot app (Master Godot SkyCLAWk).
+  // In Godot, constellations can be toggled as a separate layer with proper
+  // 3D rotation that stays locked to the wheel's coordinate system.
+  let HEAVEN_DATA_URL = "";
+  let constellationReady = false;
 
-  function ensureConstellationLayer() {
-    if (!wheelStage || constellationImg) return constellationImg;
-    constellationImg = document.createElement("img");
-    constellationImg.id = "wheelConstellationsImg";
-    constellationImg.alt = "";
-    constellationImg.draggable = false;
-    constellationImg.src = "/heaven_constellations.svg";
-    constellationImg.style.cssText = [
-      "position:absolute",
-      "left:4.56%",
-      "top:2.89%",
-      "width:92.44%",
-      "height:92.44%",
-      "object-fit:contain",
-      "pointer-events:none",
-      "user-select:none",
-      "-webkit-user-drag:none",
-      "opacity:.55",
-      "z-index:1",
-      "transform-origin:49.16% 50.96%",
-      "will-change:transform"
-    ].join(";");
-    constellationImg.onerror = () => {
-      console.warn("[wheel] heaven_constellations.svg load failed");
-    };
-    wheelStage.insertBefore(constellationImg, wheelImg);
-    wheelImg.style.zIndex = "2";
-    wheelImg.style.position = wheelImg.style.position || "absolute";
-    return constellationImg;
-  }
+  fetch("/heaven_constellations.svg")
+    .then(r => {
+      return r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`));
+    })
+    .then(txt => {
+      HEAVEN_DATA_URL = "data:image/svg+xml," + encodeURIComponent(txt);
+      constellationReady = true;
+      if (typeof drawAstroWheel === "function") drawAstroWheel();
+    })
+    .catch(err => console.warn("[wheel] heaven_constellations.svg load failed:", err));
 
   function computeWheelBaseLon(t) {
     let baseLon = 0;
@@ -353,26 +335,6 @@ let cardStartLeft = 0, cardStartTop = 0;
     } catch(_) {}
     return baseLon;
   }
-
-  function updateConstellationLayer(t, baseLon = 0) {
-    const img = ensureConstellationLayer();
-    if (!img) return;
-    const visible = window.constellationsVisible !== false;
-    img.style.display = visible ? "block" : "none";
-    if (!visible) return;
-
-    let precessionDeg = 0;
-    if (t instanceof Date && Number.isFinite(t.getTime())) {
-      const jdUt = (t.getTime() / 86400000) + 2440587.5;
-      const epoch = (typeof window.PRECESS_EPOCH_JD === "number") ? window.PRECESS_EPOCH_JD : 2451545.0;
-      const arcsecPerYear = (typeof window.PRECESS_ARCSEC_PER_YEAR === "number") ? window.PRECESS_ARCSEC_PER_YEAR : 50.29;
-      const sign = (typeof window.PRECESS_SIGN === "number") ? window.PRECESS_SIGN : -1;
-      const years = (jdUt - epoch) / 365.2422;
-      precessionDeg = sign * (years * (arcsecPerYear / 3600));
-    }
-    img.style.transform = `rotate(${3 + precessionDeg + baseLon}deg)`;
-  }
-  ensureConstellationLayer();
 
   // =========================================================
   // SVG WHEEL RENDERER (ported from MyTimeline)
@@ -1201,7 +1163,16 @@ for (const k of show) {
     // base manual rotation + precession
     const STAR_ROT = 3; // degrees (+ clockwise)
 
-    const starOverlay = "";
+    const starOverlay = HEAVEN_DATA_URL ? `
+      <g opacity="0.55" transform="rotate(${STAR_ROT + precessionDeg + baseLon} ${cx} ${cy})">
+        <image href="${HEAVEN_DATA_URL}"
+               x="${(cx - STAR_RADIUS) + STAR_DX}"
+               y="${(cy - STAR_RADIUS) + STAR_DY}"
+               width="${STAR_RADIUS * 2}"
+               height="${STAR_RADIUS * 2}"
+               preserveAspectRatio="xMidYMid meet" />
+      </g>
+    ` : "";
 
 
     // ---- House cusps (Placidus via SwissEph, or Porphyry from ASC/MC)
@@ -1738,7 +1709,6 @@ for (const k of show) {
 
     const natalLons = (window.NatalChart && window.NatalChart.longitudes) ? window.NatalChart.longitudes : null;
     const baseLon = computeWheelBaseLon(t);
-    updateConstellationLayer(t, baseLon);
 
     // Update date/time overlay at top of wheel even when the SVG frame is unchanged.
     updateWheelDateOverlay(t);
@@ -3359,29 +3329,10 @@ for (const k of show) {
   }
   initHousesToggle();
 
-  // ---- Constellation visibility toggle
-  const constellationsBtn = document.getElementById("constellationsBtn");
-  function updateConstellationsBtn() {
-    if (!constellationsBtn) return;
-    const visible = window.constellationsVisible !== false;
-    constellationsBtn.classList.toggle("active", visible);
-    constellationsBtn.setAttribute("aria-pressed", visible ? "true" : "false");
-    constellationsBtn.textContent = visible ? "Constellations On" : "Constellations Off";
-    constellationsBtn.style.background = visible ? "rgba(56,189,248,.24)" : "rgba(0,0,0,.42)";
-    constellationsBtn.style.borderColor = visible ? "rgba(125,211,252,.72)" : "rgba(255,255,255,.26)";
-    constellationsBtn.style.color = visible ? "rgba(240,249,255,.98)" : "rgba(255,255,255,.66)";
-    constellationsBtn.style.boxShadow = visible ? "0 0 14px rgba(56,189,248,.26)" : "none";
-  }
-  if (constellationsBtn) {
-    updateConstellationsBtn();
-    constellationsBtn.addEventListener("click", function(ev) {
-      ev.stopPropagation();
-      window.constellationsVisible = window.constellationsVisible === false;
-      updateConstellationsBtn();
-      if (typeof drawAstroWheel === "function") drawAstroWheel();
-    });
-  }
-  
+  // NOTE: Constellation toggle removed from webapp (2026-06-22).
+  // The toggle concept is saved for the Godot app (Master Godot SkyCLAWk).
+  // In Godot, constellations can be toggled as a separate 3D layer with
+  // proper rotation that stays locked to the wheel's coordinate system.
 
   function openHousesModal() {
     if (!housesModal) return;
