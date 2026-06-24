@@ -33,8 +33,8 @@
 	const bumpFwdBtn  = document.getElementById("bumpFwdBtn");
 	const scaleSelector = document.getElementById("scaleSelector");
 
-	// Extra vertical room for the overlay conjunction band (px)
-	const EXTRA_SCREW_TOP_PAD = 25;
+	// Extra vertical room for stacked yuga + conjunction bands (px)
+	const EXTRA_SCREW_TOP_PAD = 55;
 
 	/* =========================================================
 	SPEED UNITS (knob cycles what slider “means”)
