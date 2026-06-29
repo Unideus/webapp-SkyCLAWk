@@ -48,7 +48,7 @@ const _scale = /^(generational|personal)$/.test(_urlVariant)
 			// ─────────────────────────────
 
 			// Top reserved space for elemental cycle & accents
-			SCREW_TOP_PAD: 20,
+			SCREW_TOP_PAD: 0,
 
 			// Main generational field (bands + diagonals + wave centerline)
 			SCREW_BODY: 160,
@@ -91,7 +91,7 @@ const _scale = /^(generational|personal)$/.test(_urlVariant)
 			// ─────────────────────────────
 			// ROW / LABEL GEOMETRY
 			// ─────────────────────────────
-			ROW_HEIGHT: 45,
+			ROW_HEIGHT: 40,
 
 			// ─────────────────────────────
 			// LAYOUT CONSTANTS
@@ -278,4 +278,3 @@ const _scale = /^(generational|personal)$/.test(_urlVariant)
 	  aquarius:    "♒\uFE0E",
 	  pisces:      "♓\uFE0E"
 	};
-

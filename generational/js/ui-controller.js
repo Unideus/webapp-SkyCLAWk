@@ -35,6 +35,7 @@
 
 	// Extra vertical room for stacked yuga + conjunction bands (px)
 	const EXTRA_SCREW_TOP_PAD = 55;
+	const ARCHETYPE_LABEL_Y_OFFSET = 57;
 
 	/* =========================================================
 	SPEED UNITS (knob cycles what slider “means”)
@@ -204,8 +205,8 @@
 			// CATHEDRAL: label panel bottom sits on the TIMELINE_Y (X axis at bottom of bands)
 			const scrollGroupY = CANON.SCREW_TOP_PAD + EXTRA_SCREW_TOP_PAD;
 			const xAxisY = sr.top + scrollGroupY + CANON.TIMELINE_Y;
-			const labelHeight = 180; // matches --label-height in index.html
-			const labelTop = Math.max(Math.round(tr.bottom), Math.round(xAxisY - labelHeight));
+			const labelHeight = CANON.ROW_HEIGHT * 4;
+			const labelTop = Math.max(Math.round(tr.bottom), Math.round(xAxisY - labelHeight + ARCHETYPE_LABEL_Y_OFFSET));
 			document.documentElement.style.setProperty("--label-top", `${labelTop}px`);
 		}
 
@@ -222,11 +223,11 @@
 			}
 		}
 
-		// CATHEDRAL: time spine begins at the TOP of the diagonal/body field (not the menu)
-		const markerTop = Math.round(sr.top + CANON.SCREW_TOP_PAD + EXTRA_SCREW_TOP_PAD - 10);
-		document.documentElement.style.setProperty("--time-marker-top", `${markerTop}px`);
+		// CATHEDRAL: NOW marker tracks the archetype box seam, not the screw top
+		const labelTopPx = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--label-top")) || Math.round(sr.top);
+		const nowY = Math.round(labelTopPx - 10);
+		document.documentElement.style.setProperty("--time-marker-top", `${nowY}px`);
 
-		const nowY = Math.round(sr.top + CANON.SCREW_TOP_PAD + EXTRA_SCREW_TOP_PAD - 10);
 		document.documentElement.style.setProperty("--now-label-age-top", `${nowY}px`);
 		}
 		
@@ -1480,6 +1481,11 @@
 					</div>`;
 				});
 				locationDropdown.innerHTML = html;
+				// Position fixed below the input, escaping the menu's overflow clip
+				const rect = locationBoxInput.getBoundingClientRect();
+				locationDropdown.style.top = `${rect.bottom}px`;
+				locationDropdown.style.left = `${rect.left}px`;
+				locationDropdown.style.width = `${rect.width}px`;
 				locationDropdown.style.display = "block";
 				locationDropdown.querySelectorAll(".location-dropdown-item").forEach(el => {
 					el.addEventListener("mousedown", (e) => {

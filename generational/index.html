@@ -19,7 +19,7 @@
 		 • All future systems attach to known anchors
 		 ========================================================= -->
 
-	<link href="../css/timeline.css?v=154" rel="stylesheet"/>
+	<link href="../css/timeline.css?v=156" rel="stylesheet"/>
 	<link href="../css/astro-hud.css?v=184" rel="stylesheet"/>
 	<link rel="icon" href="../timelinetitle.webp" type="image/webp">
 	
@@ -162,12 +162,14 @@
 					<input id="dateBoxInput" type="text" placeholder="21 Jan 2026" />
 					<input id="timeBoxInput" type="time" value="12:00" step="60" />
 					<input id="locationBoxInput" type="text" placeholder="location" autocomplete="off" />
-					<div id="locationDropdown" class="location-dropdown" style="display:none;position:absolute;z-index:9999;background:#1a1a2e;border:1px solid #333;border-radius:6px;max-height:260px;overflow-y:auto;min-width:240px;box-shadow:0 4px 12px rgba(0,0,0,.5)"></div>
 					<button type="button" class="dateGoBtn" id="dateBoxGoBtn">GO</button>
 				</div>
 			  </div>
 
 			</div> <!-- ✅ END topMenu -->
+
+			<!-- Location dropdown lives outside topMenu so it's not clipped by overflow -->
+			<div id="locationDropdown" class="location-dropdown" style="display:none"></div>
 
 			<!-- =========================================================
 				 TIME SPINE (GLOBAL AXIS — NOT OWNED BY MENU)
@@ -618,8 +620,8 @@
 			-->
 			<script type="module" src="../shared/swe-init.js"></script>
 		<script src="js/vendor/astronomy.browser.min.js"></script>
-		<div id="labelSVG" style="position:fixed;right:20px;top:var(--label-top, 140px);width:var(--label-width,200px);height:var(--label-height,180px);background:#0d0d14;z-index:99999;pointer-events:none;">
-			<svg height="180" id="labelSVGInner" width="200" style="display:block;background:#0d0d14;pointer-events:none;">
+		<div id="labelSVG" style="position:fixed;right:20px;top:var(--label-top, 140px);width:var(--label-width,200px);height:var(--label-height,160px);background:#0d0d14;z-index:99999;pointer-events:none;">
+			<svg height="160" id="labelSVGInner" width="200" style="display:block;background:#0d0d14;pointer-events:none;">
 				<rect fill="#0d0d14" height="100%" width="100%" pointer-events="none"></rect>
 				<g id="labelStructure"></g>
 				<g id="diagonalIndex"></g>
@@ -629,7 +631,7 @@
 			</svg>
 		</div>
 
-		<script src="../shared/constants.js?v=2"></script>
+		<script src="../shared/constants.js?v=3"></script>
 
 		<!-- Elemental baseline (keep if elemental band still uses it) -->
 		<script src="js/_conjunction_data_saturn_jupiter.js"></script>
@@ -673,7 +675,7 @@
 		<script src="js/_era_markers.js"></script>
 		<script src="../shared/heaven-data.js"></script>
 
-		<script src="js/screw-renderer.js?v=162"></script>
+		<script src="js/screw-renderer.js?v=168"></script>
 		<script src="../shared/astro-wheel.js?v=184"></script>
 		<script src="js/conjunction-selector.js?v=2"></script>
 
@@ -691,7 +693,7 @@
 		<script src="js/_us_state_data.js"></script>
 		<script src="js/us-map-animation.js"></script>
 		
-		<script src="js/ui-controller.js?v=160"></script>
+		<script src="js/ui-controller.js?v=174"></script>
 		<script src="js/monarchs-data.js"></script>
 
 		<!-- President Thumbnails - Fixed to bottom of viewport with overlapping -->

@@ -987,7 +987,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					let saved = {};
 					try { saved = JSON.parse(localStorage.getItem("zy_cycle_projections") || "{}"); } catch (e) {}
 					return (window.__zyCycleProjectionState = {
-						baseline: saved.baseline !== false,
+						baseline: true, // Always show Saturn/Jupiter band
 						overlay: saved.overlay !== false,
 						yuga: saved.yuga !== false
 					});
@@ -1050,13 +1050,14 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				const H   = ELEMENTAL.HEIGHT;
 				const GAP = 6;
 				const HUD_LEFT_OFFSET = 74;
+				const BAND_HUD_Y_NUDGE = 37;
 				const YUGA_BUTTON_H = H * 2 + GAP;
 
 				// Bands live ABOVE the screw
 				const Y_BASE = -(H * 2 + GAP);
 				const Y_OVER = -H;
 
-				const OP_BASE = 0.18;
+				const OP_BASE = 0.30;
 				const OP_OVER = 0.26;
 
 				// -----------------------------
@@ -1246,7 +1247,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					// Center on the rendered lanes. The SVG band group is 3px below the old 22px pad.
 					// Keep this deterministic; querying the rect here can fail during live rebuild/rerender timing.
 					const BASELINE_TOP_PAD = 55;
-					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2);
+					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2) + BAND_HUD_Y_NUDGE;
 					const overlayLabelNudgeY = isOverlay ? 2 : 0;
 					const laneCenterY = baselineCenterY + (isOverlay ? -(H + GAP) : 0) + overlayLabelNudgeY;
 					el.style.top = `${laneCenterY}px`;
@@ -1327,7 +1328,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					el.style.left = `${svgRect.left}px`;
 
 					const BASELINE_TOP_PAD = 55;
-					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2);
+					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2) + BAND_HUD_Y_NUDGE;
 					const twoBandCenterY = baselineCenterY - ((H + GAP) / 2);
 					el.style.top = `${twoBandCenterY}px`;
 					el.style.transform = "translateY(-50%)";

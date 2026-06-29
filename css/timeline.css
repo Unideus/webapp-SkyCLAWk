@@ -1069,10 +1069,7 @@ button.uiPill:active{
 }
 
 .location-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  position: fixed;
   z-index: 9999;
   max-height: 240px;
   overflow-y: auto;
@@ -1159,6 +1156,7 @@ button.uiPill:active{
 #timelineWrap {
 width: 100%;
     padding: 0 20px;
+    margin: 0;
     position: relative;
     z-index: 1;
 height: 650px;     /* ⬅ MUST exceed screwSVG height */
@@ -1261,8 +1259,8 @@ height: 650px;     /* ⬅ MUST exceed screwSVG height */
     width: calc(100% - 40px);
     height: var(--screw-svg-height, calc(100vh - 80px));
     min-height: calc(100vh - 80px);
-    position: absolute;
-    top: 0;
+    position: fixed;
+    top: calc(var(--top-menu-bottom, 140px) - 8px);
     left: 20px;
     z-index: 2;
     pointer-events: none;
