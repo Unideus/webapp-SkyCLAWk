@@ -202,11 +202,11 @@
 			const tr = topMenu.getBoundingClientRect();
 			document.documentElement.style.setProperty("--top-menu-bottom", `${Math.round(tr.bottom)}px`);
 
-			// CATHEDRAL: label panel bottom sits on the TIMELINE_Y (X axis at bottom of bands)
+			// CATHEDRAL: label panel spans the same 4-row archetype field as the screw.
 			const scrollGroupY = CANON.SCREW_TOP_PAD + EXTRA_SCREW_TOP_PAD;
-			const xAxisY = sr.top + scrollGroupY + CANON.TIMELINE_Y;
 			const labelHeight = CANON.ROW_HEIGHT * 4;
-			const labelTop = Math.max(Math.round(tr.bottom), Math.round(xAxisY - labelHeight + ARCHETYPE_LABEL_Y_OFFSET));
+			const screwFieldTop = sr.top + scrollGroupY + CANON.TIMELINE_Y - labelHeight;
+			const labelTop = Math.max(Math.round(tr.bottom), Math.round(screwFieldTop + ARCHETYPE_LABEL_Y_OFFSET));
 			document.documentElement.style.setProperty("--label-top", `${labelTop}px`);
 		}
 
@@ -230,7 +230,14 @@
 
 		document.documentElement.style.setProperty("--now-label-age-top", `${nowY}px`);
 		}
-		
+
+		function syncConjLaneLabels() {
+		if (typeof window.rebuildConjunctionCycleBand === "function") {
+			window.__zyCycleHudLockedPositions = null;
+			window.rebuildConjunctionCycleBand();
+		}
+		}
+
 		function syncScrewSVGHeight() {
 		if (!screwSVGEl) return;
 
@@ -590,7 +597,7 @@
 				}
 				// Clear house cache so transit ASC recomputes for the new timeline position
 				if (window.__houseCache) {
-					if (typeof window.__houseCache.clear === "function") window.__houseCache.clear();
+		if (typeof window.__houseCache.clear === "function") window.__houseCache.clear();
 					else window.__houseCache = new Map();
 				}
 
@@ -1202,7 +1209,7 @@
 					if (!window.NatalChart) window.NatalChart = { enabled:false, dateUTC:null, longitudes:null };
 
 					// compute natal longitudes if your setter exists
-					if (typeof window.NatalChart.setDateUTC === "function") {
+		if (typeof window.NatalChart.setDateUTC === "function") {
 						window.NatalChart.setDateUTC(natalUTC);
 					}
 
@@ -1325,17 +1332,17 @@
 					timeState.navTargetDateUTC = target;
 
 					// ✅ Disable live mode in astro wheel when user enters a manual date
-					if (typeof window.setAstroWheelLiveMode === "function") {
+		if (typeof window.setAstroWheelLiveMode === "function") {
 						window.setAstroWheelLiveMode(false);
 					}
 
 					// ✅ Force wheel redraw if open
-					if (typeof drawAstroWheel === "function" && typeof isWheelOpen === "function" && isWheelOpen()) {
+		if (typeof drawAstroWheel === "function" && typeof isWheelOpen === "function" && isWheelOpen()) {
 						drawAstroWheel();
 					}
 					
 					// ✅ Also request redraw for when wheel opens later
-					if (typeof requestWheelRedraw === "function") {
+		if (typeof requestWheelRedraw === "function") {
 						requestWheelRedraw();
 					}
 
@@ -1536,7 +1543,7 @@
 				// ✅ GO must commit BEFORE blur/revert can fire
 				if (dateBoxGoBtn) {
 					// ensure it can't submit anything
-					try { dateBoxGoBtn.type = "button"; } catch(_) {}
+		try { dateBoxGoBtn.type = "button"; } catch(_) {}
 
 					// commit on pointerdown (fires before input blur)
 					dateBoxGoBtn.addEventListener("pointerdown", (e) => {
@@ -2025,14 +2032,19 @@
 
 	// Phase 1: 3D river backdrop REMOVED (dead code)
 
-	// Ensure layout/shield is correct AFTER the DOM has painted once
-		requestAnimationFrame(() => {
-		syncTimeMarkerLayout();
-		syncScrewSVGHeight();
-		syncEventShield();
+		// Ensure layout/shield is correct AFTER the DOM has painted once
+			requestAnimationFrame(() => {
+			syncTimeMarkerLayout();
+			syncScrewSVGHeight();
+			syncEventShield();
 
-		// 3D river lock REMOVED (dead code)
-		});
+			// Rebuild conjunction cycle band labels with correct --top-menu-bottom
+			if (typeof window.rebuildConjunctionCycleBand === "function") {
+			  try { window.rebuildConjunctionCycleBand(); } catch (e) { console.warn("[cycle] RAF rebuild failed", e); }
+			}
+
+			// 3D river lock REMOVED (dead code)
+			});
 
 		// 🔁 Start loop (only once)
 		requestAnimationFrame(animate);

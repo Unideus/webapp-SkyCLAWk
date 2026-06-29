@@ -755,7 +755,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			const Y0 = CANON.TIMELINE_Y + A;
 			const STEP = 6;
 			
-						// -----------------------------------------------------
+					// -----------------------------------------------------
 			// X → archetype phase
 			// -----------------------------------------------------
 			
@@ -1009,6 +1009,23 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					return lane;
 				}
 
+				function applyProjectionVisibility(laneKey, enabled) {
+					if (!projectionRoot) return;
+					const lane = projectionRoot.querySelector(`[data-projection-lane="${laneKey}"]`);
+					if (lane) {
+						lane.style.visibility = enabled ? "visible" : "hidden";
+						lane.style.pointerEvents = "none";
+					}
+				}
+
+				function applyHudPressedState(el, enabled, activeTitle, inactiveTitle) {
+					el.setAttribute("aria-pressed", enabled ? "true" : "false");
+					el.style.border = enabled
+						? "1px solid rgba(255,255,255,0.55)"
+						: "1px solid rgba(255,255,255,0.16)";
+					el.title = enabled ? activeTitle : inactiveTitle;
+				}
+
 				const baselineProjection = getProjectionLane("baseline");
 				const overlayProjection = getProjectionLane("overlay");
 				const yugaProjection = getProjectionLane("yuga");
@@ -1026,9 +1043,9 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					hud.style.width = "0";
 					hud.style.height = "0";
 					hud.style.pointerEvents = "none";
-					hud.style.zIndex = "5"; // above elemental bands (z=3), below astro-wheel (z=10)
 					document.body.appendChild(hud);
 				}
+				hud.style.zIndex = "1000"; // above top menu (z=999) so labels aren't hidden
 				// mark existing as unused, we’ll keep only the ones we touch this pass
 				Array.from(hud.children).forEach(ch => { ch.dataset.keep = "0"; });
 
@@ -1050,7 +1067,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				const H   = ELEMENTAL.HEIGHT;
 				const GAP = 6;
 				const HUD_LEFT_OFFSET = 74;
-				const BAND_HUD_Y_NUDGE = 37;
+				const BAND_HUD_Y_NUDGE = 17;
 				const YUGA_BUTTON_H = H * 2 + GAP;
 
 				// Bands live ABOVE the screw
@@ -1063,6 +1080,71 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				// -----------------------------
 				// helpers
 				// -----------------------------
+				function getBandScreenCenterY(groupId, fallbackY, fallbackHeight = H) {
+					const group = document.getElementById(groupId);
+					const bandRect = group
+						? group.querySelector(".cycleRectLayer rect, rect[data-dense-mask='1'], rect")
+						: null;
+					if (bandRect && typeof bandRect.getBoundingClientRect === "function") {
+						const r = bandRect.getBoundingClientRect();
+						if (Number.isFinite(r.top) && Number.isFinite(r.height) && r.height > 0) {
+							return r.top + (r.height / 2);
+						}
+					}
+					if (group && typeof group.getBoundingClientRect === "function") {
+						const r = group.getBoundingClientRect();
+						if (Number.isFinite(r.top) && Number.isFinite(r.height) && r.height > 0) {
+							return r.top + (r.height / 2);
+						}
+					}
+
+					const svgRect = svg.getBoundingClientRect();
+					const scrollGroupY = CANON.SCREW_TOP_PAD + (typeof EXTRA_SCREW_TOP_PAD === "number" ? EXTRA_SCREW_TOP_PAD : 55);
+					return svgRect.top + scrollGroupY + fallbackY + (fallbackHeight / 2);
+				}
+
+				function getConjBandScreenCenterY(Y) {
+					const svgRect = svg.getBoundingClientRect();
+					const scrollGroupY = CANON.SCREW_TOP_PAD + (typeof EXTRA_SCREW_TOP_PAD === "number" ? EXTRA_SCREW_TOP_PAD : 55);
+					return svgRect.top + scrollGroupY + Y + (H / 2);
+				}
+
+				function snapshotHudPositions() {
+					const out = {};
+					for (const id of ["conjHud_lane0", "conjHud_lane1", "yugaHudToggle"]) {
+						const el = document.getElementById(id);
+						if (!el) continue;
+						out[id] = {
+							left: el.style.left,
+							top: el.style.top
+						};
+					}
+					return out;
+				}
+
+				function restoreHudPositions(snapshot) {
+					for (const id of Object.keys(snapshot || {})) {
+						const el = document.getElementById(id);
+						if (!el) continue;
+						el.style.left = snapshot[id].left;
+						el.style.top = snapshot[id].top;
+					}
+				}
+
+				function lockHudPositions(snapshot) {
+					window.__zyCycleHudLockedPositions = snapshot || {};
+					restoreHudPositions(window.__zyCycleHudLockedPositions);
+					requestAnimationFrame(() => restoreHudPositions(window.__zyCycleHudLockedPositions));
+				}
+
+				function restoreScrollPosition(x, y) {
+					window.scrollTo(x, y);
+					requestAnimationFrame(() => {
+						window.scrollTo(x, y);
+						requestAnimationFrame(() => window.scrollTo(x, y));
+					});
+				}
+
 				const normalizeSign = (raw) => {
 					const s = (raw || "").toString().trim().toLowerCase();
 					if (!s) return "";
@@ -1104,8 +1186,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const seen = new Set();
 					for (const e of (events || [])) {
 						if (!e || !e.t) continue;
-						const sign = normalizeSign(e.sign || "");
-						const key = `${e.t}|${sign}`;
+					const sign = normalizeSign(e.sign || "");
+					const key = `${e.t}|${sign}`;
 						if (seen.has(key)) continue;
 						seen.add(key);
 						out.push({ ...e, sign });
@@ -1183,14 +1265,14 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const g1 = GLYPH[p1Label] || p1Label;
 					const g2 = GLYPH[p2Label] || p2Label;
 
-					const isOverlay = (Y <= -(H * 1.5));
+					const isOverlay = (Y === Y_OVER);
 					const laneIdx = isOverlay ? 1 : 0;
 					const labelId = `conjHud_lane${laneIdx}`;
 
 					let el = document.getElementById(labelId);
 					if (!el) {
 						el = document.createElement("div");
-						el.id = labelId;
+					el.id = labelId;
 						hud.appendChild(el);
 					}
 
@@ -1215,19 +1297,39 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					el.style.display = "inline-flex";
 					el.style.alignItems = "center";
 					el.style.borderRadius = "6px";
-					el.style.border = projectionState[projectionKey]
-						? "1px solid rgba(255,255,255,0.55)"
-						: "1px solid rgba(255,255,255,0.16)";
 					el.style.opacity = "1";
-					el.title = projectionState[projectionKey]
-						? "Hide elemental projection through history"
-						: "Show elemental projection through history";
 					el.setAttribute("role", "button");
-					el.setAttribute("aria-pressed", projectionState[projectionKey] ? "true" : "false");
-					el.onclick = () => {
+					applyHudPressedState(
+						el,
+						projectionState[projectionKey],
+						"Hide elemental projection through history",
+						"Show elemental projection through history"
+					);
+					el.tabIndex = -1;
+					el.onpointerdown = (event) => {
+						event.preventDefault();
+						event.stopPropagation();
+						window.__zyCycleHudPointerSnapshot = snapshotHudPositions();
+					};
+					el.onclick = (event) => {
+						event.preventDefault();
+						event.stopPropagation();
+						const keepX = window.scrollX;
+						const keepY = window.scrollY;
+						const labelPositions = window.__zyCycleHudPointerSnapshot || snapshotHudPositions();
+						window.__zyCycleHudLockedPositions = labelPositions;
 						projectionState[projectionKey] = !projectionState[projectionKey];
 						saveProjectionState();
-						buildConjunctionCycleBand();
+						applyProjectionVisibility(projectionKey, projectionState[projectionKey]);
+						applyHudPressedState(
+							el,
+							projectionState[projectionKey],
+							"Hide elemental projection through history",
+							"Show elemental projection through history"
+						);
+						lockHudPositions(labelPositions);
+						restoreScrollPosition(keepX, keepY);
+						window.__zyCycleHudPointerSnapshot = null;
 					};
 					el.style.background = "rgba(0,0,0,0.90)";
 					el.style.padding = "0 8px";
@@ -1242,15 +1344,11 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					// lock to left edge of the SVG on screen
 					const svgRect = svg.getBoundingClientRect();
 					const bandLeftPx = svgRect.left + HUD_LEFT_OFFSET;
-					el.style.left = `${bandLeftPx}px`;
 
-					// Center on the rendered lanes. The SVG band group is 3px below the old 22px pad.
-					// Keep this deterministic; querying the rect here can fail during live rebuild/rerender timing.
-					const BASELINE_TOP_PAD = 55;
-					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2) + BAND_HUD_Y_NUDGE;
-					const overlayLabelNudgeY = isOverlay ? 2 : 0;
-					const laneCenterY = baselineCenterY + (isOverlay ? -(H + GAP) : 0) + overlayLabelNudgeY;
-					el.style.top = `${laneCenterY}px`;
+					const laneCenterY = getConjBandScreenCenterY(Y);
+					const lockedPosition = window.__zyCycleHudLockedPositions && window.__zyCycleHudLockedPositions[labelId];
+					el.style.left = lockedPosition ? lockedPosition.left : `${bandLeftPx}px`;
+					el.style.top = lockedPosition ? lockedPosition.top : `${laneCenterY}px`;
 					el.style.transform = "translateY(-50%)";
 					el.style.visibility = "visible";
 					el.style.opacity = "1";
@@ -1283,7 +1381,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					let el = document.getElementById(labelId);
 					if (!el) {
 						el = document.createElement("div");
-						el.id = labelId;
+					el.id = labelId;
 						hud.appendChild(el);
 					}
 
@@ -1308,29 +1406,48 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					el.style.minWidth = "62px";
 					el.style.boxSizing = "border-box";
 					el.style.borderRadius = "6px";
-					el.style.border = projectionState.yuga
-						? "1px solid rgba(255,255,255,0.55)"
-						: "1px solid rgba(255,255,255,0.16)";
-					el.title = projectionState.yuga
-						? "Hide yuga age projection through history"
-						: "Show yuga age projection through history";
 					el.setAttribute("role", "button");
-					el.setAttribute("aria-pressed", projectionState.yuga ? "true" : "false");
-					el.onclick = () => {
+					applyHudPressedState(
+						el,
+						projectionState.yuga,
+						"Hide yuga age projection through history",
+						"Show yuga age projection through history"
+					);
+					el.tabIndex = -1;
+					el.onpointerdown = (event) => {
+						event.preventDefault();
+						event.stopPropagation();
+						window.__zyCycleHudPointerSnapshot = snapshotHudPositions();
+					};
+					el.onclick = (event) => {
+						event.preventDefault();
+						event.stopPropagation();
+						const keepX = window.scrollX;
+						const keepY = window.scrollY;
+						const labelPositions = window.__zyCycleHudPointerSnapshot || snapshotHudPositions();
+						window.__zyCycleHudLockedPositions = labelPositions;
 						projectionState.yuga = !projectionState.yuga;
 						saveProjectionState();
-						buildConjunctionCycleBand();
+						applyProjectionVisibility("yuga", projectionState.yuga);
+						applyHudPressedState(
+							el,
+							projectionState.yuga,
+							"Hide yuga age projection through history",
+							"Show yuga age projection through history"
+						);
+						lockHudPositions(labelPositions);
+						restoreScrollPosition(keepX, keepY);
+						window.__zyCycleHudPointerSnapshot = null;
 					};
 					el.dataset.keep = "1";
 					el.textContent = "Yuga";
 
 					const svgRect = svg.getBoundingClientRect();
-					el.style.left = `${svgRect.left}px`;
 
-					const BASELINE_TOP_PAD = 55;
-					const baselineCenterY = svgRect.top + BASELINE_TOP_PAD + (H / 2) + BAND_HUD_Y_NUDGE;
-					const twoBandCenterY = baselineCenterY - ((H + GAP) / 2);
-					el.style.top = `${twoBandCenterY}px`;
+					const twoBandCenterY = getBandScreenCenterY("yugaCycle", Y_BASE, H * 2 + GAP);
+					const lockedPosition = window.__zyCycleHudLockedPositions && window.__zyCycleHudLockedPositions[labelId];
+					el.style.left = lockedPosition ? lockedPosition.left : `${svgRect.left}px`;
+					el.style.top = lockedPosition ? lockedPosition.top : `${twoBandCenterY}px`;
 					el.style.transform = "translateY(-50%)";
 					el.style.visibility = "visible";
 					el.style.opacity = "1";
@@ -1362,15 +1479,15 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					}
 
 					function addTransitionWindow(seg, startYear, endYear, anchor) {
-						const d0 = dateFromYearOffset(anchorDate, startYear);
-						const d1 = dateFromYearOffset(anchorDate, endYear);
-						const x0 = dateToScrewX(d0);
-						const x1 = dateToScrewX(d1);
-						const w = x1 - x0;
+					const d0 = dateFromYearOffset(anchorDate, startYear);
+					const d1 = dateFromYearOffset(anchorDate, endYear);
+					const x0 = dateToScrewX(d0);
+					const x1 = dateToScrewX(d1);
+					const w = x1 - x0;
 						if (!Number.isFinite(w) || w <= 0) return;
 						if (x1 < MINX - visiblePad || x0 > MAXX + visiblePad) return;
 
-						const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 						rect.setAttribute("x", x0);
 						rect.setAttribute("y", String(historyY));
 						rect.setAttribute("width", w);
@@ -1380,8 +1497,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						rect.setAttribute("pointer-events", "none");
 						yugaProjection.appendChild(rect);
 
-						const edge = anchor === "end" ? x1 : x0;
-						const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+					const edge = anchor === "end" ? x1 : x0;
+					const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 						line.setAttribute("x1", String(edge));
 						line.setAttribute("x2", String(edge));
 						line.setAttribute("y1", String(historyY));
@@ -1395,16 +1512,15 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					}
 
 					for (const seg of segments) {
-						const d0 = dateFromYearOffset(anchorDate, seg.start);
-						const d1 = dateFromYearOffset(anchorDate, seg.end);
-						const x0 = dateToScrewX(d0);
-						const x1 = dateToScrewX(d1);
-						const w = x1 - x0;
+					const d0 = dateFromYearOffset(anchorDate, seg.start);
+					const d1 = dateFromYearOffset(anchorDate, seg.end);
+					const x0 = dateToScrewX(d0);
+					const x1 = dateToScrewX(d1);
+					const w = x1 - x0;
 						if (!Number.isFinite(w) || w <= 0) continue;
 						if (x1 < MINX - visiblePad || x0 > MAXX + visiblePad) continue;
 
-						if (projectionState.yuga) {
-							const projectionRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					const projectionRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 							projectionRect.setAttribute("x", x0);
 							projectionRect.setAttribute("y", String(historyY));
 							projectionRect.setAttribute("width", w);
@@ -1413,22 +1529,17 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 							projectionRect.setAttribute("fill-opacity", "0.045");
 							projectionRect.setAttribute("pointer-events", "none");
 							yugaProjection.appendChild(projectionRect);
-
-						}
 					}
 
-					if (projectionState.yuga) {
-						for (const seg of segments) {
-							const t = transitionYears(seg);
-							addTransitionWindow(seg, seg.start, seg.start + t, "start");
-							addTransitionWindow(seg, seg.end - t, seg.end, "end");
-						}
+					for (const seg of segments) {
+					const t = transitionYears(seg);
+						addTransitionWindow(seg, seg.start, seg.start + t, "start");
+						addTransitionWindow(seg, seg.end - t, seg.end, "end");
 					}
 
 					const cuspX = dateToScrewX(anchorDate);
-					if (projectionState.yuga) {
-						const previousYuga = segments.find(seg => seg.start < 0 && seg.end === 0) || segments[1];
-						const previousLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+					const previousYuga = segments.find(seg => seg.start < 0 && seg.end === 0) || segments[1];
+					const previousLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 						previousLabel.setAttribute("x", String(cuspX - 26));
 						previousLabel.setAttribute("y", String(watermarkY));
 						previousLabel.setAttribute("text-anchor", "end");
@@ -1445,7 +1556,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						previousLabel.textContent = `Ascending ${previousYuga.name} / ${previousYuga.short}`;
 						yugaProjection.appendChild(previousLabel);
 
-						const previousTransitionLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+					const previousTransitionLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 						previousTransitionLabel.setAttribute("x", String(cuspX - 26));
 						previousTransitionLabel.setAttribute("y", String(transitionLabelY));
 						previousTransitionLabel.setAttribute("text-anchor", "end");
@@ -1462,8 +1573,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						previousTransitionLabel.textContent = `${previousYuga.short} dusk`;
 						yugaProjection.appendChild(previousTransitionLabel);
 
-						const currentYuga = segments.find(seg => seg.start <= 0 && seg.end > 0) || segments[2];
-						const currentLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+					const currentYuga = segments.find(seg => seg.start <= 0 && seg.end > 0) || segments[2];
+					const currentLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 						currentLabel.setAttribute("x", String(cuspX + 26));
 						currentLabel.setAttribute("y", String(watermarkY));
 						currentLabel.setAttribute("text-anchor", "start");
@@ -1480,7 +1591,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						currentLabel.textContent = `${currentYuga.name} / ${currentYuga.short}`;
 						yugaProjection.appendChild(currentLabel);
 
-						const currentTransitionLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+					const currentTransitionLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 						currentTransitionLabel.setAttribute("x", String(cuspX + 26));
 						currentTransitionLabel.setAttribute("y", String(transitionLabelY));
 						currentTransitionLabel.setAttribute("text-anchor", "start");
@@ -1497,7 +1608,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						currentTransitionLabel.textContent = `${currentYuga.short} dawn`;
 						yugaProjection.appendChild(currentTransitionLabel);
 
-						const projectionCusp = document.createElementNS("http://www.w3.org/2000/svg", "line");
+					const projectionCusp = document.createElementNS("http://www.w3.org/2000/svg", "line");
 						projectionCusp.setAttribute("x1", cuspX);
 						projectionCusp.setAttribute("x2", cuspX);
 						projectionCusp.setAttribute("y1", String(historyY));
@@ -1507,7 +1618,6 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						projectionCusp.setAttribute("stroke-width", "1.5");
 						projectionCusp.setAttribute("pointer-events", "none");
 						yugaProjection.appendChild(projectionCusp);
-					}
 				}
 
 				// -----------------------------
@@ -1532,7 +1642,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				// Lane check: baseline = 0, overlay = 1
 
 				// Lane check: baseline = 0, overlay = 1
-				const isOverlay = (Y <= -(H * 1.5));
+				const isOverlay = (Y === Y_OVER);
 				const laneIdx = isOverlay ? 1 : 0;
 
 				// ── Dense pair mask: fast inner-planet conjunctions produce 600-5700+
@@ -1554,7 +1664,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					const xStart = MINX;
 					const xEnd = MAXX;
 					if (Number.isFinite(xStart) && Number.isFinite(xEnd) && xEnd > xStart) {
-						const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 							maskRect.setAttribute("x", xStart);
 							maskRect.setAttribute("y", Y);
 							maskRect.setAttribute("width", xEnd - xStart);
@@ -1702,8 +1812,8 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 					rect.setAttribute("opacity", String(bandOpacity * decay.fill));
 					rectLayer.appendChild(rect);
 
-					if (projectionGroup && projectionEnabled) {
-						const projectionRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					if (projectionGroup) {
+					const projectionRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 						projectionRect.setAttribute("x", x0);
 						projectionRect.setAttribute("y", "0");
 						projectionRect.setAttribute("width", w);
@@ -1713,7 +1823,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 						projectionRect.setAttribute("pointer-events", "none");
 						projectionGroup.appendChild(projectionRect);
 
-						const boundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
+					const boundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
 						boundary.setAttribute("x1", x0);
 						boundary.setAttribute("x2", x0);
 						boundary.setAttribute("y1", "0");
@@ -1836,7 +1946,7 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 
 					const selKey = `${sel.p1}|${sel.p2}`;
 					if (selKey !== "Saturn|Jupiter" && selKey !== "Jupiter|Saturn") {
-						const overlayEvents = getEventsForPair(sel.p1, sel.p2);
+					const overlayEvents = getEventsForPair(sel.p1, sel.p2);
 						if (overlayEvents) {
 							drawBand(overlayGroup, overlayProjection, projectionState.overlay, overlayEvents, Y_OVER, OP_OVER, sel.p1, sel.p2);
 							setHudLabelForLane(Y_OVER, sel.p1, sel.p2, "overlay");
@@ -1845,6 +1955,10 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 				}
 
 				// Cleanup unused HUD labels (prevents “ghost” labels)
+				applyProjectionVisibility("baseline", projectionState.baseline);
+				applyProjectionVisibility("overlay", projectionState.overlay);
+				applyProjectionVisibility("yuga", projectionState.yuga);
+
 				Array.from(hud.children).forEach(ch => {
 					if (ch.dataset.keep !== "1") ch.remove();
 				});
@@ -2075,15 +2189,19 @@ function reserveInLane(kindState, laneIndex, x0, x1) {
 			`${CANON.SCREW_TOTAL_HEIGHT}px`
 		);
 
-	// Signal that screw geometry is ready
-	window.screwReady = true;
-	window.dispatchEvent(new CustomEvent('zy:screwBuilt'));
-	}
+		// Signal that screw geometry is ready
+		window.screwReady = true;
+		window.dispatchEvent(new CustomEvent('zy:screwBuilt'));
+
+		// Expose so ui-controller can rebuild labels after --top-menu-bottom is set
+		window.rebuildConjunctionCycleBand = buildConjunctionCycleBand;
+		}
 
 		// Rebuild the cycle band when the selector changes
 	if (!window.__zyCycleBandHooked) {
 		window.__zyCycleBandHooked = true;
 		window.addEventListener("zy:cyclechange", () => {
+			window.__zyCycleHudLockedPositions = null;
 			try { buildConjunctionCycleBand(); }
 			catch (e) { console.warn("[cycle] buildConjunctionCycleBand failed", e); }
 		});
